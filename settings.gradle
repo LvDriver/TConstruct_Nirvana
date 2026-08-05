@@ -1,0 +1,11 @@
+pluginManagement {
+    repositories {
+        mavenLocal()
+        maven { url = 'https://maven.neoforged.net/releases' }
+        // 国内镜像兜底（plugins.gradle.org / mavenCentral 在此网络不可达）
+        maven { url = 'https://mirrors.cloud.tencent.com/nexus/repository/maven-public/' }
+    }
+}
+
+// 说明：官方 MDK 在此处声明 foojay-resolver-convention 用于自动下载 JDK toolchain。
+// 本机已安装 JDK 21（Temurin 21.0.11），且 plugins.gradle.org 不可达，故移除该插件。
