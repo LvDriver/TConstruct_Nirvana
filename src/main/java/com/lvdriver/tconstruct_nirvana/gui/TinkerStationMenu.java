@@ -31,6 +31,7 @@ public class TinkerStationMenu extends AbstractContainerMenu {
     private final SimpleContainer parts;
     private final ResultContainer result = new ResultContainer();
     private final ContainerLevelAccess access;
+    private final net.minecraft.world.ContainerListener partListener;
 
     /** 服务端构造：直接持有方块实体容器。 */
     public TinkerStationMenu(int id, Inventory playerInventory, SimpleContainer parts, ContainerLevelAccess access, BlockEntity blockEntity) {
@@ -38,12 +39,13 @@ public class TinkerStationMenu extends AbstractContainerMenu {
         this.parts = parts;
         this.access = access;
         // 部件变化 → 重算结果 + 标记方块实体脏（服务器保存时部件槽不丢失）
-        parts.addListener(container -> {
+        this.partListener = container -> {
             this.slotsChanged(container);
             if (blockEntity != null) {
                 blockEntity.setChanged();
             }
-        });
+        };
+        parts.addListener(this.partListener);
 
         // 5 个部件槽（横排）
         for (int i = 0; i < PART_SLOTS; i++) {
@@ -126,5 +128,12 @@ public class TinkerStationMenu extends AbstractContainerMenu {
     @Override
     public boolean stillValid(Player player) {
         return access.evaluate((level, pos) -> level.getBlockState(pos).getBlock() instanceof com.lvdriver.tconstruct_nirvana.block.BlockToolTable, true);
+    }
+
+    @Override
+    public void removed(Player player) {
+        super.removed(player);
+        // 菜单关闭后移除容器监听，防止挂在长生命周期 BE 容器上累积泄漏
+        this.parts.removeListener(this.partListener);
     }
 }

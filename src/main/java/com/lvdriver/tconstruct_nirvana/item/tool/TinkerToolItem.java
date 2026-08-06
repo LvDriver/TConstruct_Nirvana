@@ -380,6 +380,7 @@ public abstract class TinkerToolItem extends Item {
                 continue;
             }
             Material material = materials.get(index);
+            // 该材料的全部磨刀石（含堆叠摊平）一次性消耗，与 calculateRepairAmount 统计口径一致
             for (int i = 0; i < items.size(); i++) {
                 ItemStack s = items.get(i);
                 if (s.isEmpty() || !(s.getItem() instanceof SharpeningKit kit)) {
@@ -388,7 +389,6 @@ public abstract class TinkerToolItem extends Item {
                 if (kit.getMaterial(s) == material) {
                     items.set(i, ItemStack.EMPTY);
                     foundMatch = true;
-                    break;
                 }
             }
         }

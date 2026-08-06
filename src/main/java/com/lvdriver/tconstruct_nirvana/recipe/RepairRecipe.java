@@ -54,8 +54,9 @@ public class RepairRecipe extends CustomRecipe {
                 }
                 tool = slot;
             } else if (slot.getItem() instanceof SharpeningKit) {
-                // 堆叠磨刀石摊平为单发条目（与分散多槽摆法行为一致）
-                for (int n = 0; n < slot.getCount(); n++) {
+                // 堆叠磨刀石摊平为单发条目（copy 前读原 count，与分散多槽摆法行为一致）
+                int count = inv.getItem(i).getCount();
+                for (int n = 0; n < count; n++) {
                     input.add(slot.copy());
                 }
             } else {
