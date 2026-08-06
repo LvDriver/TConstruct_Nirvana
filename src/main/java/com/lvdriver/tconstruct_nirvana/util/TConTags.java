@@ -3,10 +3,12 @@ package com.lvdriver.tconstruct_nirvana.util;
 import com.lvdriver.tconstruct_nirvana.TConstructNirvana;
 import net.minecraft.resources.ResourceLocation;
 import net.minecraft.tags.BlockTags;
+import net.minecraft.tags.FluidTags;
 import net.minecraft.tags.ItemTags;
 import net.minecraft.tags.TagKey;
 import net.minecraft.world.item.Item;
 import net.minecraft.world.level.block.Block;
+import net.minecraft.world.level.material.Fluid;
 
 import java.util.List;
 
@@ -50,6 +52,15 @@ public final class TConTags {
 
     /** 全部工具部件（部件-模具关联的部件侧集合，供配方/附属 mod 使用）。 */
     public static final TagKey<Item> TOOL_PARTS = itemTag(TConstructNirvana.MODID, "tool_parts");
+
+    /**
+     * 流体 common tag（500mod 兼容，NeoForge 1.21.1 标准：与 {@code Tags.Fluids}
+     * 同风格，id 为 {@code c:<name>} 如 {@code c:molten_iron}，文件自动落
+     * {@code data/c/tags/fluid/}，供配方/附属 mod 引用）。
+     */
+    public static TagKey<Fluid> fluidTag(String path) {
+        return FluidTags.create(ResourceLocation.fromNamespaceAndPath("c", path));
+    }
 
     // 材料-物品关联自定义 tag（旧版 oredict 名无 c: 对应项时的 mod 命名空间方案，
     // DataGen 将原版物品加入；其他 mod 可自行加入同 tag 物品扩展匹配）

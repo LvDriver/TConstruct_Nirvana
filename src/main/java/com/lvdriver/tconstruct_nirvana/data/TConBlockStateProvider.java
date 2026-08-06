@@ -1,8 +1,10 @@
 package com.lvdriver.tconstruct_nirvana.data;
 
 import com.lvdriver.tconstruct_nirvana.block.ModBlocks;
+import com.lvdriver.tconstruct_nirvana.fluid.ModFluids;
 import net.minecraft.data.PackOutput;
 import net.neoforged.neoforge.client.model.generators.BlockStateProvider;
+import net.neoforged.neoforge.client.model.generators.ModelFile;
 import net.neoforged.neoforge.common.data.ExistingFileHelper;
 
 /**
@@ -40,5 +42,14 @@ public class TConBlockStateProvider extends BlockStateProvider {
                 models().cubeAll("tool_station", modLoc("block/tool_station")));
         simpleBlockWithItem(ModBlocks.TOOL_FORGE.get(),
                 models().cubeAll("tool_forge", modLoc("block/block_cobalt")));
+
+        // 流体方块：占位模型（无 elements，particle = 类别贴图；实际表面由
+        // LiquidBlockRenderer 按 IClientFluidTypeExtensions 的 still/flow 贴图渲染）
+        for (ModFluids.FluidEntry entry : ModFluids.FLUIDS_ALL) {
+            String name = entry.id().getPath();
+            ModelFile model = models().getBuilder("block/fluid/" + name)
+                    .texture("particle", entry.stillTexture());
+            simpleBlock(entry.block().get(), model);
+        }
     }
 }

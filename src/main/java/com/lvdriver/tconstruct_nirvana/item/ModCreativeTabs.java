@@ -2,6 +2,7 @@ package com.lvdriver.tconstruct_nirvana.item;
 
 import com.lvdriver.tconstruct_nirvana.TConstructNirvana;
 import com.lvdriver.tconstruct_nirvana.block.ModBlocks;
+import com.lvdriver.tconstruct_nirvana.fluid.ModFluids;
 import com.lvdriver.tconstruct_nirvana.item.part.ModToolParts;
 import com.lvdriver.tconstruct_nirvana.item.part.ToolPart;
 import com.lvdriver.tconstruct_nirvana.item.pattern.ModPatterns;
@@ -53,6 +54,11 @@ public final class ModCreativeTabs {
                 // 工具站/锻造厂（会话4.5b GUI）
                 output.accept(ModBlocks.TOOL_STATION.get());
                 output.accept(ModBlocks.TOOL_FORGE.get());
+
+                // 流体桶（1:1 旧版 FluidRegistry.addBucketForFluid 入创造页行为）
+                for (ModFluids.FluidEntry fluid : ModFluids.FLUIDS_ALL) {
+                    output.accept(fluid.bucket().get());
+                }
 
                 // 模具：空白 + 各部件形状（图案模具）
                 output.accept(new ItemStack(ModPatterns.PATTERN.get()));

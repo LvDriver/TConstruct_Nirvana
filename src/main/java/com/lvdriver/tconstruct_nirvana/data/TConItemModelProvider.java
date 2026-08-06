@@ -1,12 +1,15 @@
 package com.lvdriver.tconstruct_nirvana.data;
 
+import com.lvdriver.tconstruct_nirvana.fluid.ModFluids;
 import com.lvdriver.tconstruct_nirvana.item.ModItems;
 import com.lvdriver.tconstruct_nirvana.item.part.ModToolParts;
 import com.lvdriver.tconstruct_nirvana.item.pattern.ModPatterns;
 import com.lvdriver.tconstruct_nirvana.item.tool.ModTools;
 import net.minecraft.data.PackOutput;
 import net.minecraft.resources.ResourceLocation;
+import net.neoforged.neoforge.client.model.generators.ItemModelBuilder;
 import net.neoforged.neoforge.client.model.generators.ItemModelProvider;
+import net.neoforged.neoforge.client.model.generators.loaders.DynamicFluidContainerModelBuilder;
 import net.neoforged.neoforge.common.data.ExistingFileHelper;
 
 import java.util.LinkedHashMap;
@@ -75,6 +78,16 @@ public class TConItemModelProvider extends ItemModelProvider {
                 singleTexture(entry.name(), mcLoc("item/generated"), "layer0",
                         ResourceLocation.fromNamespaceAndPath(modid, texture));
             }
+        }
+
+        // 流体桶：neoforge:fluid_container 动态模型（桶身 + 流体层，按流体染色）
+        for (ModFluids.FluidEntry entry : ModFluids.FLUIDS_ALL) {
+            ItemModelBuilder builder = getBuilder(entry.bucket().getId().getPath())
+                    .parent(getExistingFile(mcLoc("item/generated")))
+                    .texture("layer0", mcLoc("item/bucket"));
+            builder.customLoader(DynamicFluidContainerModelBuilder::begin)
+                    .fluid(entry.still().get())
+                    .end();
         }
     }
 }

@@ -1,7 +1,11 @@
 package com.lvdriver.tconstruct_nirvana.api.registry;
 
+import com.lvdriver.tconstruct_nirvana.TConstructNirvana;
 import com.lvdriver.tconstruct_nirvana.material.Material;
+import net.minecraft.core.registries.BuiltInRegistries;
+import net.minecraft.resources.ResourceLocation;
 import net.minecraft.world.level.material.Fluid;
+import net.minecraft.world.level.material.Fluids;
 import net.neoforged.neoforge.fluids.FluidType;
 import net.neoforged.neoforge.registries.DeferredRegister;
 
@@ -38,4 +42,24 @@ public interface FluidRegistry {
      * 材料不存在时忽略并记日志；材料已有关联时覆盖。
      */
     Material associateFluid(String materialId, String fluidId);
+
+    /**
+     * 查询流体的熔点温度（存于 FluidType 属性，1:1 旧版 {@code Fluid.getTemperature}）。
+     * 未注册返回 -1。附属可用于冶炼判定（输入流体温 ≥ 熔点才可熔化）。
+     * <p>fluidId 可为本 mod 注册名（如 "molten_iron"，自动补 modid 前缀）
+     * 或完整 id（含命名空间，如 "minecraft:water"）；解析失败返回 -1。</p>
+     */
+    default int getTemperature(String fluidId) {
+        if (fluidId == null) {
+            return -1;
+        }
+        // 统一 tryParse：含冒号按完整 id，否则补 modid 前缀；非法输入返回 null → -1
+        ResourceLocation id = ResourceLocation.tryParse(
+                fluidId.contains(":") ? fluidId : TConstructNirvana.MODID + ":" + fluidId);
+        if (id == null) {
+            return -1;
+        }
+        Fluid fluid = BuiltInRegistries.FLUID.get(id);
+        return fluid != null && fluid != Fluids.EMPTY ? fluid.getFluidType().getTemperature() : -1;
+    }
 }

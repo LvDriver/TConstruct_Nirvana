@@ -2,6 +2,7 @@ package com.lvdriver.tconstruct_nirvana.recipe;
 
 import com.lvdriver.tconstruct_nirvana.TConstructNirvana;
 import net.minecraft.core.registries.Registries;
+import net.minecraft.resources.ResourceLocation;
 import net.minecraft.world.item.crafting.RecipeSerializer;
 import net.minecraft.world.item.crafting.RecipeType;
 import net.neoforged.bus.api.IEventBus;
@@ -11,8 +12,8 @@ import net.neoforged.neoforge.registries.DeferredRegister;
 /**
  * 配方类型/序列化器注册中枢（DeferredRegister）。
  *
- * <p>现有骨架 + 工具组装配方序列化器（{@link ToolBuildRecipeSerializer}）。
- * 冶炼/铸造/合金等自定义配方类型在"配方系统"会话中填充。</p>
+ * <p>工具组装配方（ToolBuildRecipeSerializer）、工具修复（RepairRecipeSerializer）、
+ * 合金配方（AlloyRecipeSerializer：输入流体 → 输出流体，冶炼炉会话接入触发点）。</p>
  */
 public final class ModRecipeTypes {
 
@@ -31,6 +32,15 @@ public final class ModRecipeTypes {
     /** 工具修复配方序列化器（工具 + 磨刀石 → 修复，会话4.5b）。 */
     public static final DeferredHolder<RecipeSerializer<?>, RepairRecipeSerializer> REPAIR_SERIALIZER =
             RECIPE_SERIALIZERS.register("repair", () -> RepairRecipeSerializer.INSTANCE);
+
+    /** 合金配方类型（输入流体 → 输出流体）。 */
+    public static final DeferredHolder<RecipeType<?>, RecipeType<AlloyRecipe>> ALLOY_TYPE =
+            RECIPE_TYPES.register("alloy", () -> RecipeType.simple(
+                    ResourceLocation.fromNamespaceAndPath(TConstructNirvana.MODID, "alloy")));
+
+    /** 合金配方序列化器。 */
+    public static final DeferredHolder<RecipeSerializer<?>, AlloyRecipeSerializer> ALLOY_SERIALIZER =
+            RECIPE_SERIALIZERS.register("alloy", () -> AlloyRecipeSerializer.INSTANCE);
 
     private ModRecipeTypes() {
     }

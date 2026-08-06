@@ -4,7 +4,7 @@
 > 目的：把"需要记住的事"从对话上下文搬到文件里，AI 按需读取，省 token、防遗忘。
 
 ## 项目状态
-- 当前阶段：会话4.5b 完成（ranged 完整化 + 材料修复配方 + 工具站/锻造厂 GUI）
+- 当前阶段：会话5 完成（金属流体 + 温度系统 + 合金系统，不含冶炼炉结构）
 - 最后更新：2026-08-06
 - 旧源码路径：`./TinkersAntique-1.12/`（已解压，匠魂怀古 1.12.2 源码）
 
@@ -20,7 +20,8 @@
 - [x] 会话4.5b：ranged 完整化（自定义弹射物实体/弩装填/拉弓动画）+ 完整修复机制（材料修复配方 + 磨刀石）+ 工具站/锻造厂 GUI（简化版，随工具组装）
 - [ ] 箭袋：旧版匠魂怀古无此物（全库 grep 确认），1:1 原则跳过；如后续用户要求可自创
 - [ ] 工具站 GUI 增强：Shift 快速移动/拆解/修饰符按钮/修复按钮（当前最小版：5 部件槽+结果槽）
-- [ ] 流体系统（熔融钴/阿迪特等，冶炼炉前置）
+- [x] 会话5：金属流体系统（26 流体注册 + 温度系统 + 合金配方 + c: tag）——熔炼/浇铸配方类型与冶炼炉事件触发点待冶炼炉会话
+- [ ] 熔炼/浇铸配方类型（MeltingRecipe/CastingRecipe 数据驱动版，熔炼炉会话接入）
 - [ ] needs_cobalt_tool 工具侧接线完善（数据驱动 level 判定已可用）+ sharpening_kit 部件注册
 - [ ] TConConfig 矿石生成开关接线（BiomeModifier 数据驱动限制）或移除
 - [ ] 确定 Mod 核心玩法（1:1 还原匠魂怀古，后续再调整/新增）
@@ -91,6 +92,12 @@
 | 2026-08-06 | 修复机制 1:1：磨刀石（cost=288，HEAD 材料）+ 工作台 RepairRecipe（工具+磨刀石，全消耗校验）+ TinkersItem.repair（144 换算、多材料×(1+(n-1)/9)、修饰符惩罚 0.95/0.9/0.85、修复递减下限 0.5） | 旧版工作台修复输入仅磨刀石（锭类材料走工具站修复按钮，后续会话） |
 | 2026-08-06 | 工具站/锻造厂 GUI 最小可用版：BlockToolTable + ToolTableBlockEntity（SimpleContainer 5 槽）+ TinkerStationMenu（5 部件槽+结果槽实时预览、取走即消耗）+ Screen（旧版 generic.png 背景）；锻造厂同逻辑 | ContainerToolStation 510 行完整版（Shift/拆解/修饰符/修复按钮）留待增强会话；客户端 Menu 空容器重建，槽内容服务端广播同步 |
 | 2026-08-06 | 箭袋不移植（旧版无此物，全库 grep 确认），devlog 待办标注；Bolt 伤害简化（旧版 Rapier.dealHybridDamage 混合伤害，本项目统一基类伤害） | 1:1 原则；差异记录防回归 |
+| 2026-08-06 | 流体注册：NeoForge 21.1.248 无 ForgeFlowingFluid/FluidBlock（1.20 类），改用 `BaseFlowingFluid`（Source/Flowing 嵌套类）+ 原版 `LiquidBlock`；注册顺序 FLUID_TYPES→FLUIDS→ITEMS(桶)→BLOCKS(方块)（BucketItem/LiquidBlock 构造需 Fluid 实例）；条目互相引用经 DeferredHolder 延迟解析，静态初始化顺序无关 | 1.21.1 Fluid API 全变；javap 反编译 neoforge-21.1.248-universal.jar 实证 |
+| 2026-08-06 | 流体 tag 命名 **c:<name>**（c:molten_iron 等，用户确认），非任务字面的 c:fluid/ 前缀：NeoForge 1.21.1 Tags.Fluids 全家族即 c:water/c:lava 风格，文件落 data/c/tags/fluid/*.json，500mod 互认最佳 | 实证：neoforge jar 内 data/c/tags/fluid/beetroot_soup.json ↔ Tags.Fluids.BEETROOT_SOUP="c:beetroot_soup"（tag path 不含 fluid/ 前缀，registry 目录自动加） |
+| 2026-08-06 | 合金配方 = 自定义 RecipeType（`tconstruct_nirvana:alloy`）+ RecipeSerializer（codec+streamCodec），输入用 `SizedFluidIngredient`（FLAT_CODEC，JSON `{"fluid":..,"amount":..}`），输出 `FluidStack`；匹配逻辑 1:1 旧版 AlloyRecipe.matches（ratio 次数）；isSpecial 防配方书渲染；10 条 1:1 自 registerAlloys（旧版集成条件默认满足全注册；obsidianAlloy 配置开关旧版默认 true，本版无条件注册） | 1.21.1 无流体 Ingredient（1.20），NeoForge 21.1 新增 FluidIngredient 体系 |
+| 2026-08-06 | 温度系统：熔点 1:1 自旧版 `Fluid.setTemperature` 写入 `FluidType.Properties.temperature`（iron 769/gold 532/cobalt 950/manyullyn 1000 等）；附属经 `FluidRegistry.getTemperature(fluidId)` 查询（default 方法，遵守稳定 API 承诺） | 匠魂 1.12 无显式流体温度概念，只有配方 temp 字段 + 加热结构；1.21.1 FluidType 自带 temperature 属性，正合熔点 |
+| 2026-08-06 | 材料↔流体关联 1:1 自旧版 MaterialIntegration.integrateFluid：14 金属材料（iron/pigiron/cobalt/ardite/manyullyn/knightslime/alubrass/alumite/copper/bronze/lead/silver/electrum/steel）经 Material.setFluid 关联；gold/tin/zinc/nickel/brass/aluminum 无本 mod 材料（旧版同） | 关联后材料可浇铸、流体可熔炼对应物品（冶炼炉会话接入） |
+| 2026-08-06 | 流体渲染：IClientFluidTypeExtensions（RegisterClientExtensionsEvent.registerFluidType）+ 旧版贴图 1:1（molten_metal/liquid_stone/liquid/liquid_slime 各 still+flow）+ FluidColored 染色（alpha 缺失补 0xFF）；流体方块模型 = 无 elements 占位（particle=类别贴图），表面由 LiquidBlockRenderer 按渲染属性绘制；桶模型用 `neoforge:fluid_container` loader（DynamicFluidContainerModelBuilder） | 21.1 无 "neoforge:fluid" 方块模型 loader（1.20 有）；桶 1:1 旧版 addBucketForFluid：1 堆叠 + craftRemainder 空桶 |
 
 ## 子系统清单
 > 2026-08-05 首次分析 `./TinkersAntique-1.12/src/main/java/slimeknights/tconstruct/`，顶层 8 个子包：common / library / tools / smeltery / world / shared / gadgets / plugin
@@ -163,8 +170,26 @@
 - 创造标签页 `output.accept(Block)` 在游戏内运行时才构建（runClient 才暴露），编译/DataGen 无法发现漏 BlockItem → GUI 会话后必须跑 runClient 冒烟
 - 1.21.1 `EntityType.Builder.build(String)` 需显式 id；`AbstractArrow.addAdditionalSaveData/readAdditionalSaveData` 是 public 非 protected；实体渲染器注册无 `RegisterRenderersEvent`（那是 1.20 的），用原版静态 `EntityRenderers.register` + FMLClientSetupEvent
 - 1.21.1 `TooltipContext` 是 `Item` 的内部类（子类可裸引用，不能写 `net.minecraft.world.item.TooltipContext`）；`com.mojang.math.Axis`（非 RotationAxis，那是 1.21.3+）
+- NeoForge 21.1.248 无 `ForgeFlowingFluid`/`FluidBlock`（1.20 类）→ 用 `net.neoforged.neoforge.fluids.BaseFlowingFluid`（Source/Flowing 嵌套类，Properties 构造 `(Supplier<FluidType>, Supplier<Fluid> still, Supplier<Fluid> flowing)` + `.bucket/.block/.explosionResistance`）+ 原版 `LiquidBlock`；`LiquidBlock` 构造签名是 `(FlowingFluid, Properties)` 非 `(Fluid, Properties)`，须强转
+- `FluidTagsProvider` 在 **`net.minecraft.data.tags`**（vanilla 包，NeoForge 只 patch 了 4 参构造），不在 `net.neoforged.neoforge.common.data`（那是 BlockTagsProvider 等）
+- 流体 common tag 的 TagKey **path 不带 "fluid/" 前缀**（如 `c:molten_iron`）：TagsProvider 自动按注册表目录（tags/fluid/）落文件；若写 `c:fluid/molten_iron` 会生成 `data/c/tags/fluid/fluid/molten_iron.json`（路径多一层）
+- `BucketItem` 1.21.1 只有 `(Fluid, Item.Properties)` 构造（无 Supplier 版）→ 桶必须在 FLUIDS 注册之后注册；`LanguageProvider.addItem` 只接受 `Supplier<? extends Item>`（传 DeferredItem，不能 `.get()`）
+- `BlockBehaviour` 在 `net.minecraft.world.level.block.state` 包（写错成 `block.BlockBehaviour` 编译报"程序包不存在"）
+- FluidType 默认翻译 key = `fluid_type.<modid>.<名>`（`Util.makeDescriptionId("fluid_type", key)`）；1.21.1 FluidType 渲染属性经 `RegisterClientExtensionsEvent.registerFluidType(IClientFluidTypeExtensions, FluidType...)`（MOD bus，仅客户端）
+- FluidIngredient 体系（1.21.1 新增）：`SizedFluidIngredient.FLAT_CODEC` JSON 为 `{"fluid":..,"amount":..}`/`{"tag":..,"amount":..}`；`FluidStack.CODEC` 输出 `{"id":..,"amount":..}`
 
 ## 会话记录
+### 2026-08-06 会话5：金属流体 + 温度系统 + 合金系统（完成）
+- 流体注册（fluid/ModFluids 重写）：26 种流体全注册——20 熔融金属（iron/gold/pigiron/cobalt/ardite/manyullyn/knightslime/alubrass/alumite/brass/copper/tin/bronze/zinc/lead/nickel/silver/electrum/steel/aluminum）+ 4 石头类（molten_stone/obsidian/clay/dirt）+ blood + purpleslime（合金输入支撑）；每流体 = FluidType（属性 1:1 旧版 TinkerFluids：金属 density 2000/viscosity 10000/light 10 + 各自温度/稀有度）+ BaseFlowingFluid.Source/Flowing + LiquidBlock + BucketItem；FluidEntry record 汇总全部条目（type/still/flowing/block/bucket/贴图/tint）；注册顺序 FLUID_TYPES→FLUIDS→ITEMS→BLOCKS
+- 温度系统：熔点 1:1 自旧版 setTemperature 写入 FluidType.Properties.temperature；附属 API `FluidRegistry.getTemperature(fluidId)`（default 方法，未注册返回 -1）
+- 合金系统（recipe/ 包）：AlloyRecipeInput（RecipeInput 包装流体列表）+ AlloyRecipe（matchesAmount 1:1 旧版 ratio 次数匹配，isSpecial）+ AlloyRecipeSerializer（codec=RecordCodecBuilder(SizedFluidIngredient.FLAT_CODEC.listOf + FluidStack.CODEC)，streamCodec 同构）+ AlloyRecipeBuilder（DataGen）；ModRecipeTypes 注册 alloy 类型/序列化器；TConRecipeProvider 生成 10 条 1:1 合金（obsidian/clay/knightslime/pigiron/manyullyn/bronze/electrum/alubrass/brass/alumite，含水+岩浆输入）
+- 流体 tag：TConTags.fluidTag + TConFluidTagsProvider（vanilla FluidTagsProvider），26 个 `c:molten_iron` 风格 tag（用户确认 NeoForge 标准）；DataGen：流体方块 blockstate+占位模型（particle=类别贴图）、桶模型（neoforge:fluid_container）、lang 26 流体+26 桶（en/zh）、创造页 26 桶
+- 材料关联：ModMaterials.registerFluidAssociations 14 金属材料 ↔ 熔融流体（1:1 旧版 MaterialIntegration.integrateFluid）
+- 客户端：TConFluidRenderProperties（IClientFluidTypeExtensions：still/flow 贴图 + tint）+ ModClientEvents RegisterClientExtensionsEvent 注册；旧版贴图 12 个复制（molten_metal/liquid/liquid_stone/liquid_slime 各 still+flow+mcmeta）
+- **验证**：`./gradlew check` BUILD SUCCESSFUL（3 轮编译修复）；`./gradlew runData` 通过（236 文件，合金 JSON/tag/模型/lang 逐项核对）；`./gradlew runClient` 冒烟（initialized → 资源加载 → 主菜单，无 ERROR）
+- 踩坑修复：LanguageProvider static 块插入破坏结构；BlockBehaviour 包路径（block.state）；LiquidBlock 需 FlowingFluid 强转；FluidTagsProvider 在 vanilla data.tags 包；tag path 多一层 fluid/（c:fluid/ 前缀错误，改 c:<name>）；addItem 只收 Supplier
+- 遗留：熔炼/浇铸配方类型（MeltingRecipe/CastingRecipe）与冶炼事件触发点（SmelteryEvent/MeltingEvent/CastingEvent API 已发布）待冶炼炉会话；emerald/diamond/glass/calcium/venom/milk/slime 系列流体未注册（非合金输入，冶炼炉会话补）；obsidianAlloy 配置开关未做（旧版默认 true，无条件注册）；合金 c:ingots tag 仍空（附属/物品注册后自动生效）
+- 下一步：冶炼炉多方块（含熔炼/浇铸配方接入）或工具站 GUI 增强
 ### 2026-08-06 会话4.5b：ranged 完整化 + 修复机制 + 工具站/锻造厂 GUI（完成）
 - 弹射物实体：`entity/` 包新建 `ModEntities`（arrow/bolt/shuriken 三实体 DeferredRegister，1:1 尺寸 0.5×0.5/0.3×0.1）+ `TinkerProjectileBase extends AbstractArrow`（1:1 伤害公式=(弹射物攻击+弓基础×power+bonusDamage)×damageModifier×power；反弹/消失；重力 Bolt 0.065/Shuriken 动态(tickCount/10×0.04)；阻力按旧版 getSlowdown 差值在 super.tick 后缩放；背包实际弹药栈结算+损坏伤害 1；NBT power/launching）+ TinkerArrow/TinkerBolt/TinkerShuriken
 - 客户端：`client/` 包新建，`TinkerProjectileRenderer`（物品模型渲染+ArrowRenderer 朝向+手里剑自旋），FMLClientSetupEvent 注册（1.21.1 无 RegisterRenderersEvent）；`ModClientEvents` 统一客户端注册

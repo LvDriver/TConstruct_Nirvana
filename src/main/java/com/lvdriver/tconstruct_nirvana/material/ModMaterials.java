@@ -108,6 +108,30 @@ public final class ModMaterials {
         registerProjectileMaterialStats();
         registerTraits();
         registerItemAssociations();
+        registerFluidAssociations();
+    }
+
+    /** 材料 ↔ 流体关联（1:1 自旧版 MaterialIntegration.integrateFluid：金属材料关联熔融流体，
+     * 关联后材料可浇铸、流体可熔炼对应物品，冶炼炉会话接入）。 */
+    private static void registerFluidAssociations() {
+        associateFluid(iron, "molten_iron");
+        associateFluid(pigiron, "molten_pigiron");
+        associateFluid(cobalt, "molten_cobalt");
+        associateFluid(ardite, "molten_ardite");
+        associateFluid(manyullyn, "molten_manyullyn");
+        associateFluid(knightslime, "molten_knightslime");
+        associateFluid(alubrass, "molten_alubrass");
+        associateFluid(alumite, "molten_alumite");
+        associateFluid(copper, "molten_copper");
+        associateFluid(bronze, "molten_bronze");
+        associateFluid(lead, "molten_lead");
+        associateFluid(silver, "molten_silver");
+        associateFluid(electrum, "molten_electrum");
+        associateFluid(steel, "molten_steel");
+    }
+
+    private static void associateFluid(Material material, String fluidId) {
+        material.setFluid(fluidId);
     }
 
     /** 可制作/可浇铸标记（1:1 自旧版 setupMaterials）。 */

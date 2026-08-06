@@ -49,6 +49,10 @@ public final class TConDataGen {
         generator.addProvider(event.includeServer(), new TConItemTagsProvider(
                 packOutput, event.getLookupProvider(), blockTags.contentsGetter(), modid, event.getExistingFileHelper()));
 
+        // 流体 Tag（c:<name> 如 c:molten_iron，合金/熔炼配方与附属 mod 使用）
+        generator.addProvider(event.includeServer(), new TConFluidTagsProvider(
+                packOutput, event.getLookupProvider(), modid, event.getExistingFileHelper()));
+
         // 方块战利品（掉落自身，1:1 旧版行为）
         generator.addProvider(event.includeServer(), new LootTableProvider(
                 packOutput, Collections.emptySet(),

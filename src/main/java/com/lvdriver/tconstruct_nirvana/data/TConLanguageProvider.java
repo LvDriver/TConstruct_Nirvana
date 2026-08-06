@@ -1,6 +1,7 @@
 package com.lvdriver.tconstruct_nirvana.data;
 
 import com.lvdriver.tconstruct_nirvana.block.ModBlocks;
+import com.lvdriver.tconstruct_nirvana.fluid.ModFluids;
 import com.lvdriver.tconstruct_nirvana.item.ModItems;
 import com.lvdriver.tconstruct_nirvana.item.part.ModToolParts;
 import com.lvdriver.tconstruct_nirvana.item.pattern.ModPatterns;
@@ -14,12 +15,45 @@ import java.util.Map;
  * 本地化文件生成（DataGen）。
  *
  * <p>提供 en_us 与 zh_cn 两种语言；材料名（material.*.name）在后续
- * 材料展示会话按需补齐全部条目。</p>
+ * 材料展示会话按需补齐全部条目。流体名 key 为
+ * {@code fluid_type.tconstruct_nirvana.<流体注册名>}（1.21.1 FluidType 默认翻译 key）。</p>
  */
 public class TConLanguageProvider extends LanguageProvider {
 
     /** 部件名：注册名 → (英文, 中文)。 */
     private static final Map<String, String[]> PART_NAMES = new LinkedHashMap<>();
+
+    /** 流体名：注册名 → (英文, 中文)。1:1 自旧版 lang（熔融金属/石头/血/史莱姆）。 */
+    private static final Map<String, String[]> FLUID_NAMES = new LinkedHashMap<>();
+
+    static {
+        FLUID_NAMES.put("molten_iron", new String[]{"Molten Iron", "熔融铁"});
+        FLUID_NAMES.put("molten_gold", new String[]{"Molten Gold", "熔融金"});
+        FLUID_NAMES.put("molten_pigiron", new String[]{"Molten Pig Iron", "熔融生铁"});
+        FLUID_NAMES.put("molten_cobalt", new String[]{"Molten Cobalt", "熔融钴"});
+        FLUID_NAMES.put("molten_ardite", new String[]{"Molten Ardite", "熔融阿迪特"});
+        FLUID_NAMES.put("molten_manyullyn", new String[]{"Molten Manyullyn", "熔融玛玉灵"});
+        FLUID_NAMES.put("molten_knightslime", new String[]{"Molten Knightslime", "熔融骑士史莱姆"});
+        FLUID_NAMES.put("molten_alubrass", new String[]{"Molten Alubrass", "熔融铝黄铜"});
+        FLUID_NAMES.put("molten_alumite", new String[]{"Molten Alumite", "熔融铝化钢"});
+        FLUID_NAMES.put("molten_brass", new String[]{"Molten Brass", "熔融黄铜"});
+        FLUID_NAMES.put("molten_copper", new String[]{"Molten Copper", "熔融铜"});
+        FLUID_NAMES.put("molten_tin", new String[]{"Molten Tin", "熔融锡"});
+        FLUID_NAMES.put("molten_bronze", new String[]{"Molten Bronze", "熔融青铜"});
+        FLUID_NAMES.put("molten_zinc", new String[]{"Molten Zinc", "熔融锌"});
+        FLUID_NAMES.put("molten_lead", new String[]{"Molten Lead", "熔融铅"});
+        FLUID_NAMES.put("molten_nickel", new String[]{"Molten Nickel", "熔融镍"});
+        FLUID_NAMES.put("molten_silver", new String[]{"Molten Silver", "熔融银"});
+        FLUID_NAMES.put("molten_electrum", new String[]{"Molten Electrum", "熔融琥珀金"});
+        FLUID_NAMES.put("molten_steel", new String[]{"Molten Steel", "熔融钢"});
+        FLUID_NAMES.put("molten_aluminum", new String[]{"Molten Aluminum", "熔融铝"});
+        FLUID_NAMES.put("molten_stone", new String[]{"Molten Stone", "熔融石头"});
+        FLUID_NAMES.put("molten_obsidian", new String[]{"Molten Obsidian", "熔融黑曜石"});
+        FLUID_NAMES.put("molten_clay", new String[]{"Molten Clay", "熔融粘土"});
+        FLUID_NAMES.put("molten_dirt", new String[]{"Molten Dirt", "熔融泥土"});
+        FLUID_NAMES.put("blood", new String[]{"Blood", "血"});
+        FLUID_NAMES.put("purpleslime", new String[]{"Purple Slime", "紫色史莱姆"});
+    }
 
     static {
         PART_NAMES.put("pick_head", new String[]{"Pickaxe Head", "镐头"});
@@ -75,6 +109,18 @@ public class TConLanguageProvider extends LanguageProvider {
         addItem(ModItems.ARDITE_INGOT, chinese ? "阿迪特锭" : "Ardite Ingot");
         addItem(ModItems.COBALT_NUGGET, chinese ? "钴粒" : "Cobalt Nugget");
         addItem(ModItems.ARDITE_NUGGET, chinese ? "阿迪特粒" : "Ardite Nugget");
+
+        // 流体（1:1 旧版 fluid.*.name；key = fluid_type.<modid>.<名>，1.21.1 FluidType 默认翻译 key）
+        for (Map.Entry<String, String[]> entry : FLUID_NAMES.entrySet()) {
+            add("fluid_type.tconstruct_nirvana." + entry.getKey(),
+                    chinese ? entry.getValue()[1] : entry.getValue()[0]);
+        }
+        // 桶（旧版无独立桶名，直接显示流体名）
+        for (ModFluids.FluidEntry fluid : ModFluids.FLUIDS_ALL) {
+            addItem(fluid.bucket(), chinese
+                    ? FLUID_NAMES.get(fluid.id().getPath())[1] + "桶"
+                    : FLUID_NAMES.get(fluid.id().getPath())[0] + " Bucket");
+        }
 
         // 工具部件
         for (Map.Entry<String, String[]> entry : PART_NAMES.entrySet()) {
