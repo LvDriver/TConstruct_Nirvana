@@ -1,5 +1,7 @@
 package com.lvdriver.tconstruct_nirvana.item.tool;
 
+import com.lvdriver.tconstruct_nirvana.api.event.ModifierTriggerEvent;
+import com.lvdriver.tconstruct_nirvana.api.event.ToolBuildEvent;
 import com.lvdriver.tconstruct_nirvana.data.ModDataComponents;
 import com.lvdriver.tconstruct_nirvana.data.ModifierData;
 import com.lvdriver.tconstruct_nirvana.data.ToolData;
@@ -24,6 +26,7 @@ import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.item.TooltipFlag;
 import net.minecraft.world.level.Level;
 import net.minecraft.world.level.block.state.BlockState;
+import net.neoforged.neoforge.common.NeoForge;
 
 import java.util.ArrayList;
 import java.util.LinkedHashSet;
@@ -111,6 +114,12 @@ public abstract class TinkerToolItem extends Item {
         tool.set(ModDataComponents.BASE_MATERIALS, materials.stream().map(m -> m.identifier).toList());
         // 基础属性（旧版 TOOL_DATA + TOOL_DATA_ORIG）
         ToolData toolData = buildTagData(materials);
+        // API: 工具组装事件（附属可修改基础属性/取消组装，NeoForge.EVENT_BUS）
+        ToolBuildEvent buildEvent = new ToolBuildEvent(this, tool, materials, toolData);
+        if (NeoForge.EVENT_BUS.post(buildEvent).isCanceled()) {
+            return ItemStack.EMPTY;
+        }
+        toolData = buildEvent.getToolData();
         ToolHelper.setToolData(tool, toolData);
         tool.set(ModDataComponents.TOOL_DATA_ORIG, toolData);
         tool.set(ModDataComponents.BASE_MODIFIERS, List.of());
@@ -238,6 +247,9 @@ public abstract class TinkerToolItem extends Item {
         } else {
             reduceDurabilityOnHit(stack, null, 1f);
         }
+        // API: 修饰符触发事件（攻击命中，只读监听）
+        NeoForge.EVENT_BUS.post(new ModifierTriggerEvent(
+                ModifierTriggerEvent.Trigger.ATTACK, stack, attacker, ToolHelper.getActiveModifiers(stack)));
         return true;
     }
 
@@ -270,6 +282,9 @@ public abstract class TinkerToolItem extends Item {
             modifier.afterBlockBreak(stack, world, state, pos, player, wasEffective);
         }
         ToolHelper.damageTool(stack, damage, player);
+        // API: 修饰符触发事件（方块破坏后，只读监听）
+        NeoForge.EVENT_BUS.post(new ModifierTriggerEvent(
+                ModifierTriggerEvent.Trigger.BLOCK_BREAK, stack, player, ToolHelper.getActiveModifiers(stack)));
     }
 
     /* ---------- 物品 tick（1.21.1 inventoryTick 替代旧版 onUpdate） ---------- */

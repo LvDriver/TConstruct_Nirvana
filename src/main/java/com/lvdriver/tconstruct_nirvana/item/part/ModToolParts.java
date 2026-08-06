@@ -101,4 +101,22 @@ public final class ModToolParts {
         // shard 已在静态块登记进 PARTS，此处直接返回
         return Collections.unmodifiableList(new java.util.ArrayList<>(PARTS.values()));
     }
+
+    /* ---------- 附属扩展入口（经 TConstructNirvanaAPI.toolParts() 调用） ---------- */
+
+    /**
+     * 用本 mod 物品注册表注册新部件（附属扩展，形状标识 = 部件注册名）。
+     * 须在物品注册事件（RegisterEvent）之前调用，如附属 Mod 构造器。
+     */
+    public static DeferredItem<ToolPart> registerPart(String name, int cost, String... statTypes) {
+        return part(name, cost, statTypes);
+    }
+
+    /**
+     * 登记附属自行注册的部件物品（附属扩展，可随时调用）。
+     * 建议 shapeId 与物品注册名一致；模具形状即部件注册名，登记后自动可用。
+     */
+    public static void registerPart(ResourceLocation shapeId, DeferredItem<? extends ToolPart> part) {
+        PARTS.put(shapeId, part);
+    }
 }

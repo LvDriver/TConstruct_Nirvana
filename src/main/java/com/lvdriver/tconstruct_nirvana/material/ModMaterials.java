@@ -356,4 +356,26 @@ public final class ModMaterials {
         }
         return null;
     }
+
+    /**
+     * 附属扩展入口：登记新材料（经 {@code TConstructNirvanaAPI.materials()} 调用）。
+     *
+     * <p>identifier 已存在时替换原条目（保持注册顺序），与旧版 {@code safeAdd}
+     * 语义一致；未存在则追加到末尾。属性/特质挂载在登记后随时可调。</p>
+     */
+    public static Material registerMaterial(Material material) {
+        int index = -1;
+        for (int i = 0; i < materials.size(); i++) {
+            if (materials.get(i).identifier.equals(material.identifier)) {
+                index = i;
+                break;
+            }
+        }
+        if (index >= 0) {
+            materials.set(index, material);
+        } else {
+            materials.add(material);
+        }
+        return material;
+    }
 }

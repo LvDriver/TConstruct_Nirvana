@@ -4,7 +4,7 @@
 > 目的：把"需要记住的事"从对话上下文搬到文件里，AI 按需读取，省 token、防遗忘。
 
 ## 项目状态
-- 当前阶段：会话4 完成（工具组装系统 + 修饰符系统 + 材料特质系统）
+- 当前阶段：会话4.5 完成（附属扩展 API：公开注册表 + 事件钩子）
 - 最后更新：2026-08-06
 - 旧源码路径：`./TinkersAntique-1.12/`（已解压，匠魂怀古 1.12.2 源码）
 
@@ -15,7 +15,7 @@
 - [x] 配置 DataGen 并跑通 `runData`（100 个数据文件已生成）
 - [x] 会话3：工具部件系统（ToolPart + PartMaterialType + 部件数据 DataComponent + 模具 Pattern/Cast）
 - [ ] 会话3.5：RecipeMatch→ItemTag 材料-物品关联体系（材料↔物品 addItem/addCommonItems 仍为遗留；部件已用 DataComponent 直存材料标识绕过）
-- [ ] 会话4.5：附属扩展 API（公开注册表 + 事件钩子）
+- [x] 会话4.5：附属扩展 API（公开注册表 + 事件钩子）
 - [x] 会话4：工具组装系统（21 工具注册 + ToolData 公式 + 组装配方）+ 修饰符系统（26 修饰符）+ Trait 系统（53 特质）
 - [ ] 会话4.5b：ranged 完整化（自定义弹射物实体/拉弓 GUI/弩装填/箭袋）+ 完整修复机制（材料修复配方）+ 工具站/锻造厂 GUI（随工具组装）
 - [ ] 流体系统（熔融钴/阿迪特等，冶炼炉前置）
@@ -76,6 +76,11 @@
 | 2026-08-06 | security_review 遗留（后续会话）：ModCreative 无限耐久/无限槽须在应用入口接入时加创造/命令限定；silktouch 与 autosmelt/blasting 互斥 aspect；战牌格挡任意伤害源减半无冷却 | 现均不可达/低危，记录待办防回归 |
 | 2026-08-06 | AOE 1:1 细化（review 三轮闭环）：强度比过滤 `额外硬度/主硬度>10` 拒绝（防钴锤瞬破黑曜石）；俯视分轴（俯角>45° → width×height 水平面 + Y 向 depth 层，含 origin 层）；`damageTool` 早退（amount<=0||broken）+ maxDamage clamp | 旧版 canBreakExtraBlock/calcAOEBlocks 语义逐行对齐 |
 | 2026-08-06 | afterHit 钩子改由 `LivingDamageEvent.Post` 驱动（damageDealt = newDamage - blockedDamage），hurtEnemy 只留耐久/饥饿 | 1.21.1 无攻击结算后回调可拿实际伤害；necrotic 吸血因此拿到真实值；横扫副目标也触发 afterHit（与旧版差异已记录） |
+| 2026-08-06 | 附属 API 分层：`api` 包只放接口/事件类/门面入口（TConstructNirvanaAPI 返回 5 个 Registry 接口），实现类放 `impl` 包，附属只依赖 api 类型；Modifiers.register 改 public 开放 | 稳定 API：接口发布后不改签名，实现可自由重构；附属 compileOnly 引用完整 jar（impl 类同 jar 内） |
+| 2026-08-06 | 附属部件注册走 DeferredItem：`registerPart(ResourceLocation, DeferredItem<? extends ToolPart>)`，PARTS 结构不动；DeferredItem.createItem 在 21.1 无 supplier 版（仅按 key 懒查找）故不适用 | 附属用自己 DeferredRegister 注册物品天然返回 DeferredItem；getAllParts 的 List<DeferredItem> 类型被 DataGen/创造标签页依赖，不能改 |
+| 2026-08-06 | 事件钩子：ToolBuildEvent（buildItem 组装时触发，可改 ToolData/取消）+ ModifierTriggerEvent（ATTACK/BLOCK_BREAK，只读监听）+ SmelteryEvent/MeltingEvent/CastingEvent（冶炼炉会话接入触发点，API 先行锁定形状） | 全部挂 NeoForge.EVENT_BUS，附属可用 EventPriority；冶炼炉未实现故事件暂无触发点，javadoc 已注明 |
+| 2026-08-06 | 模具形状扩展 = 注册部件即自动可用（形状即部件注册名），PatternRegistry 只提供物品 accessor + isKnownShape 查询 | 1:1 旧版 Pattern 形状来自 part 注册表，无需独立模具注册表 |
+| 2026-08-06 | 附属 API 验证：模拟附属源码（仅引用 api 公共类型）编译通过后删除；src/test 无 Minecraft classpath（moddev 不给 test 源集挂 mc 依赖） | 验收"API 可被外部引用"；冒烟验证不留测试类，保持最小 diff |
 
 ## 子系统清单
 > 2026-08-05 首次分析 `./TinkersAntique-1.12/src/main/java/slimeknights/tconstruct/`，顶层 8 个子包：common / library / tools / smeltery / world / shared / gadgets / plugin
@@ -112,6 +117,7 @@
 
 ## 已知 Bug
 - （无功能性 Bug；以下为已知限制/遗留，详见会话记录与关键决策）
+- 冶炼事件类（SmelteryEvent/MeltingEvent/CastingEvent）已发布但无触发点，待冶炼炉会话接入
 - `needs_cobalt_tool`：钴/阿迪特矿需钴级工具采掘（1:1 还原旧版采掘等级 4），当前尚无钴工具 → 矿石暂无法正常采掘掉落，待工具会话接线
 - TConConfig 的 generateCobaltOre / generateArditeOre 开关未接线（BiomeModifier 为数据驱动，无法读运行时 config）
 - 材料特质为字符串占位（如 "momentum"），无实际游戏效果，待修饰符会话实现 Trait 类
@@ -136,6 +142,15 @@
 - 静态块中前向引用后声明的静态字段是编译错误（非法前向引用）→ 把被引用的 Map 声明移到类顶部
 
 ## 会话记录
+### 2026-08-06 会话4.5：附属扩展 API（完成）
+- api 包（只放接口/事件/门面）：`TConstructNirvanaAPI` 门面 + 5 个 Registry 接口（MaterialRegistry / ModifierRegistry / ToolPartRegistry / PatternRegistry / FluidRegistry）+ 5 个事件类（ToolBuildEvent / ModifierTriggerEvent / SmelteryEvent 基类 + MeltingEvent / CastingEvent）
+- impl 包：5 个 RegistryImpl 实现类（委托 ModMaterials / Modifiers / ModToolParts / ModPatterns / ModFluids），附属不直接引用
+- 开放入口：ModMaterials.registerMaterial（去重替换）、Modifiers.register（改 public）、ModToolParts.registerPart ×2（本 mod 注册表注册 / 登记附属 DeferredItem）
+- 事件触发点接入：TinkerToolItem.buildItem → ToolBuildEvent（可改 ToolData/取消）；hurtEnemy → ModifierTriggerEvent(ATTACK)；afterBlockBreak → ModifierTriggerEvent(BLOCK_BREAK)；冶炼事件 API 先行无触发点（冶炼炉会话接入）
+- build.gradle：java-library 已启用（api configuration 可用），publishing 加 artifactId=mod_id；附属 compileOnly 引用 maven-publish 产物
+- **验证全通过**：`./gradlew check`（BUILD SUCCESSFUL）、`./gradlew build`（BUILD SUCCESSFUL，jar 含 api/* 11 类 + impl/* 5 类）、模拟附属源码编译通过（临时类已删）
+- 踩坑：DeferredItem.createItem 在 21.1 无 supplier 版（仅按 key 懒查找）；src/test 无 Minecraft classpath（冒烟验证改放 main 临时类）
+- 遗留：冶炼事件触发点待冶炼炉会话；附属扩展的 DataGen（lang/tag）附属自理
 ### 2026-08-06 会话1：脚手架搭建（完成）
 - 按官方 MDK `archive/1.21-mdg` 分支模板创建工程：build.gradle / settings.gradle / gradle.properties / src/main/templates/META-INF/neoforge.mods.toml（含 JEI 可选依赖）/ pack.mcmeta / .gitignore
 - 主类 `TConstructNirvana`（@Mod），构造器挂接 7 个 DeferredRegister 注册类 + 注册 COMMON 配置

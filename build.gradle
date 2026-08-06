@@ -168,9 +168,13 @@ sourceSets.main.resources.srcDir generateModMetadata
 neoForge.ideSyncTask generateModMetadata
 
 // Example configuration to allow publishing using the maven-publish plugin
+// 本 mod 的 api 包（com.lvdriver.tconstruct_nirvana.api.*）对附属 mod 开放：
+// 附属经 maven-publish 产物以 compileOnly 依赖本 jar 即可引用（Java library 的
+// api configuration 由 java-library 插件提供，当前无外部依赖需要以 api 声明泄漏）。
 publishing {
     publications {
         register('mavenJava', MavenPublication) {
+            artifactId = mod_id
             from components.java
         }
     }
