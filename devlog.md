@@ -133,6 +133,7 @@
 - 材料特质为字符串占位（如 "momentum"），无实际游戏效果，待修饰符会话实现 Trait 类
 - bolt_core 为简化单材料版（旧版双材料：核心+头，Bolt 组装时头部复用核心材料），完整双材料逻辑后续补
 - 弹射物 trait 钩子（旧版 IProjectileTrait.onLaunch/onProjectileUpdate/onMovement/afterHit）未接入，弹射物修饰符交互留待后续会话
+- 弩 loaded 状态经物品 DataComponent 同步（同旧版 NBT 同步方式）：装填完成瞬间 1 tick 内立即右键可能触发客户端蓄力分支动画（服务端正常发射），功能不受影响
 - Bolt 伤害为基类统一公式（旧版 Rapier.dealHybridDamage 混合伤害），差异已记录
 - 工具站 GUI 为最小可用版：无 Shift 快速移动/拆解/修饰符/修复按钮；破坏方块不掉落容器内容
 - 弹射物渲染为物品模型占位（2D 纸片），完整 3D 弹射物模型后续会话

@@ -37,7 +37,13 @@ public class TinkerStationMenu extends AbstractContainerMenu {
         super(ModMenuTypes.TOOL_STATION.get(), id);
         this.parts = parts;
         this.access = access;
-        parts.addListener(this::slotsChanged);
+        // 部件变化 → 重算结果 + 标记方块实体脏（服务器保存时部件槽不丢失）
+        parts.addListener(container -> {
+            this.slotsChanged(container);
+            if (blockEntity != null) {
+                blockEntity.setChanged();
+            }
+        });
 
         // 5 个部件槽（横排）
         for (int i = 0; i < PART_SLOTS; i++) {

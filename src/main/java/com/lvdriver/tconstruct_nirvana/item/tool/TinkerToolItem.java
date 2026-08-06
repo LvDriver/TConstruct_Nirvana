@@ -464,7 +464,7 @@ public abstract class TinkerToolItem extends Item {
      * 修饰符数量惩罚（1/2/3+ → 0.95/0.9/0.85）；修复次数收益递减（下限 0.5）。
      */
     protected int calculateRepair(ItemStack tool, int amount) {
-        float origDur = ToolHelper.getOriginalToolData(tool).durability();
+        float origDur = Math.max(1f, ToolHelper.getOriginalToolData(tool).durability());
         float actualDur = ToolHelper.getDurabilityStat(tool);
         // 计算改变总耐久的修饰符（如钻石）不应惩罚玩家：系数 = 当前/原始
         float durabilityFactor = actualDur / origDur;
