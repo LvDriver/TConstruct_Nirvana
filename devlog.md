@@ -4,17 +4,24 @@
 > 目的：把"需要记住的事"从对话上下文搬到文件里，AI 按需读取，省 token、防遗忘。
 
 ## 项目状态
-- 当前阶段：脚手架已搭建（NeoForge 21.1.248 MDK 工程，build/runData/runClient 均验证通过）
-- 最后更新：2026-08-05
+- 当前阶段：会话2 完成（材料定义 + 矿物/金属物品 + 下界矿石生成 + 创造标签页）
+- 最后更新：2026-08-06
 - 旧源码路径：`./TinkersAntique-1.12/`（已解压，匠魂怀古 1.12.2 源码）
 
 ## 待办（按优先级）
 - [x] 分析匠魂怀古源码模块结构，列出要移植的子系统清单
 - [x] 创建 NeoForge 1.21.1 MDK 工程（版本对齐：NeoForge 21.1.248 / Java 21 / Gradle 8.14.2）
+- [x] 会话2：材料与矿物系统（材料定义 + 钴/阿迪特矿 + 锭粒 + 世界生成 BiomeModifier + TCon 创造标签页）
+- [x] 配置 DataGen 并跑通 `runData`（46 个数据文件已生成）
+- [ ] 会话3：RecipeMatch→ItemTag 材料-物品关联体系（材料/修饰符全局地基，优先）
+- [ ] 会话3：工具部件系统（ToolPart + PartMaterialType + 部件数据 DataComponent）
+- [ ] Trait/Modifier 体系（40 材料特质字符串占位 → 实际类，60+ 类）
+- [ ] 流体系统（熔融钴/阿迪特等，冶炼炉前置）
+- [ ] needs_cobalt_tool 工具侧接线（钴镐等）
+- [ ] TConConfig 矿石生成开关接线（BiomeModifier 数据驱动限制）或移除
 - [ ] 确定 Mod 核心玩法（1:1 还原匠魂怀古，后续再调整/新增）
-- [ ] 会话2：材料与矿物系统（材料定义 + 钴/阿迪特矿 + 锭粒 + 世界生成 BiomeModifier + TCon 创造标签页）
 - [ ] 定义注册清单：物品 / 方块 / 流体 / 实体 / 配方类型等
-- [ ] 配置 DataGen 并跑通 `runData`
+- [ ] 冶炼炉多方块（后期）
 
 ## 关键决策
 | 日期 | 决策 | 原因 |
@@ -38,6 +45,14 @@
 | 2026-08-05 | 网络环境特殊：services.gradle.org、plugins.gradle.org、mavenCentral 均不可达；Gradle 发行版走腾讯镜像，maven 仓库走腾讯 nexus maven-public 兜底 | 国内网络；本地已有 JDK 21，故移除官方 MDK 的 foojay toolchain 插件 |
 | 2026-08-05 | Parchment 官方仓库 maven.parchmentmc.org 已加入 build.gradle repositories（重定向到 ldtteam.jfrog.io/GCS，不稳定） | 兜底下载源 |
 | 2026-08-05 | 按子系统拆分 Reasonix 会话，串行推进 | 避免上下文膨胀导致缓存失效和代码不一致 |
+| 2026-08-06 | 材料系统落在新包 `material/`（Material + 8 类 stats record + ModMaterials 静态注册），不建 registry | 材料是纯数据定义，无需注册表；部件/物品才需要 DeferredRegister |
+| 2026-08-06 | 材料属性数据 1:1 移植自 `tools/TinkerMaterials.java`（40 材料全量）；特质先以字符串标识占位（如 "momentum"/"magnetic1"），Trait 实现留待修饰符会话 | 旧版 addTrait 依赖 ITrait 类（60+ 类），本会话不阻塞，数据先落 |
+| 2026-08-06 | 材料↔物品关联（addItem/addCommonItems/representativeItem，旧 RecipeMatch 体系）暂不移植，留待 RecipeMatch→ItemTag 会话 | 依赖 Mantle RecipeMatch，需按 1.21 Tag 体系重写 |
+| 2026-08-06 | 钴/阿迪特矿 1:1 还原：硬度 10、采掘等级 4（COBALT）→ 自定义 tag `tconstruct_nirvana:needs_cobalt_tool`；金属块硬度 5、任意镐可采 | 1.21 采掘等级由 tag 体系表达；needs_cobalt_tool 的工具侧接线在工具会话 |
+| 2026-08-06 | 矿物词典映射：oreCobalt→c:ores/cobalt、ingotCobalt→c:ingots/cobalt、blockCobalt→c:storage_blocks/cobalt 等（c: 前缀 common tag） | 500mod 整合包兼容（JEI/其他 mod 矿物词典互通） |
+| 2026-08-06 | 信标基座用 `minecraft:beacon_base_blocks` tag（1.21.1 已移除 Block#isBeaconBase） | 1.21 信标基座判定改为 tag（BeaconBlockEntity 硬编码检查） |
+| 2026-08-06 | 世界生成 1:1：每区块 20 矿脉（旧 rate=20）、size 5、替换 netherrack、Y 0~128（旧两段随机合并近似均匀）、BiomeModifier `add_features` + `#minecraft:is_nether` + underground_ores | BiomeModifier JSON 手写 provider（1.21.1 无 BiomeModifiersBuilder） |
+| 2026-08-06 | TConConfig 的 generateCobaltOre/generateArditeOre 开关暂不接线（BiomeModifier 是数据驱动，无法读运行时 config） | 待后续会话用数据条件/删除处理 |
 
 ## 子系统清单
 > 2026-08-05 首次分析 `./TinkersAntique-1.12/src/main/java/slimeknights/tconstruct/`，顶层 8 个子包：common / library / tools / smeltery / world / shared / gadgets / plugin
@@ -73,11 +88,19 @@
 - 材料与修饰符的 RecipeMatch 体系是全局地基（Material 和 Modifier 都继承它），优先重写
 
 ## 已知 Bug
-- （无）
+- （无功能性 Bug；以下为已知限制/遗留，详见会话记录与关键决策）
+- `needs_cobalt_tool`：钴/阿迪特矿需钴级工具采掘（1:1 还原旧版采掘等级 4），当前尚无钴工具 → 矿石暂无法正常采掘掉落，待工具会话接线
+- TConConfig 的 generateCobaltOre / generateArditeOre 开关未接线（BiomeModifier 为数据驱动，无法读运行时 config）
+- 材料特质为字符串占位（如 "momentum"），无实际游戏效果，待修饰符会话实现 Trait 类
 
 ## 已踩过的坑（随开发补充）
 - `.m2` 本地 Maven 仓库（`C:\Users\<user>\.m2\repository`）中曾有损坏的 parchment zip（25KB，正常 889KB），因 `mavenLocal()` 排仓库首位被优先选中，导致 jst 报 `ZipException: zip END header not found`、`createMinecraftArtifacts` 失败 → 删掉 `.m2/repository/org/parchmentmc` 后恢复（gradle modules-2 缓存有完好副本）
 - services.gradle.org 不可达时，`gradle/wrapper/gradle-wrapper.properties` 的 `distributionUrl` 已指向腾讯镜像（`mirrors.cloud.tencent.com/gradle/`），`networkTimeout` 已调至 60000
+- 1.21.1 类名/包与 1.20 不同：`BootstrapContext`（1.20 误拼 BootstapContext）、`RegistrySetBuilder` 在 `net.minecraft.core`、`BlockLootSubProvider` 在 `net.minecraft.data.loot`（不在 packs）、无 `BiomeModifiersBuilder`、`BlockTags` 无 NETHERRACK 常量（用 `TagKey.create(Registries.BLOCK, mc:netherrack)`）
+- `BlockLootSubProvider` 的 `getKnownBlocks()` 默认遍历全注册表（含 vanilla 方块）会报 `Missing loottable 'minecraft:blocks/stone'` → 必须 override 只返回本 mod 方块
+- 物品模型贴图按注册名查找（`item/cobalt_ingot` → `textures/item/cobalt_ingot.png`），旧版 `ingot_cobalt.png` 命名不匹配会报 `Texture ... does not exist` → 贴图按注册名重命名
+- 1.21.1 移除 `Block#isBeaconBase`，信标基座改 `minecraft:beacon_base_blocks` tag
+- 旧版下界矿石贴图是 `nether_ore_cobalt/ardite`（非 ore_cobalt），1:1 沿用
 
 ## 会话记录
 ### 2026-08-06 会话1：脚手架搭建（完成）
@@ -100,3 +123,19 @@
 - 全库 grep 统计 Mantle 依赖：约 60 个类、380 处引用，核心是 pulsar / RecipeMatch / network / inventory-gui / block / tileentity / multiblock / client book-model
 - 关键结论：RecipeMatch 体系是全局地基（Material、Modifier 都继承它），优先重写；工具数据全存 NBT 需全改 DataComponent；1.12 无显式流体温度概念，只有配方 temp 熔点字段
 - 下一步：创建 NeoForge 1.21.1 MDK 工程
+
+### 2026-08-06 会话2：材料定义与矿物/金属物品（完成）
+- 材料系统：新包 `material/`，Material 类（VALUE 常量/颜色/craftable+castable/属性 Map/特质字符串占位）+ 8 类 MaterialStats record（Head/Handle/Extra/Bow/BowString/ArrowShaft/Fletching/Projectile）+ MaterialTypes + ModMaterials 静态注册 40 材料（属性数值 1:1 自 tools/TinkerMaterials.java，含弓/箭杆/箭羽数据）；TConStats 便捷方法 + util/HarvestLevels 常量
+- 矿物与金属：cobalt_ore/ardite_ore（硬度 10、采掘等级 4→needs_cobalt_tool tag）+ cobalt_block/ardite_block（硬度 5、信标基座 tag）+ 钴/阿迪特锭粒 4 件，全部 DeferredRegister；矿物词典等价 tag（c:ores/*、c:ingots/*、c:nuggets/*、c:storage_blocks/*）DataGen 生成
+- 世界生成：configured feature（size 5、替换 #minecraft:netherrack）+ placed feature（count 20、in_square、uniform Y0-128、biome）+ BiomeModifier（add_features、#minecraft:is_nether、underground_ores）全部 DataGen 输出 JSON，参数 1:1 自 NetherOreGenerator/Config
+- 创造标签页：TCon 主标签页（icon=钴锭）放入 8 个物品
+- 资源：旧版贴图 9 张复制（nether_ore_cobalt/ardite、block_cobalt/ardite(+top)、锭粒贴图重命名为注册名）；模型/blockstate/loot/lang（en_us+zh_cn）全部 DataGen
+- **验证全通过**：`./gradlew build`（BUILD SUCCESSFUL）、`./gradlew runData`（生成 46 个数据文件，含 worldgen/loot/tags/lang）、`./gradlew runClient`（tconstruct_nirvana initialized → 资源加载无错误 → 主菜单）
+- 遗留：材料↔物品关联（RecipeMatch→ItemTag）与 Trait 类留待后续会话；TConConfig 矿石开关未接线（BiomeModifier 数据驱动）；needs_cobalt_tool 工具侧接线待工具会话
+- 下一步：会话3（待定：RecipeMatch 体系 / 工具部件 / 流体）
+
+### 2026-08-06 会话2 收工
+- `./gradlew build` 确认通过（BUILD SUCCESSFUL）
+- devlog 收工更新：待办补充会话3 及后续待办；已知 Bug 记录 3 条遗留限制
+- Git 存档并 push 至 GitHub（origin: https://github.com/LvDriver/TConstruct_Nirvana.git）
+- 下一会话建议：会话3 = RecipeMatch→ItemTag 材料-物品关联体系 + 工具部件系统（材料/修饰符全局地基，先铺）

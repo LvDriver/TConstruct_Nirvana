@@ -7,6 +7,7 @@ import com.lvdriver.tconstruct_nirvana.data.ModDataComponents;
 import com.lvdriver.tconstruct_nirvana.fluid.ModFluids;
 import com.lvdriver.tconstruct_nirvana.item.ModCreativeTabs;
 import com.lvdriver.tconstruct_nirvana.item.ModItems;
+import com.lvdriver.tconstruct_nirvana.material.ModMaterials;
 import com.lvdriver.tconstruct_nirvana.recipe.ModRecipeTypes;
 import net.neoforged.bus.api.IEventBus;
 import net.neoforged.fml.ModContainer;
@@ -36,6 +37,9 @@ public class TConstructNirvana {
         ModRecipeTypes.register(modEventBus);
         ModDataComponents.register(modEventBus);
         ModCreativeTabs.register(modEventBus);
+
+        // 材料系统：静态注册全部材料与属性数据（1:1 自 Tinkers' Antique）
+        ModMaterials.init();
 
         // 配置文件（矿物生成开关等）
         modContainer.registerConfig(ModConfig.Type.COMMON, TConConfig.SPEC);
