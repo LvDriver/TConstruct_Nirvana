@@ -6,7 +6,10 @@ import com.lvdriver.tconstruct_nirvana.data.ModDataComponents;
 import com.lvdriver.tconstruct_nirvana.data.ModifierData;
 import com.lvdriver.tconstruct_nirvana.data.ToolData;
 import com.lvdriver.tconstruct_nirvana.item.part.PartMaterialType;
+import com.lvdriver.tconstruct_nirvana.item.part.SharpeningKit;
+import com.lvdriver.tconstruct_nirvana.material.HeadMaterialStats;
 import com.lvdriver.tconstruct_nirvana.material.Material;
+import com.lvdriver.tconstruct_nirvana.material.MaterialTypes;
 import com.lvdriver.tconstruct_nirvana.modifier.Modifier;
 import com.lvdriver.tconstruct_nirvana.modifier.Modifiers;
 import com.lvdriver.tconstruct_nirvana.trait.Trait;
@@ -343,6 +346,151 @@ public abstract class TinkerToolItem extends Item {
     /** 修复量倍率（旧版 getRepairModifierForPart）。 */
     public float getRepairModifierForPart(int index) {
         return 1f;
+    }
+
+    /* ---------- 修复（1:1 旧版 TinkersItem.repair，工作台 RepairRecipe 调用） ---------- */
+
+    /**
+     * 用磨刀石（SharpeningKit）修复工具（1:1 旧版 repair 简化版）。
+     * 每个修复部件（{@link #getRepairParts()}）的材料需要一个同材料磨刀石；
+     * 输入必须全部被消耗，否则视为无效配方（防白嫖）。
+     *
+     * @return 修复后的工具栈；无效输入返回 {@link ItemStack#EMPTY}
+     */
+    public ItemStack repair(ItemStack repairable, List<ItemStack> repairItems) {
+        if (!repairable.isDamaged() && !ToolHelper.isBroken(repairable)) {
+            // 无损伤且未损坏 —— 无需修复
+            return ItemStack.EMPTY;
+        }
+        List<Material> materials = ToolHelper.getMaterials(repairable);
+        if (materials.isEmpty()) {
+            return ItemStack.EMPTY;
+        }
+
+        // 第一遍（模拟）：检查每个修复部件的材料是否有对应磨刀石，且输入全部可消耗
+        List<ItemStack> items = new ArrayList<>();
+        for (ItemStack s : repairItems) {
+            if (!s.isEmpty()) {
+                items.add(s.copy());
+            }
+        }
+        boolean foundMatch = false;
+        for (int index : getRepairParts()) {
+            if (index >= materials.size()) {
+                continue;
+            }
+            Material material = materials.get(index);
+            for (int i = 0; i < items.size(); i++) {
+                ItemStack s = items.get(i);
+                if (s.isEmpty() || !(s.getItem() instanceof SharpeningKit kit)) {
+                    continue;
+                }
+                if (kit.getMaterial(s) == material) {
+                    items.set(i, ItemStack.EMPTY);
+                    foundMatch = true;
+                    break;
+                }
+            }
+        }
+        if (!foundMatch) {
+            return ItemStack.EMPTY;
+        }
+        // 所有输入必须被消耗
+        for (ItemStack s : items) {
+            if (!s.isEmpty()) {
+                return ItemStack.EMPTY;
+            }
+        }
+
+        // 第二遍（真实修复）：反复消耗磨刀石直到耐久满或材料用完
+        ItemStack item = repairable.copy();
+        List<ItemStack> realItems = new ArrayList<>(repairItems);
+        do {
+            int amount = calculateRepairAmount(materials, realItems);
+            if (amount <= 0) {
+                break;
+            }
+            ToolHelper.repairTool(item, calculateRepair(item, amount));
+            item.set(ModDataComponents.REPAIR_COUNT, item.getOrDefault(ModDataComponents.REPAIR_COUNT, 0) + 1);
+        } while (item.getDamageValue() > 0);
+
+        return item;
+    }
+
+    /**
+     * 计算修复量基数（1:1 旧版 calculateRepairAmount）：
+     * 每个去重材料：head 耐久 × 磨刀石数量 × 部件倍率 / 144；
+     * 多材料奖励 ×(1 + (材料数-1)/9)。消耗列表中的磨刀石。
+     */
+    protected int calculateRepairAmount(List<Material> materials, List<ItemStack> repairItems) {
+        java.util.Set<Material> materialsMatched = new java.util.HashSet<>();
+        float durability = 0f;
+        for (int index : getRepairParts()) {
+            if (index >= materials.size()) {
+                continue;
+            }
+            Material material = materials.get(index);
+            if (materialsMatched.contains(material)) {
+                continue;
+            }
+            // 统计该材料磨刀石数量
+            int count = 0;
+            for (ItemStack s : repairItems) {
+                if (!s.isEmpty() && s.getItem() instanceof SharpeningKit kit && kit.getMaterial(s) == material) {
+                    count++;
+                }
+            }
+            if (count > 0) {
+                HeadMaterialStats stats = material.getStatsOrUnknown(MaterialTypes.HEAD);
+                materialsMatched.add(material);
+                durability += (float) stats.durability() * count * getRepairModifierForPart(index) / 144f;
+            }
+        }
+        // 移除已匹配材料的磨刀石（供 do-while 循环下一轮）
+        for (int i = 0; i < repairItems.size(); i++) {
+            ItemStack s = repairItems.get(i);
+            if (!s.isEmpty() && s.getItem() instanceof SharpeningKit kit && materialsMatched.contains(kit.getMaterial(s))) {
+                repairItems.set(i, ItemStack.EMPTY);
+            }
+        }
+
+        durability *= 1f + ((float) materialsMatched.size() - 1) / 9f;
+        return (int) durability;
+    }
+
+    /**
+     * 修复量换算（1:1 旧版 calculateRepair）：
+     * 基数 × min(10, 当前/原始耐久系数)；下限 当前耐久/64；
+     * 修饰符数量惩罚（1/2/3+ → 0.95/0.9/0.85）；修复次数收益递减（下限 0.5）。
+     */
+    protected int calculateRepair(ItemStack tool, int amount) {
+        float origDur = ToolHelper.getOriginalToolData(tool).durability();
+        float actualDur = ToolHelper.getDurabilityStat(tool);
+        // 计算改变总耐久的修饰符（如钻石）不应惩罚玩家：系数 = 当前/原始
+        float durabilityFactor = actualDur / origDur;
+        float increase = amount * Math.min(10f, durabilityFactor);
+        increase = Math.max(increase, actualDur / 64f);
+
+        int modifiersUsed = ToolHelper.getBaseModifiers(tool).size();
+        float mods = 1f;
+        if (modifiersUsed == 1) {
+            mods = 0.95f;
+        } else if (modifiersUsed == 2) {
+            mods = 0.9f;
+        } else if (modifiersUsed >= 3) {
+            mods = 0.85f;
+        }
+        increase *= mods;
+
+        int repair = tool.getOrDefault(ModDataComponents.REPAIR_COUNT, 0);
+        // 1:1 旧版：repair/2 为整数除法
+        float repairDiminishingReturns = (100 - repair / 2) / 100f;
+        if (repairDiminishingReturns < 0.5f) {
+            repairDiminishingReturns = 0.5f;
+        }
+        increase *= repairDiminishingReturns;
+
+        return (int) Math.ceil(increase);
     }
 
     @Override

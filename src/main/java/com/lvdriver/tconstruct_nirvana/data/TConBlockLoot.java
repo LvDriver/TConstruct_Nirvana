@@ -28,6 +28,8 @@ public class TConBlockLoot extends BlockLootSubProvider {
         dropSelf(ModBlocks.ARDITE_ORE.get());
         dropSelf(ModBlocks.COBALT_BLOCK.get());
         dropSelf(ModBlocks.ARDITE_BLOCK.get());
+        dropSelf(ModBlocks.TOOL_STATION.get());
+        dropSelf(ModBlocks.TOOL_FORGE.get());
     }
 
     /** 仅处理本 mod 方块，避免遍历全注册表（vanilla 方块无对应 loot builder）。 */
@@ -37,6 +39,8 @@ public class TConBlockLoot extends BlockLootSubProvider {
                 ModBlocks.COBALT_ORE.get(),
                 ModBlocks.ARDITE_ORE.get(),
                 ModBlocks.COBALT_BLOCK.get(),
-                ModBlocks.ARDITE_BLOCK.get());
+                ModBlocks.ARDITE_BLOCK.get(),
+                ModBlocks.TOOL_STATION.get(),
+                ModBlocks.TOOL_FORGE.get());
     }
 }

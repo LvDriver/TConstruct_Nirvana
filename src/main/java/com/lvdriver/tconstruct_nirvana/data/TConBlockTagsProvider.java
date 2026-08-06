@@ -33,7 +33,12 @@ public class TConBlockTagsProvider extends BlockTagsProvider {
                 .add(ModBlocks.COBALT_ORE.get())
                 .add(ModBlocks.ARDITE_ORE.get())
                 .add(ModBlocks.COBALT_BLOCK.get())
-                .add(ModBlocks.ARDITE_BLOCK.get());
+                .add(ModBlocks.ARDITE_BLOCK.get())
+                .add(ModBlocks.TOOL_FORGE.get());
+
+        // 斧可采（工具站木质）
+        tag(BlockTags.MINEABLE_WITH_AXE)
+                .add(ModBlocks.TOOL_STATION.get());
 
         // 钴级采掘（旧版 harvestLevel = 4）
         tag(TConTags.NEEDS_COBALT_TOOL)

@@ -28,6 +28,10 @@ public final class ModRecipeTypes {
     public static final DeferredHolder<RecipeSerializer<?>, ToolBuildRecipeSerializer> TOOL_BUILD_SERIALIZER =
             RECIPE_SERIALIZERS.register("tool_build", () -> ToolBuildRecipeSerializer.INSTANCE);
 
+    /** 工具修复配方序列化器（工具 + 磨刀石 → 修复，会话4.5b）。 */
+    public static final DeferredHolder<RecipeSerializer<?>, RepairRecipeSerializer> REPAIR_SERIALIZER =
+            RECIPE_SERIALIZERS.register("repair", () -> RepairRecipeSerializer.INSTANCE);
+
     private ModRecipeTypes() {
     }
 

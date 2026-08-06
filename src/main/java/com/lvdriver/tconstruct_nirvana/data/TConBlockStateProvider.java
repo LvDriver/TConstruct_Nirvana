@@ -34,5 +34,11 @@ public class TConBlockStateProvider extends BlockStateProvider {
                         modLoc("block/block_ardite"),
                         modLoc("block/block_ardite_top"),
                         modLoc("block/block_ardite_top")));
+
+        // 工具站/锻造厂（会话4.5b GUI；锻造厂沿用钴块贴图占位）
+        simpleBlockWithItem(ModBlocks.TOOL_STATION.get(),
+                models().cubeAll("tool_station", modLoc("block/tool_station")));
+        simpleBlockWithItem(ModBlocks.TOOL_FORGE.get(),
+                models().cubeAll("tool_forge", modLoc("block/block_cobalt")));
     }
 }

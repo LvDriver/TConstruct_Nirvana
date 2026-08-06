@@ -3,6 +3,7 @@ package com.lvdriver.tconstruct_nirvana.item.tool.ranged;
 import com.lvdriver.tconstruct_nirvana.data.ToolData;
 import com.lvdriver.tconstruct_nirvana.item.part.ModToolParts;
 import com.lvdriver.tconstruct_nirvana.item.part.PartMaterialType;
+import com.lvdriver.tconstruct_nirvana.item.tool.ModTools;
 import com.lvdriver.tconstruct_nirvana.item.tool.TinkerToolItem;
 import com.lvdriver.tconstruct_nirvana.material.Material;
 import com.lvdriver.tconstruct_nirvana.material.MaterialTypes;
@@ -56,6 +57,11 @@ public class LongBow extends BowToolItem {
     @Override
     public int getDrawTime() {
         return 30;
+    }
+
+    @Override
+    protected List<Item> getAmmoItems() {
+        return List.of(ModTools.ARROW.get());
     }
 
     @Override

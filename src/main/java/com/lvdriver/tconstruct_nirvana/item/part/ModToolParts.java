@@ -65,14 +65,19 @@ public final class ModToolParts {
     public static final DeferredItem<BoltCore> BOLT_CORE = ModItems.ITEMS.register("bolt_core",
             () -> new BoltCore(new Item.Properties(), 288));
 
+    /** 磨刀石（1:1 旧版 SharpeningKit，cost=4 碎块=288，修复材料载体，见 {@link SharpeningKit}）。 */
+    public static final DeferredItem<SharpeningKit> SHARPENING_KIT = ModItems.ITEMS.register("sharpening_kit",
+            () -> new SharpeningKit(new Item.Properties()));
+
     /** 碎块（1:1 旧版 Shard，cost=72=1 碎块，特殊匹配逻辑见 {@link Shard}）。 */
     public static final DeferredItem<Shard> SHARD = ModItems.ITEMS.register("shard",
             () -> new Shard(new Item.Properties()));
 
     static {
-        // shard / bolt_core 同样有模具形状（旧版 registerStencilTableCrafting）
+        // shard / bolt_core / sharpening_kit 同样有模具形状（旧版 registerStencilTableCrafting）
         PARTS.put(ResourceLocation.fromNamespaceAndPath(TConstructNirvana.MODID, "shard"), SHARD);
         PARTS.put(ResourceLocation.fromNamespaceAndPath(TConstructNirvana.MODID, "bolt_core"), BOLT_CORE);
+        PARTS.put(ResourceLocation.fromNamespaceAndPath(TConstructNirvana.MODID, "sharpening_kit"), SHARPENING_KIT);
     }
 
     private ModToolParts() {

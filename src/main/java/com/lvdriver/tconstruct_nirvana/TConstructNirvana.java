@@ -4,8 +4,10 @@ import com.lvdriver.tconstruct_nirvana.block.ModBlockEntities;
 import com.lvdriver.tconstruct_nirvana.block.ModBlocks;
 import com.lvdriver.tconstruct_nirvana.config.TConConfig;
 import com.lvdriver.tconstruct_nirvana.data.ModDataComponents;
+import com.lvdriver.tconstruct_nirvana.entity.ModEntities;
 import com.lvdriver.tconstruct_nirvana.event.TinkerToolEvents;
 import com.lvdriver.tconstruct_nirvana.fluid.ModFluids;
+import com.lvdriver.tconstruct_nirvana.gui.ModMenuTypes;
 import com.lvdriver.tconstruct_nirvana.item.ModCreativeTabs;
 import com.lvdriver.tconstruct_nirvana.item.ModItems;
 import com.lvdriver.tconstruct_nirvana.item.part.ModToolParts;
@@ -42,6 +44,8 @@ public class TConstructNirvana {
         ModFluids.register(modEventBus);
         ModRecipeTypes.register(modEventBus);
         ModDataComponents.register(modEventBus);
+        ModEntities.register(modEventBus);
+        ModMenuTypes.register(modEventBus);
         ModCreativeTabs.register(modEventBus);
 
         // 部件/模具注册条目在类加载时登记到 ModItems.ITEMS，此处确保类加载

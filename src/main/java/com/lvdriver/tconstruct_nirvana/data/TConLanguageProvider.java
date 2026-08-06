@@ -49,6 +49,8 @@ public class TConLanguageProvider extends LanguageProvider {
         PART_NAMES.put("arrow_shaft", new String[]{"Arrow Shaft", "箭杆"});
         PART_NAMES.put("fletching", new String[]{"Fletching", "箭羽"});
         PART_NAMES.put("shard", new String[]{"Shard", "碎块"});
+        PART_NAMES.put("bolt_core", new String[]{"Bolt Core", "弩芯"});
+        PART_NAMES.put("sharpening_kit", new String[]{"Sharpening Kit", "磨刀石"});
     }
 
     private final boolean chinese;
@@ -66,6 +68,8 @@ public class TConLanguageProvider extends LanguageProvider {
         addBlock(ModBlocks.ARDITE_ORE, chinese ? "阿迪特矿" : "Ardite Ore");
         addBlock(ModBlocks.COBALT_BLOCK, chinese ? "钴块" : "Block of Cobalt");
         addBlock(ModBlocks.ARDITE_BLOCK, chinese ? "阿迪特块" : "Block of Ardite");
+        addBlock(ModBlocks.TOOL_STATION, chinese ? "工具站" : "Tool Station");
+        addBlock(ModBlocks.TOOL_FORGE, chinese ? "锻造厂" : "Tool Forge");
 
         addItem(ModItems.COBALT_INGOT, chinese ? "钴锭" : "Cobalt Ingot");
         addItem(ModItems.ARDITE_INGOT, chinese ? "阿迪特锭" : "Ardite Ingot");
@@ -114,6 +118,10 @@ public class TConLanguageProvider extends LanguageProvider {
         add("ui.mininglevel.diamond", chinese ? "钻石" : "Diamond");
         add("ui.mininglevel.obsidian", chinese ? "黑曜石" : "Obsidian");
         add("ui.mininglevel.cobalt", chinese ? "钴" : "Cobalt");
+
+        // 弹射物信息（1:1 旧版 ProjectileCore.getInformation 的弹药/精准度行）
+        add("tooltip.ammo", chinese ? "弹药：%s / %s" : "Ammo: %s / %s");
+        add("tooltip.accuracy", chinese ? "精准度：%s%%" : "Accuracy: %s%%");
 
         // 工具（1:1 旧版工具名）
         add("item.tconstruct_nirvana.pickaxe", chinese ? "镐" : "Pickaxe");

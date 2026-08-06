@@ -57,6 +57,22 @@ public final class ModBlocks {
                     .requiresCorrectToolForDrops()
                     .sound(SoundType.METAL));
 
+    /** 工具站：木质组装台（1:1 旧版 BlockToolTable，会话4.5b GUI）。 */
+    public static final DeferredBlock<BlockToolTable> TOOL_STATION = BLOCKS.registerBlock(
+            "tool_station", BlockToolTable::new,
+            BlockBehaviour.Properties.of()
+                    .mapColor(MapColor.WOOD)
+                    .strength(2.0F, 3.0F)
+                    .sound(SoundType.WOOD));
+
+    /** 锻造厂：金属组装台（1:1 旧版 BlockToolForge 简化，同工具站逻辑）。 */
+    public static final DeferredBlock<BlockToolTable> TOOL_FORGE = BLOCKS.registerBlock(
+            "tool_forge", BlockToolTable::new,
+            BlockBehaviour.Properties.of()
+                    .mapColor(MapColor.METAL)
+                    .strength(5.0F, 6.0F)
+                    .sound(SoundType.METAL));
+
     private ModBlocks() {
     }
 

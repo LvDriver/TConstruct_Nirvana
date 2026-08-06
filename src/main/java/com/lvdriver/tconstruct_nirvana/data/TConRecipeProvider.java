@@ -25,5 +25,8 @@ public class TConRecipeProvider extends RecipeProvider {
     protected void buildRecipes(RecipeOutput output) {
         SpecialRecipeBuilder.special(category -> new com.lvdriver.tconstruct_nirvana.recipe.ToolBuildRecipe(category))
                 .save(output, com.lvdriver.tconstruct_nirvana.TConstructNirvana.MODID + ":tool_build");
+        // 工具修复：工具 + 磨刀石（1:1 旧版 RepairRecipe）
+        SpecialRecipeBuilder.special(category -> new com.lvdriver.tconstruct_nirvana.recipe.RepairRecipe(category))
+                .save(output, com.lvdriver.tconstruct_nirvana.TConstructNirvana.MODID + ":repair");
     }
 }

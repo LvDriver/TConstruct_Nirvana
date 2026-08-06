@@ -61,4 +61,37 @@ public class Shuriken extends ProjectileToolItem {
         data = data.withAttack(data.attack() + 1f);
         return data.withModifiers(TinkerToolItem.DEFAULT_MODIFIERS);
     }
+
+    /* ---------- 投掷（1:1 旧版 Shuriken.onItemRightClick） ---------- */
+
+    @Override
+    public net.minecraft.world.InteractionResultHolder<ItemStack> use(
+            net.minecraft.world.level.Level world, net.minecraft.world.entity.player.Player player,
+            net.minecraft.world.InteractionHand hand) {
+        ItemStack stack = player.getItemInHand(hand);
+        if (com.lvdriver.tconstruct_nirvana.util.ToolHelper.isBroken(stack)) {
+            return net.minecraft.world.InteractionResultHolder.fail(stack);
+        }
+        player.getCooldowns().addCooldown(this, 4);
+
+        if (!world.isClientSide) {
+            boolean usedAmmo = useAmmo(stack, player);
+            com.lvdriver.tconstruct_nirvana.entity.TinkerProjectileBase projectile =
+                    getProjectile(stack, stack, world, player, 2.1f, 0f, 1f, usedAmmo);
+            world.addFreshEntity(projectile);
+        }
+        return net.minecraft.world.InteractionResultHolder.success(stack);
+    }
+
+    @Override
+    public com.lvdriver.tconstruct_nirvana.entity.TinkerProjectileBase getProjectile(
+            ItemStack stack, ItemStack launcher, net.minecraft.world.level.Level world,
+            net.minecraft.world.entity.player.Player player, float speed, float inaccuracy, float power, boolean usedAmmo) {
+        // 1:1 旧版 Shuriken.getProjectile：不准度 × 精准度
+        float accuracy = stack.getOrDefault(com.lvdriver.tconstruct_nirvana.data.ModDataComponents.ACCURACY, 1f);
+        inaccuracy *= accuracy;
+        return new com.lvdriver.tconstruct_nirvana.entity.TinkerShuriken(
+                com.lvdriver.tconstruct_nirvana.entity.ModEntities.TINKER_SHURIKEN.get(), world, player,
+                speed, inaccuracy, getProjectileStack(stack, player, usedAmmo), launcher);
+    }
 }

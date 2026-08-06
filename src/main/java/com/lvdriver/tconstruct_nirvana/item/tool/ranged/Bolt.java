@@ -79,4 +79,16 @@ public class Bolt extends ProjectileToolItem {
         tool.set(ModDataComponents.ACCURACY, Math.min(1f, Math.max(0, stats.accuracy())));
         return tool;
     }
+
+    @Override
+    public com.lvdriver.tconstruct_nirvana.entity.TinkerProjectileBase getProjectile(
+            ItemStack stack, ItemStack launcher, net.minecraft.world.level.Level world,
+            net.minecraft.world.entity.player.Player player, float speed, float inaccuracy, float power, boolean usedAmmo) {
+        // 1:1 旧版 Bolt.getProjectile：精准度修正不准度（同 Arrow）
+        float accuracy = stack.getOrDefault(ModDataComponents.ACCURACY, 1f);
+        inaccuracy -= (1f - 1f / Math.max(0.01f, accuracy)) * speed / 2f;
+        return new com.lvdriver.tconstruct_nirvana.entity.TinkerBolt(
+                com.lvdriver.tconstruct_nirvana.entity.ModEntities.TINKER_BOLT.get(), world, player,
+                speed, inaccuracy, power, getProjectileStack(stack, player, usedAmmo), launcher);
+    }
 }

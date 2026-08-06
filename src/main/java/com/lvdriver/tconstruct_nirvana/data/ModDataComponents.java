@@ -101,6 +101,11 @@ public final class ModDataComponents {
             DATA_COMPONENT_TYPES.register("accuracy",
                     () -> DataComponentType.<Float>builder().persistent(Codec.FLOAT).build());
 
+    /** 弩是否已装填（1:1 旧版 CrossBow 的 "Loaded" NBT，会话4.5b）。 */
+    public static final DeferredHolder<DataComponentType<?>, DataComponentType<Boolean>> CROSSBOW_LOADED =
+            DATA_COMPONENT_TYPES.register("crossbow_loaded",
+                    () -> DataComponentType.<Boolean>builder().persistent(Codec.BOOL).build());
+
     /** 特质等级存储（identifier → 当前等级，momentum/insatiable/splintering 等动态等级用）。 */
     public static final DeferredHolder<DataComponentType<?>, DataComponentType<java.util.Map<String, Integer>>> TRAIT_LEVELS =
             DATA_COMPONENT_TYPES.register("trait_levels",

@@ -4,7 +4,7 @@
 > 目的：把"需要记住的事"从对话上下文搬到文件里，AI 按需读取，省 token、防遗忘。
 
 ## 项目状态
-- 当前阶段：会话3.5 完成（RecipeMatch→ItemTag 材料-物品关联体系）
+- 当前阶段：会话4.5b 完成（ranged 完整化 + 材料修复配方 + 工具站/锻造厂 GUI）
 - 最后更新：2026-08-06
 - 旧源码路径：`./TinkersAntique-1.12/`（已解压，匠魂怀古 1.12.2 源码）
 
@@ -17,7 +17,9 @@
 - [x] 会话3.5：RecipeMatch→ItemTag 材料-物品关联体系（ItemTagMatch TagKey 匹配 + 40 材料绑定 + 代表物品）
 - [x] 会话4.5：附属扩展 API（公开注册表 + 事件钩子）
 - [x] 会话4：工具组装系统（21 工具注册 + ToolData 公式 + 组装配方）+ 修饰符系统（26 修饰符）+ Trait 系统（53 特质）
-- [ ] 会话4.5b：ranged 完整化（自定义弹射物实体/拉弓 GUI/弩装填/箭袋）+ 完整修复机制（材料修复配方）+ 工具站/锻造厂 GUI（随工具组装）
+- [x] 会话4.5b：ranged 完整化（自定义弹射物实体/弩装填/拉弓动画）+ 完整修复机制（材料修复配方 + 磨刀石）+ 工具站/锻造厂 GUI（简化版，随工具组装）
+- [ ] 箭袋：旧版匠魂怀古无此物（全库 grep 确认），1:1 原则跳过；如后续用户要求可自创
+- [ ] 工具站 GUI 增强：Shift 快速移动/拆解/修饰符按钮/修复按钮（当前最小版：5 部件槽+结果槽）
 - [ ] 流体系统（熔融钴/阿迪特等，冶炼炉前置）
 - [ ] needs_cobalt_tool 工具侧接线完善（数据驱动 level 判定已可用）+ sharpening_kit 部件注册
 - [ ] TConConfig 矿石生成开关接线（BiomeModifier 数据驱动限制）或移除
@@ -83,6 +85,12 @@
 | 2026-08-06 | 附属 API 验证：模拟附属源码（仅引用 api 公共类型）编译通过后删除；src/test 无 Minecraft classpath（moddev 不给 test 源集挂 mc 依赖） | 验收"API 可被外部引用"；冒烟验证不留测试类，保持最小 diff |
 | 2026-08-06 | RecipeMatch→ItemTag：util 包 `ItemTagMatch`（TagKey<Item> + 价值 amount）替代旧版 Mantle RecipeMatch；`Material.addItem(TagKey,value)/addItemIngot/addCommonItems(金属路径)/matches/getMatchValue/hasItems` 落位；代表物品支持 tag 式（运行时从 tag 内容取首个，旧版 representativeOre）与 Item/ItemStack 式 | 1.21.1 无 OreDictionary，TagKey 是唯一匹配路径；`setRepresentativeItem` 取消旧版"必须已关联"校验（材料绑定在 Mod 构造器，早于数据包 tag 加载，无法校验） |
 | 2026-08-06 | 旧版 oredict 名映射规则：有 c: 约定直连（ingotCobalt→c:ingots/cobalt、stickWood→c:rods/wooden、gemPrismarine→c:gems/prismarine、bone→c:bones、string→c:strings、feather→c:feathers、blaze_rod→c:rods/blaze、sugar_cane→c:crops/sugar_cane、cobblestone→c:cobblestones、stone→c:stones、obsidian→c:obsidians、netherrack→c:netherracks、endstone→c:end_stones）；无 c: 对应项 → mod 命名空间 tag（flint/cactus/bonemeal/paper/sponges/vines/packed_ice/end_rods/storage_blocks/prismarine(+bricks/dark)），DataGen 加入原版物品；plankWood/logWood/treeLeaves → minecraft:planks/logs/leaves；金属合金（pigiron 等 9 种）→ c:ingots|nuggets|storage_blocks/<path> 约定 tag（现为空，附属/物品注册后自动生效） | 500mod 兼容：其他 mod 物品带同 tag 即自动关联材料；仅关联本 mod 未注册物品的旧条目（firewood/slimecrystal*/boneBloodied/slimevine*/slimeleaf*）留待物品注册会话 |
+| 2026-08-06 | 弹射物实体移植：继承 AbstractArrow 复用物理/碰撞/拾取协议，1:1 覆盖伤害公式（(弹射物攻击+弓基础×power+bonusDamage)×damageModifier×power）、反弹/消失、重力（Bolt 0.065/Shuriken 动态）、阻力（tick 后按 getSlowdown 差值缩放，0.99 硬编码无覆写点）；命中用背包实际弹药栈结算（AmmoHelper 语义）+ 损坏弹药伤害 1 | 1.21.1 无 IEntityAdditionalSpawnData，pickupItemStack 自动同步；旧版 EntityProjectileBase 630 行核心逻辑逐段对齐 |
+| 2026-08-06 | 弹射物弹药模型 1:1：durabilityPerAmmo=10（耐久/10=弹药），useAmmo→damageTool(10)，getProjectileStack（copy+setAmmo(1)+非消耗满耐久+unbreak），耐久条按弹药显示，tooltip 弹药/精准度；弓每发扣 1 耐久 | 与"万物皆可熔"同源：箭消耗自身耐久而非数量，拾取一单位弹药防正反馈（reinforced 等防损特质） |
+| 2026-08-06 | 弓发射 1:1：power=(progress²+2progress)/3×progress×baseSpeed×range；findAmmo 主副手→快捷栏→背包且弹药>0；创造无弹药兜底原版箭；弩 loaded 装填（拉满→loaded→右键发射） | 旧版 BowCore 默认 baseInaccuracy=0/baseProjectileSpeed=3（本项目曾误 1/3.5 已修，影响弩不准度 0） |
+| 2026-08-06 | 修复机制 1:1：磨刀石（cost=288，HEAD 材料）+ 工作台 RepairRecipe（工具+磨刀石，全消耗校验）+ TinkersItem.repair（144 换算、多材料×(1+(n-1)/9)、修饰符惩罚 0.95/0.9/0.85、修复递减下限 0.5） | 旧版工作台修复输入仅磨刀石（锭类材料走工具站修复按钮，后续会话） |
+| 2026-08-06 | 工具站/锻造厂 GUI 最小可用版：BlockToolTable + ToolTableBlockEntity（SimpleContainer 5 槽）+ TinkerStationMenu（5 部件槽+结果槽实时预览、取走即消耗）+ Screen（旧版 generic.png 背景）；锻造厂同逻辑 | ContainerToolStation 510 行完整版（Shift/拆解/修饰符/修复按钮）留待增强会话；客户端 Menu 空容器重建，槽内容服务端广播同步 |
+| 2026-08-06 | 箭袋不移植（旧版无此物，全库 grep 确认），devlog 待办标注；Bolt 伤害简化（旧版 Rapier.dealHybridDamage 混合伤害，本项目统一基类伤害） | 1:1 原则；差异记录防回归 |
 
 ## 子系统清单
 > 2026-08-05 首次分析 `./TinkersAntique-1.12/src/main/java/slimeknights/tconstruct/`，顶层 8 个子包：common / library / tools / smeltery / world / shared / gadgets / plugin
@@ -123,7 +131,11 @@
 - `needs_cobalt_tool`：钴/阿迪特矿需钴级工具采掘（1:1 还原旧版采掘等级 4），当前尚无钴工具 → 矿石暂无法正常采掘掉落，待工具会话接线
 - TConConfig 的 generateCobaltOre / generateArditeOre 开关未接线（BiomeModifier 为数据驱动，无法读运行时 config）
 - 材料特质为字符串占位（如 "momentum"），无实际游戏效果，待修饰符会话实现 Trait 类
-- bolt_core / sharpening_kit 部件未注册（BoltCore 双材料、SharpeningKit 属工具修饰子系统），待对应会话
+- bolt_core 为简化单材料版（旧版双材料：核心+头，Bolt 组装时头部复用核心材料），完整双材料逻辑后续补
+- 弹射物 trait 钩子（旧版 IProjectileTrait.onLaunch/onProjectileUpdate/onMovement/afterHit）未接入，弹射物修饰符交互留待后续会话
+- Bolt 伤害为基类统一公式（旧版 Rapier.dealHybridDamage 混合伤害），差异已记录
+- 工具站 GUI 为最小可用版：无 Shift 快速移动/拆解/修饰符/修复按钮；破坏方块不掉落容器内容
+- 弹射物渲染为物品模型占位（2D 纸片），完整 3D 弹射物模型后续会话
 - 材料↔物品关联已实现（ItemTagMatch）；遗留：仅关联本 mod 未注册物品的旧条目（firewood、slimecrystal*/slimeleaf*/slimevine*、boneBloodied）未绑定，待物品注册会话；合金金属（pigiron/bronze/lead/silver/electrum/steel/alubrass/alumite/manyullyn/knightslime）的 c: tag 现为空（无 mod 提供物品），附属注册后自动生效
 
 ## 已踩过的坑（随开发补充）
@@ -142,8 +154,26 @@
 - 静态初始化顺序坑：`ModToolParts.PARTS` 声明在 `part()` 调用之后时，`PARTS.put` 报 NPE（PARTS 尚未初始化）→ 被方法间接引用的静态字段必须声明在调用之前
 - `DeferredItem.get()` 在注册事件触发前调用会抛异常 → 构造器中"确保类加载"只能访问字段/调用静态方法，不能 `get()`
 - 静态块中前向引用后声明的静态字段是编译错误（非法前向引用）→ 把被引用的 Map 声明移到类顶部
+- NeoForge 1.21.1 `DeferredRegister.Blocks.registerBlock` **不自动注册 BlockItem** → 须在 ModItems `registerSimpleBlockItem` 手动注册；漏注册时 `Block.asItem()` 返回 `minecraft:air`，创造标签页 `accept(Block)` 直接崩 `IllegalArgumentException: The stack count must be 1`（NeoForge 对 count≠1 校验）
+- 1.21.1 `MenuScreens.register` 已 private + @Deprecated → 改 `RegisterMenuScreensEvent`（MOD bus，`event.register(MenuType, ScreenConstructor)`）
+- 1.21.1 `BaseEntityBlock` 无泛型参数（1.20 是 `BaseEntityBlock<T extends BlockEntity>`），且须实现抽象 `codec()`（返回 `MapCodec<? extends BaseEntityBlock>`，用 `simpleCodec(MyBlock::new)`）；`Block.use` 交互方法已下沉到 `BlockBehaviour`（`useWithoutItem` 签名无 InteractionHand）
+- 1.21.1 `MenuType` 构造是 `(MenuSupplier, FeatureFlagSet)` 双参（`FeatureFlags.REGISTRY.allFlags()`）；方法引用有多个构造时无法推断（TinkerStationMenu 有 5 参/2 参构造 → 用 2 参构造方法引用 `TinkerStationMenu::new` 仍可解析，但报"无法推断类型参数"时检查是否漏 FeatureFlagSet 参数）
+- `ContainerHelper.saveAllItems/loadAllItems` 1.21.1 参数顺序是 `(CompoundTag, NonNullList, HolderLookup.Provider)`（provider 在最后，1.20 习惯在前会编译错）
+- 创造标签页 `output.accept(Block)` 在游戏内运行时才构建（runClient 才暴露），编译/DataGen 无法发现漏 BlockItem → GUI 会话后必须跑 runClient 冒烟
+- 1.21.1 `EntityType.Builder.build(String)` 需显式 id；`AbstractArrow.addAdditionalSaveData/readAdditionalSaveData` 是 public 非 protected；实体渲染器注册无 `RegisterRenderersEvent`（那是 1.20 的），用原版静态 `EntityRenderers.register` + FMLClientSetupEvent
+- 1.21.1 `TooltipContext` 是 `Item` 的内部类（子类可裸引用，不能写 `net.minecraft.world.item.TooltipContext`）；`com.mojang.math.Axis`（非 RotationAxis，那是 1.21.3+）
 
 ## 会话记录
+### 2026-08-06 会话4.5b：ranged 完整化 + 修复机制 + 工具站/锻造厂 GUI（完成）
+- 弹射物实体：`entity/` 包新建 `ModEntities`（arrow/bolt/shuriken 三实体 DeferredRegister，1:1 尺寸 0.5×0.5/0.3×0.1）+ `TinkerProjectileBase extends AbstractArrow`（1:1 伤害公式=(弹射物攻击+弓基础×power+bonusDamage)×damageModifier×power；反弹/消失；重力 Bolt 0.065/Shuriken 动态(tickCount/10×0.04)；阻力按旧版 getSlowdown 差值在 super.tick 后缩放；背包实际弹药栈结算+损坏伤害 1；NBT power/launching）+ TinkerArrow/TinkerBolt/TinkerShuriken
+- 客户端：`client/` 包新建，`TinkerProjectileRenderer`（物品模型渲染+ArrowRenderer 朝向+手里剑自旋），FMLClientSetupEvent 注册（1.21.1 无 RegisterRenderersEvent）；`ModClientEvents` 统一客户端注册
+- 发射接线：BowToolItem 1:1（power=(p²+2p)/3×p×baseSpeed×range、findAmmo 主副手→快捷栏→背包且弹药>0、consumeAmmo、getProjectileEntity、拉满暴击、每发扣 1 耐久）；ProjectileToolItem 弹药模型 1:1（durabilityPerAmmo=10、useAmmo→damageTool(10)、getProjectileStack、弹药耐久条、弹药/精准度 tooltip）；Arrow/Bolt getProjectile（精准度修正 inaccuracy -= (1-1/acc)×speed/2）；Shuriken 投掷（cooldown 4、speed 2.1）；CrossBow loaded 装填（CROSSBOW_LOADED 组件+拉满装填+右键发射+UseAnim.NONE）；修正 BowCore 默认 baseInaccuracy 0f/baseProjectileSpeed 3f（弩不准度 0）
+- 修复机制：SharpeningKit 部件（cost=288、HEAD 材料、进模具/创造页/tag）+ TinkerToolItem.repair/calculateRepairAmount/calculateRepair（144 换算、多材料×(1+(n-1)/9)、修饰符惩罚、修复递减下限 0.5、全消耗校验）+ RepairRecipe/Serializer（crafting_special）+ DataGen（配方/lang/tag/贴图）
+- 工具站/锻造厂 GUI 最小版：BlockToolTable（工具站木/锻造厂金属）+ ToolTableBlockEntity（SimpleContainer 5 槽+NBT）+ TinkerStationMenu（5 部件槽+结果槽预览+取走即消耗+背包 36 槽）+ TinkerStationScreen（旧版 generic.png）+ RegisterMenuScreensEvent 注册；DataGen blockstate/模型/loot/lang/mineable tag
+- **验证**：`./gradlew check` 多次 BUILD SUCCESSFUL；`./gradlew runData` 通过（repair.json/模型/loot/lang/tag 产物核对）；`./gradlew runClient` 冒烟通过（修复创造标签页崩溃后：mod 加载→资源加载→进入单人世界，无 ERROR）
+- 踩坑修复：创造标签页崩溃（BlockItem 未注册→asItem=air）→ ModItems 手动 registerSimpleBlockItem；MenuScreens.register private→RegisterMenuScreensEvent；BaseEntityBlock 无泛型+codec()；MenuType 双参构造；ContainerHelper 参数序；TooltipContext 内部类
+- 遗留：箭袋旧版无此物跳过（devlog 待办标注）；工具站 GUI 增强（Shift/拆解/修饰符/修复按钮）；弹射物 trait 钩子；Bolt 混合伤害；3D 弹射物模型；CrossBow preventSlowDown 减速
+- 下一步：流体系统（熔融钴/阿迪特，冶炼炉前置）或工具站 GUI 增强
 ### 2026-08-06 会话3.5：RecipeMatch→ItemTag 材料-物品关联体系（完成）
 - util 包新建 `ItemTagMatch`（record：TagKey<Item> + amount 价值），替代旧版 Mantle RecipeMatch（matches = stack.is(tag)，空栈恒 false）
 - Material 新增：`addItem(TagKey, value)`（旧版 addItem(oredict,1,amount)，needed 恒 1 已省略）/ `addItemIngot` / `addCommonItems(金属路径)`（c:ingots|nuggets|storage_blocks/<path> 三件套）/ `matches` / `getMatchValue` / `hasItems` / `getItemMatches`；代表物品三式：setRepresentativeItem(TagKey)（运行时 BuiltInRegistries.ITEM.getTag 取首个，对应旧版 representativeOre）/ (Item) / (ItemStack)

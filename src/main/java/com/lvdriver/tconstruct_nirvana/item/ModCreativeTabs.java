@@ -50,6 +50,10 @@ public final class ModCreativeTabs {
                 output.accept(ModItems.COBALT_NUGGET.get());
                 output.accept(ModItems.ARDITE_NUGGET.get());
 
+                // 工具站/锻造厂（会话4.5b GUI）
+                output.accept(ModBlocks.TOOL_STATION.get());
+                output.accept(ModBlocks.TOOL_FORGE.get());
+
                 // 模具：空白 + 各部件形状（图案模具）
                 output.accept(new ItemStack(ModPatterns.PATTERN.get()));
                 for (DeferredItem<? extends ToolPart> part : ModToolParts.getAllParts()) {

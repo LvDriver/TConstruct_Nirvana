@@ -37,6 +37,8 @@ public final class ModItems {
     public static final DeferredItem<BlockItem> ARDITE_ORE_ITEM = ITEMS.registerSimpleBlockItem(ModBlocks.ARDITE_ORE);
     public static final DeferredItem<BlockItem> COBALT_BLOCK_ITEM = ITEMS.registerSimpleBlockItem(ModBlocks.COBALT_BLOCK);
     public static final DeferredItem<BlockItem> ARDITE_BLOCK_ITEM = ITEMS.registerSimpleBlockItem(ModBlocks.ARDITE_BLOCK);
+    public static final DeferredItem<BlockItem> TOOL_STATION_ITEM = ITEMS.registerSimpleBlockItem(ModBlocks.TOOL_STATION);
+    public static final DeferredItem<BlockItem> TOOL_FORGE_ITEM = ITEMS.registerSimpleBlockItem(ModBlocks.TOOL_FORGE);
 
     private ModItems() {
     }
