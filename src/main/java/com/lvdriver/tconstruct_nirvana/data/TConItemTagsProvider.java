@@ -49,6 +49,19 @@ public class TConItemTagsProvider extends ItemTagsProvider {
             tag(TConTags.TOOL_PARTS).add(part.get());
         }
 
+        // 材料-物品关联自定义 tag：原版物品加入（无 c: 对应项的 oredict 替代）
+        tag(TConTags.FLINT).add(net.minecraft.world.item.Items.FLINT);
+        tag(TConTags.CACTUS).add(net.minecraft.world.item.Items.CACTUS);
+        tag(TConTags.STORAGE_BLOCKS_PRISMARINE).add(net.minecraft.world.item.Items.PRISMARINE);
+        tag(TConTags.STORAGE_BLOCKS_PRISMARINE_BRICKS).add(net.minecraft.world.item.Items.PRISMARINE_BRICKS);
+        tag(TConTags.STORAGE_BLOCKS_DARK_PRISMARINE).add(net.minecraft.world.item.Items.DARK_PRISMARINE);
+        tag(TConTags.BONE_MEAL).add(net.minecraft.world.item.Items.BONE_MEAL);
+        tag(TConTags.PAPER).add(net.minecraft.world.item.Items.PAPER);
+        tag(TConTags.SPONGES).add(net.minecraft.world.item.Items.SPONGE);
+        tag(TConTags.VINES).add(net.minecraft.world.item.Items.VINE);
+        tag(TConTags.PACKED_ICE).add(net.minecraft.world.item.Items.PACKED_ICE);
+        tag(TConTags.END_RODS).add(net.minecraft.world.item.Items.END_ROD);
+
         // 工具 mineable tag（物品侧，1:1 旧版 tool class → 1.21.1 mineable 体系）
         for (var entry : com.lvdriver.tconstruct_nirvana.item.tool.ModTools.entries()) {
             TinkerToolItem tool = (TinkerToolItem) entry.item().get();

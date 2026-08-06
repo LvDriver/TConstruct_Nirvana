@@ -4,7 +4,7 @@
 > 目的：把"需要记住的事"从对话上下文搬到文件里，AI 按需读取，省 token、防遗忘。
 
 ## 项目状态
-- 当前阶段：会话4.5 完成（附属扩展 API：公开注册表 + 事件钩子）
+- 当前阶段：会话3.5 完成（RecipeMatch→ItemTag 材料-物品关联体系）
 - 最后更新：2026-08-06
 - 旧源码路径：`./TinkersAntique-1.12/`（已解压，匠魂怀古 1.12.2 源码）
 
@@ -14,7 +14,7 @@
 - [x] 会话2：材料与矿物系统（材料定义 + 钴/阿迪特矿 + 锭粒 + 世界生成 BiomeModifier + TCon 创造标签页）
 - [x] 配置 DataGen 并跑通 `runData`（100 个数据文件已生成）
 - [x] 会话3：工具部件系统（ToolPart + PartMaterialType + 部件数据 DataComponent + 模具 Pattern/Cast）
-- [ ] 会话3.5：RecipeMatch→ItemTag 材料-物品关联体系（材料↔物品 addItem/addCommonItems 仍为遗留；部件已用 DataComponent 直存材料标识绕过）
+- [x] 会话3.5：RecipeMatch→ItemTag 材料-物品关联体系（ItemTagMatch TagKey 匹配 + 40 材料绑定 + 代表物品）
 - [x] 会话4.5：附属扩展 API（公开注册表 + 事件钩子）
 - [x] 会话4：工具组装系统（21 工具注册 + ToolData 公式 + 组装配方）+ 修饰符系统（26 修饰符）+ Trait 系统（53 特质）
 - [ ] 会话4.5b：ranged 完整化（自定义弹射物实体/拉弓 GUI/弩装填/箭袋）+ 完整修复机制（材料修复配方）+ 工具站/锻造厂 GUI（随工具组装）
@@ -81,6 +81,8 @@
 | 2026-08-06 | 事件钩子：ToolBuildEvent（buildItem 组装时触发，可改 ToolData/取消）+ ModifierTriggerEvent（ATTACK/BLOCK_BREAK，只读监听）+ SmelteryEvent/MeltingEvent/CastingEvent（冶炼炉会话接入触发点，API 先行锁定形状） | 全部挂 NeoForge.EVENT_BUS，附属可用 EventPriority；冶炼炉未实现故事件暂无触发点，javadoc 已注明 |
 | 2026-08-06 | 模具形状扩展 = 注册部件即自动可用（形状即部件注册名），PatternRegistry 只提供物品 accessor + isKnownShape 查询 | 1:1 旧版 Pattern 形状来自 part 注册表，无需独立模具注册表 |
 | 2026-08-06 | 附属 API 验证：模拟附属源码（仅引用 api 公共类型）编译通过后删除；src/test 无 Minecraft classpath（moddev 不给 test 源集挂 mc 依赖） | 验收"API 可被外部引用"；冒烟验证不留测试类，保持最小 diff |
+| 2026-08-06 | RecipeMatch→ItemTag：util 包 `ItemTagMatch`（TagKey<Item> + 价值 amount）替代旧版 Mantle RecipeMatch；`Material.addItem(TagKey,value)/addItemIngot/addCommonItems(金属路径)/matches/getMatchValue/hasItems` 落位；代表物品支持 tag 式（运行时从 tag 内容取首个，旧版 representativeOre）与 Item/ItemStack 式 | 1.21.1 无 OreDictionary，TagKey 是唯一匹配路径；`setRepresentativeItem` 取消旧版"必须已关联"校验（材料绑定在 Mod 构造器，早于数据包 tag 加载，无法校验） |
+| 2026-08-06 | 旧版 oredict 名映射规则：有 c: 约定直连（ingotCobalt→c:ingots/cobalt、stickWood→c:rods/wooden、gemPrismarine→c:gems/prismarine、bone→c:bones、string→c:strings、feather→c:feathers、blaze_rod→c:rods/blaze、sugar_cane→c:crops/sugar_cane、cobblestone→c:cobblestones、stone→c:stones、obsidian→c:obsidians、netherrack→c:netherracks、endstone→c:end_stones）；无 c: 对应项 → mod 命名空间 tag（flint/cactus/bonemeal/paper/sponges/vines/packed_ice/end_rods/storage_blocks/prismarine(+bricks/dark)），DataGen 加入原版物品；plankWood/logWood/treeLeaves → minecraft:planks/logs/leaves；金属合金（pigiron 等 9 种）→ c:ingots|nuggets|storage_blocks/<path> 约定 tag（现为空，附属/物品注册后自动生效） | 500mod 兼容：其他 mod 物品带同 tag 即自动关联材料；仅关联本 mod 未注册物品的旧条目（firewood/slimecrystal*/boneBloodied/slimevine*/slimeleaf*）留待物品注册会话 |
 
 ## 子系统清单
 > 2026-08-05 首次分析 `./TinkersAntique-1.12/src/main/java/slimeknights/tconstruct/`，顶层 8 个子包：common / library / tools / smeltery / world / shared / gadgets / plugin
@@ -122,7 +124,7 @@
 - TConConfig 的 generateCobaltOre / generateArditeOre 开关未接线（BiomeModifier 为数据驱动，无法读运行时 config）
 - 材料特质为字符串占位（如 "momentum"），无实际游戏效果，待修饰符会话实现 Trait 类
 - bolt_core / sharpening_kit 部件未注册（BoltCore 双材料、SharpeningKit 属工具修饰子系统），待对应会话
-- 材料↔物品关联（旧 RecipeMatch addItem/addCommonItems）未实现：部件经 DataComponent 直存材料标识可用，但"钴锭→钴材料"等自动关联待 RecipeMatch→ItemTag 会话
+- 材料↔物品关联已实现（ItemTagMatch）；遗留：仅关联本 mod 未注册物品的旧条目（firewood、slimecrystal*/slimeleaf*/slimevine*、boneBloodied）未绑定，待物品注册会话；合金金属（pigiron/bronze/lead/silver/electrum/steel/alubrass/alumite/manyullyn/knightslime）的 c: tag 现为空（无 mod 提供物品），附属注册后自动生效
 
 ## 已踩过的坑（随开发补充）
 - `.m2` 本地 Maven 仓库（`C:\Users\<user>\.m2\repository`）中曾有损坏的 parchment zip（25KB，正常 889KB），因 `mavenLocal()` 排仓库首位被优先选中，导致 jst 报 `ZipException: zip END header not found`、`createMinecraftArtifacts` 失败 → 删掉 `.m2/repository/org/parchmentmc` 后恢复（gradle modules-2 缓存有完好副本）
@@ -142,6 +144,15 @@
 - 静态块中前向引用后声明的静态字段是编译错误（非法前向引用）→ 把被引用的 Map 声明移到类顶部
 
 ## 会话记录
+### 2026-08-06 会话3.5：RecipeMatch→ItemTag 材料-物品关联体系（完成）
+- util 包新建 `ItemTagMatch`（record：TagKey<Item> + amount 价值），替代旧版 Mantle RecipeMatch（matches = stack.is(tag)，空栈恒 false）
+- Material 新增：`addItem(TagKey, value)`（旧版 addItem(oredict,1,amount)，needed 恒 1 已省略）/ `addItemIngot` / `addCommonItems(金属路径)`（c:ingots|nuggets|storage_blocks/<path> 三件套）/ `matches` / `getMatchValue` / `hasItems` / `getItemMatches`；代表物品三式：setRepresentativeItem(TagKey)（运行时 BuiltInRegistries.ITEM.getTag 取首个，对应旧版 representativeOre）/ (Item) / (ItemStack)
+- 迁移差异：setRepresentativeItem 取消旧版"必须已关联否则 warn"校验——材料绑定在 Mod 构造器，早于数据包 tag 加载，运行期校验不可行（javadoc 注明）
+- 40 材料绑定（ModMaterials.registerItemAssociations，1:1 自 TinkerMaterials.setupMaterials）：wood(rods/planks/logs)、stone(cobblestones+stones)、flint/cactus/bonemeal/paper/sponges/vines/packed_ice/end_rods/prismarine 系列走 mod 命名空间 tag；骨/obsidian/netherrack/endstone/string/feather/blaze/reed 走 c: tag；leaf→minecraft:leaves；14 金属/合金 addCommonItems（cobalt/ardite 复用会话2 已有 c: tag）
+- TConTags 新增 11 个 mod 命名空间 tag 常量；TConItemTagsProvider DataGen 加入原版物品（flint、cactus、prismarine×3、bone_meal、paper、sponge、vine、packed_ice、end_rod）
+- **验证全通过**：`./gradlew build`（BUILD SUCCESSFUL，1 次修复 HolderSet.Named 无 isEmpty() → 改 size()）、`./gradlew runData`（+11 文件，tag JSON 内容核对无误）、二次 build 确认
+- 遗留：firewood/slimecrystal*/boneBloodied/slimevine*/slimeleaf* 关联待物品注册会话；合金 c: tag 现空待附属填充；匹配体系暂无调用方（冶炼/部件加工台会话接入）
+- 下一步：流体系统（熔融钴/阿迪特）或会话4.5b（ranged/修复/GUI）
 ### 2026-08-06 会话4.5：附属扩展 API（完成）
 - api 包（只放接口/事件/门面）：`TConstructNirvanaAPI` 门面 + 5 个 Registry 接口（MaterialRegistry / ModifierRegistry / ToolPartRegistry / PatternRegistry / FluidRegistry）+ 5 个事件类（ToolBuildEvent / ModifierTriggerEvent / SmelteryEvent 基类 + MeltingEvent / CastingEvent）
 - impl 包：5 个 RegistryImpl 实现类（委托 ModMaterials / Modifiers / ModToolParts / ModPatterns / ModFluids），附属不直接引用

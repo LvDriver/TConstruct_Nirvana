@@ -1,10 +1,21 @@
 package com.lvdriver.tconstruct_nirvana.material;
 
+import com.lvdriver.tconstruct_nirvana.util.ItemTagMatch;
+import net.minecraft.core.HolderSet;
+import net.minecraft.core.registries.BuiltInRegistries;
+import net.minecraft.resources.ResourceLocation;
+import net.minecraft.tags.ItemTags;
+import net.minecraft.tags.TagKey;
+import net.minecraft.world.item.Item;
+import net.minecraft.world.item.ItemStack;
+
+import java.util.ArrayList;
 import java.util.Collection;
 import java.util.LinkedHashMap;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
+import java.util.Optional;
 
 /**
  * 材料定义（1:1 移植自 Tinkers' Antique {@code Material}）。
@@ -14,8 +25,9 @@ import java.util.Map;
  * 物品价值常量（Ingot=144 等）供液体换算与部件制作使用。</p>
  *
  * <p>1.21.1 迁移说明：材料数据为纯静态注册（{@link ModMaterials}），不依赖 NBT；
- * 特质以字符串标识占位（{@code Trait} 类在修饰符会话落地），物品关联
- * （RecipeMatch→ItemTag 匹配）在后续会话补全。</p>
+ * 特质以字符串标识占位（{@code Trait} 类在修饰符会话落地）；物品关联以
+ * {@link com.lvdriver.tconstruct_nirvana.util.ItemTagMatch}（TagKey 匹配）承载，
+ * 替代旧版 Mantle RecipeMatch。</p>
  */
 public class Material {
 
@@ -69,6 +81,15 @@ public class Material {
 
     /** 属性类型 -> 特质标识列表（trait 实现于修饰符会话落地）。 */
     protected final Map<String, List<String>> traits = new LinkedHashMap<>();
+
+    /** 物品关联列表（旧版 RecipeMatchRegistry.items）：TagKey 匹配 + 价值。 */
+    private final List<ItemTagMatch> itemMatches = new ArrayList<>();
+
+    /** 代表物品（显示用，如创造标签页/JEI）；{@link ItemStack#EMPTY} 表示未设置。 */
+    private ItemStack representativeItem = ItemStack.EMPTY;
+
+    /** 代表物品的 tag 形式（旧版 representativeOre）：运行时从 tag 内容取首个物品。 */
+    private TagKey<Item> representativeOre;
 
     public Material(String identifier, int color) {
         this(identifier, color, false);
@@ -189,6 +210,116 @@ public class Material {
             return List.copyOf(traits.get(null));
         }
         return List.of();
+    }
+
+    /* ---------- 物品关联（旧版 RecipeMatch→1.21.1 TagKey） ----------
+     * 注册侧已由 ModMaterials.registerItemAssociations 接入；
+     * 查询/展示侧（matches / getMatchValue / getRepresentativeItem 等）
+     * 当前无调用方，待创造标签页 / JEI 信息 / 部件加工台与冶炼炉会话接入。 */
+
+    /**
+     * 关联一类物品到本材料：该 tag 下每个物品代表 {@code value} 价值（mb）。
+     * 旧版 {@code addItem(String oredict, int needed, int amount)} 的 1.21.1 版
+     * （needed 恒为 1，已省略）；矿物词典名映射为 {@code c:} 前缀 tag。
+     */
+    public Material addItem(TagKey<Item> tag, int value) {
+        itemMatches.add(new ItemTagMatch(tag, value));
+        return this;
+    }
+
+    /** 关联价值为 {@link #VALUE_Ingot} 的一类物品（旧版 {@code addItemIngot}）。 */
+    public Material addItemIngot(TagKey<Item> tag) {
+        return addItem(tag, VALUE_Ingot);
+    }
+
+    /**
+     * 金属材料快捷关联：锭/粒/块三件套（旧版 {@code addCommonItems("Cobalt")}）。
+     *
+     * @param metalPath 小写金属名（如 {@code "cobalt"}、{@code "pig_iron"}），
+     *                  映射为 {@code c:ingots/<path>} / {@code c:nuggets/<path>} /
+     *                  {@code c:storage_blocks/<path>}
+     */
+    public Material addCommonItems(String metalPath) {
+        addItem(cTag("ingots/" + metalPath), VALUE_Ingot);
+        addItem(cTag("nuggets/" + metalPath), VALUE_Nugget);
+        addItem(cTag("storage_blocks/" + metalPath), VALUE_Block);
+        return this;
+    }
+
+    private static TagKey<Item> cTag(String path) {
+        return ItemTags.create(ResourceLocation.fromNamespaceAndPath("c", path));
+    }
+
+    /** 返回首个命中该物品的匹配器（按添加顺序），未关联返回 empty。 */
+    public Optional<ItemTagMatch> matches(ItemStack stack) {
+        for (ItemTagMatch match : itemMatches) {
+            if (match.matches(stack)) {
+                return Optional.of(match);
+            }
+        }
+        return Optional.empty();
+    }
+
+    /** 该物品代表的本材料价值（mb），未关联返回 0。 */
+    public int getMatchValue(ItemStack stack) {
+        return matches(stack).map(ItemTagMatch::amount).orElse(0);
+    }
+
+    /** 是否已关联任何物品（旧版 {@code hasItems}）。 */
+    public boolean hasItems() {
+        return !itemMatches.isEmpty();
+    }
+
+    /** 全部物品关联（只读视图）。 */
+    public List<ItemTagMatch> getItemMatches() {
+        return List.copyOf(itemMatches);
+    }
+
+    /* ---------- 代表物品 ---------- */
+
+    /**
+     * 指定代表物品的 tag：{@link #getRepresentativeItem()} 时从该 tag 运行期内容
+     * 取首个物品（旧版 {@code setRepresentativeItem(String representativeOre)}）。
+     */
+    public Material setRepresentativeItem(TagKey<Item> representativeOre) {
+        this.representativeOre = representativeOre;
+        return this;
+    }
+
+    /** 指定代表物品（旧版 {@code setRepresentativeItem(Item)}）。 */
+    public Material setRepresentativeItem(Item representativeItem) {
+        return setRepresentativeItem(new ItemStack(representativeItem));
+    }
+
+    /**
+     * 指定代表物品。
+     *
+     * <p>迁移说明：旧版要求该物品已通过 {@code addItem} 关联（否则 warn 拒绝）；
+     * 1.21.1 中 tag 内容在数据包加载后才可用，而材料绑定发生在 Mod 构造器
+     * （早于加载），无法校验，故改为直接接受，由调用方保证合理性。</p>
+     */
+    public Material setRepresentativeItem(ItemStack representativeItem) {
+        if (representativeItem == null || representativeItem.isEmpty()) {
+            this.representativeItem = ItemStack.EMPTY;
+        } else {
+            this.representativeItem = representativeItem.copy();
+        }
+        return this;
+    }
+
+    /**
+     * 获取代表物品（用于创造标签页/JEI 显示）。
+     * tag 形式优先（运行时解析 tag 内容首个物品），其次为直接设置的代表物品；
+     * 均无返回 {@link ItemStack#EMPTY}。
+     */
+    public ItemStack getRepresentativeItem() {
+        if (representativeOre != null) {
+            HolderSet.Named<Item> holders = BuiltInRegistries.ITEM.getTag(representativeOre).orElse(null);
+            if (holders != null && holders.size() > 0) {
+                return new ItemStack(holders.get(0).value());
+            }
+        }
+        return representativeItem;
     }
 
     /* ---------- 标识与本地化 ---------- */

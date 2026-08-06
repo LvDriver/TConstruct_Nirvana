@@ -1,6 +1,10 @@
 package com.lvdriver.tconstruct_nirvana.material;
 
 import com.lvdriver.tconstruct_nirvana.util.HarvestLevels;
+import com.lvdriver.tconstruct_nirvana.util.TConTags;
+import net.minecraft.tags.ItemTags;
+import net.minecraft.world.item.Items;
+import net.neoforged.neoforge.common.Tags;
 
 import java.util.ArrayList;
 import java.util.Collections;
@@ -9,11 +13,12 @@ import java.util.List;
 /**
  * 全部工具材料的静态注册（1:1 移植自 Tinkers' Antique {@code TinkerMaterials}）。
  *
- * <p>所有材料默认隐藏，待材料-物品关联（RecipeMatch 会话）后由集成逻辑激活。
+ * <p>所有材料默认隐藏，由集成逻辑（创造标签页等）调用 {@code setVisible} 激活。
  * 属性数值与特质关联严格对照旧版 {@code TinkerMaterials}，未做任何调整。</p>
  *
  * <p>迁移说明：旧版 {@code addItem* / setRepresentativeItem / safeAdd}（矿物词典物品关联）
- * 依赖 Mantle RecipeMatch，本会话暂不移植，待 RecipeMatch→ItemTag 体系落地后补全；
+ * 已由 {@link #registerItemAssociations()} 以 1.21.1 TagKey 体系补全
+ * （{@link com.lvdriver.tconstruct_nirvana.util.ItemTagMatch}）；
  * 特质以字符串标识记录（如 "momentum"），Trait 实现见修饰符会话。</p>
  */
 public final class ModMaterials {
@@ -102,6 +107,7 @@ public final class ModMaterials {
         registerBowMaterialStats();
         registerProjectileMaterialStats();
         registerTraits();
+        registerItemAssociations();
     }
 
     /** 可制作/可浇铸标记（1:1 自旧版 setupMaterials）。 */
@@ -340,6 +346,101 @@ public final class ModMaterials {
         reed.addTrait("breakable");
         ice.addTrait("freezing");
         endrod.addTrait("endspeed");
+    }
+
+    /**
+     * 材料↔物品关联（1:1 自旧版 setupMaterials 的 addItem/addCommonItems/
+     * setRepresentativeItem，矿物词典名映射为 1.21.1 Tag）。
+     *
+     * <p>旧版 oredict 名映射规则：有 c: 约定的直接对应（{@code ingotCobalt}→
+     * {@code c:ingots/cobalt}、{@code stickWood}→{@code c:rods/wooden} 等）；
+     * 无 c: 对应项的原版物品用 mod 命名空间 tag（{@link TConTags}，DataGen 加入
+     * 原版物品）；金属/合金锭一律走 {@code c:} 约定（锭/粒/块三件套），其他 mod
+     * 的对应物品天然互通。</p>
+     *
+     * <p>迁移说明：旧版仅关联本 mod 物品的关联（firewood、slimecrystal*、
+     * boneBloodied、slimevine*、slimeleaf*）因对应物品尚未注册，留待物品注册会话；
+     * 合金金属（pigiron 等）c: tag 现为空，附属/物品注册后自动生效。</p>
+     */
+    private static void registerItemAssociations() {
+        // 天然资源/方块（旧版 oredict → 1.21.1 Tag）
+        wood.addItem(Tags.Items.RODS_WOODEN, Material.VALUE_Shard)          // stickWood
+                .addItem(ItemTags.PLANKS, Material.VALUE_Ingot)             // plankWood
+                .addItem(ItemTags.LOGS, Material.VALUE_Ingot * 4)           // logWood
+                .setRepresentativeItem(ItemTags.LOGS);
+        stone.addItemIngot(Tags.Items.COBBLESTONES)                         // cobblestone
+                .addItemIngot(Tags.Items.STONES)                            // stone
+                .setRepresentativeItem(Items.COBBLESTONE);
+        flint.addItem(TConTags.FLINT, Material.VALUE_Ingot)                 // Items.FLINT
+                .setRepresentativeItem(Items.FLINT);
+        cactus.addItemIngot(TConTags.CACTUS)                                // blockCactus
+                .setRepresentativeItem(Items.CACTUS);
+        bone.addItemIngot(Tags.Items.BONES)                                 // bone
+                .addItem(TConTags.BONE_MEAL, Material.VALUE_Fragment)       // bonemeal（旧版 DYE 白）
+                .setRepresentativeItem(Items.BONE);
+        obsidian.addItemIngot(Tags.Items.OBSIDIANS)                         // obsidian
+                .setRepresentativeItem(Items.OBSIDIAN);
+        prismarine.addItem(Tags.Items.GEMS_PRISMARINE, Material.VALUE_Fragment)                    // gemPrismarine
+                .addItem(TConTags.STORAGE_BLOCKS_PRISMARINE, Material.VALUE_Ingot)                 // blockPrismarine
+                .addItem(TConTags.STORAGE_BLOCKS_PRISMARINE_BRICKS, Material.VALUE_Fragment * 9)   // blockPrismarineBrick
+                .addItem(TConTags.STORAGE_BLOCKS_DARK_PRISMARINE, Material.VALUE_Ingot * 2)        // blockPrismarineDark
+                .setRepresentativeItem(Items.PRISMARINE);
+        endstone.addItemIngot(Tags.Items.END_STONES)                        // endstone
+                .setRepresentativeItem(Items.END_STONE);
+        paper.addItem(TConTags.PAPER, Material.VALUE_Fragment)              // paper
+                .setRepresentativeItem(Items.PAPER);
+        sponge.addItem(TConTags.SPONGES, Material.VALUE_Ingot)              // Blocks.SPONGE
+                .setRepresentativeItem(Items.SPONGE);
+        // firewood：旧版关联本 mod firewood 物品，物品未注册，留待物品注册会话
+
+        // 史莱姆
+        knightslime.addCommonItems("knightslime");                          // ingot/nugget/block Knightslime
+        // slime/blueslime/magmaslime：旧版关联 slimecrystal*，物品未注册，留待物品注册会话
+
+        // 下界
+        netherrack.addItemIngot(Tags.Items.NETHERRACKS)                     // netherrack
+                .setRepresentativeItem(Items.NETHERRACK);
+        cobalt.addCommonItems("cobalt");                                    // ingot/nugget/block Cobalt
+        ardite.addCommonItems("ardite");                                    // ingot/nugget/block Ardite
+        manyullyn.addCommonItems("manyullyn");                              // ingot/nugget/block Manyullyn
+
+        // 特殊骨材料（boneBloodied 物品未注册，留待物品注册会话）
+
+        // 金属与合金（addCommonItems 全量，c: tag 空时待附属/物品注册填充）
+        iron.addCommonItems("iron").setRepresentativeItem(Items.IRON_INGOT);
+        pigiron.addCommonItems("pig_iron");
+        copper.addCommonItems("copper").setRepresentativeItem(Items.COPPER_INGOT);
+        bronze.addCommonItems("bronze");
+        lead.addCommonItems("lead");
+        silver.addCommonItems("silver");
+        electrum.addCommonItems("electrum");
+        steel.addCommonItems("steel");
+        alubrass.addCommonItems("alubrass");
+        alumite.addCommonItems("alumite");
+
+        // 弓弦
+        string.addItemIngot(Tags.Items.STRINGS)                             // string
+                .setRepresentativeItem(Items.STRING);
+        vine.addItemIngot(TConTags.VINES)                                   // vine
+                .setRepresentativeItem(Items.VINE);
+        // slimevine_*：旧版关联本 mod slimeVine 物品，物品未注册，留待物品注册会话
+
+        // 额外箭杆
+        blaze.addItem(Tags.Items.RODS_BLAZE, Material.VALUE_Ingot)          // Items.BLAZE_ROD
+                .setRepresentativeItem(Items.BLAZE_ROD);
+        reed.addItem(Tags.Items.CROPS_SUGAR_CANE, Material.VALUE_Ingot)     // Items.REEDS
+                .setRepresentativeItem(Items.SUGAR_CANE);
+        ice.addItem(TConTags.PACKED_ICE, Material.VALUE_Ingot)              // Blocks.PACKED_ICE
+                .setRepresentativeItem(Items.PACKED_ICE);
+        endrod.addItem(TConTags.END_RODS, Material.VALUE_Ingot)             // Blocks.END_ROD
+                .setRepresentativeItem(Items.END_ROD);
+
+        // 箭羽
+        feather.addItemIngot(Tags.Items.FEATHERS)                           // feather
+                .setRepresentativeItem(Items.FEATHER);
+        leaf.addItem(ItemTags.LEAVES, Material.VALUE_Shard)                 // treeLeaves
+                .setRepresentativeItem(Items.OAK_LEAVES);
+        // slimeleaf_*：旧版关联本 mod slimeLeaves，物品未注册，留待物品注册会话
     }
 
     /** 全部材料（含隐藏），只读视图。 */

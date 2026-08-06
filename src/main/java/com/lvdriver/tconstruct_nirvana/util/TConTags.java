@@ -51,6 +51,31 @@ public final class TConTags {
     /** 全部工具部件（部件-模具关联的部件侧集合，供配方/附属 mod 使用）。 */
     public static final TagKey<Item> TOOL_PARTS = itemTag(TConstructNirvana.MODID, "tool_parts");
 
+    // 材料-物品关联自定义 tag（旧版 oredict 名无 c: 对应项时的 mod 命名空间方案，
+    // DataGen 将原版物品加入；其他 mod 可自行加入同 tag 物品扩展匹配）
+    /** 旧版具体物品 Items.FLINT → tconstruct_nirvana:flint。 */
+    public static final TagKey<Item> FLINT = itemTag(TConstructNirvana.MODID, "flint");
+    /** 旧版 blockCactus → tconstruct_nirvana:cactus。 */
+    public static final TagKey<Item> CACTUS = itemTag(TConstructNirvana.MODID, "cactus");
+    /** 旧版 blockPrismarine → tconstruct_nirvana:storage_blocks/prismarine。 */
+    public static final TagKey<Item> STORAGE_BLOCKS_PRISMARINE = itemTag(TConstructNirvana.MODID, "storage_blocks/prismarine");
+    /** 旧版 blockPrismarineBrick → tconstruct_nirvana:storage_blocks/prismarine_bricks。 */
+    public static final TagKey<Item> STORAGE_BLOCKS_PRISMARINE_BRICKS = itemTag(TConstructNirvana.MODID, "storage_blocks/prismarine_bricks");
+    /** 旧版 blockPrismarineDark → tconstruct_nirvana:storage_blocks/dark_prismarine。 */
+    public static final TagKey<Item> STORAGE_BLOCKS_DARK_PRISMARINE = itemTag(TConstructNirvana.MODID, "storage_blocks/dark_prismarine");
+    /** 旧版 Items.DYE(白) 骨粉 → tconstruct_nirvana:bonemeal。 */
+    public static final TagKey<Item> BONE_MEAL = itemTag(TConstructNirvana.MODID, "bonemeal");
+    /** 旧版 paper → tconstruct_nirvana:paper。 */
+    public static final TagKey<Item> PAPER = itemTag(TConstructNirvana.MODID, "paper");
+    /** 旧版 Blocks.SPONGE → tconstruct_nirvana:sponges。 */
+    public static final TagKey<Item> SPONGES = itemTag(TConstructNirvana.MODID, "sponges");
+    /** 旧版 vine → tconstruct_nirvana:vines。 */
+    public static final TagKey<Item> VINES = itemTag(TConstructNirvana.MODID, "vines");
+    /** 旧版 Blocks.PACKED_ICE → tconstruct_nirvana:packed_ice。 */
+    public static final TagKey<Item> PACKED_ICE = itemTag(TConstructNirvana.MODID, "packed_ice");
+    /** 旧版 Blocks.END_ROD → tconstruct_nirvana:end_rods。 */
+    public static final TagKey<Item> END_RODS = itemTag(TConstructNirvana.MODID, "end_rods");
+
     /** 采集类工具可用的 mineable 系列（工具物品 tag 与方块 tag 同名，DataGen 生成）。 */
     public static final List<TagKey<Block>> MINEABLE_TAGS = List.of(
             BlockTags.MINEABLE_WITH_PICKAXE,
