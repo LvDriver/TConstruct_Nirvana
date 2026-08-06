@@ -64,6 +64,11 @@ public class PartMaterialType {
         return neededParts;
     }
 
+    /** 材料须全部具备的属性类型列表。 */
+    public List<String> getNeededTypes() {
+        return neededTypes;
+    }
+
     /* ---------- 便捷工厂（1:1 旧版） ---------- */
 
     public static PartMaterialType head(ToolPart part) {

@@ -2,6 +2,7 @@ package com.lvdriver.tconstruct_nirvana.data;
 
 import com.lvdriver.tconstruct_nirvana.item.ModItems;
 import com.lvdriver.tconstruct_nirvana.item.part.ModToolParts;
+import com.lvdriver.tconstruct_nirvana.item.tool.TinkerToolItem;
 import com.lvdriver.tconstruct_nirvana.util.TConTags;
 import net.minecraft.core.HolderLookup;
 import net.minecraft.data.PackOutput;
@@ -46,6 +47,18 @@ public class TConItemTagsProvider extends ItemTagsProvider {
         // 全部工具部件（部件-模具关联的部件侧集合）
         for (var part : ModToolParts.getAllParts()) {
             tag(TConTags.TOOL_PARTS).add(part.get());
+        }
+
+        // 工具 mineable tag（物品侧，1:1 旧版 tool class → 1.21.1 mineable 体系）
+        for (var entry : com.lvdriver.tconstruct_nirvana.item.tool.ModTools.entries()) {
+            TinkerToolItem tool = (TinkerToolItem) entry.item().get();
+            for (var mineable : tool.getMineableTags()) {
+                tag(mineable).add(entry.item().get());
+            }
+        }
+        // 钴级工具（needs_cobalt_tool 物品侧，工具采掘等级 ≥ 4 时由 HarvestCheck 判定，tag 供附属使用）
+        for (var entry : com.lvdriver.tconstruct_nirvana.item.tool.ModTools.entries()) {
+            tag(TConTags.NEEDS_COBALT_TOOL_ITEMS).add(entry.item().get());
         }
     }
 }

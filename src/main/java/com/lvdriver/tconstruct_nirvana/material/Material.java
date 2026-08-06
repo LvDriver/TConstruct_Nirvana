@@ -211,4 +211,27 @@ public class Material {
     public String toString() {
         return "Material{" + identifier + '}';
     }
+
+    /** 按标识查找材料（内部委托 ModMaterials 静态注册表），未找到返回 {@link #UNKNOWN}。 */
+    public static Material getByIdentifier(String identifier) {
+        return ModMaterials.getMaterial(identifier) != null
+                ? ModMaterials.getMaterial(identifier)
+                : UNKNOWN;
+    }
+
+    /**
+     * 组合物品名（1:1 旧版 Material.getCombinedItemName）：材料前缀 + 工具名，
+     * 如 "钴 镐"（前缀取各材料 {@link #getLocalizedPrefixKey}，未知材料跳过）。
+     */
+    public static net.minecraft.network.chat.Component getCombinedItemName(
+            net.minecraft.network.chat.Component itemName, Collection<Material> materials) {
+        StringBuilder sb = new StringBuilder();
+        for (Material material : materials) {
+            if (material != UNKNOWN) {
+                sb.append(net.minecraft.network.chat.Component
+                        .translatable(material.getLocalizedPrefixKey()).getString()).append(' ');
+            }
+        }
+        return net.minecraft.network.chat.Component.literal(sb + itemName.getString());
+    }
 }

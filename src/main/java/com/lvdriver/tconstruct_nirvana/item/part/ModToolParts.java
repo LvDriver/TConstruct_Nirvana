@@ -61,13 +61,18 @@ public final class ModToolParts {
     public static final DeferredItem<ToolPart> ARROW_SHAFT = part("arrow_shaft", 288, MaterialTypes.SHAFT);
     public static final DeferredItem<ToolPart> FLETCHING = part("fletching", 288, MaterialTypes.FLETCHING);
 
+    /** 弩芯（1:1 旧版 BoltCore，cost=2 锭；双材料简化版见 {@link BoltCore}）。 */
+    public static final DeferredItem<BoltCore> BOLT_CORE = ModItems.ITEMS.register("bolt_core",
+            () -> new BoltCore(new Item.Properties(), 288));
+
     /** 碎块（1:1 旧版 Shard，cost=72=1 碎块，特殊匹配逻辑见 {@link Shard}）。 */
     public static final DeferredItem<Shard> SHARD = ModItems.ITEMS.register("shard",
             () -> new Shard(new Item.Properties()));
 
     static {
-        // shard 同样有模具形状（旧版 registerStencilTableCrafting(pattern, shard)）
+        // shard / bolt_core 同样有模具形状（旧版 registerStencilTableCrafting）
         PARTS.put(ResourceLocation.fromNamespaceAndPath(TConstructNirvana.MODID, "shard"), SHARD);
+        PARTS.put(ResourceLocation.fromNamespaceAndPath(TConstructNirvana.MODID, "bolt_core"), BOLT_CORE);
     }
 
     private ModToolParts() {

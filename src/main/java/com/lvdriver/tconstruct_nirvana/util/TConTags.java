@@ -8,6 +8,8 @@ import net.minecraft.tags.TagKey;
 import net.minecraft.world.item.Item;
 import net.minecraft.world.level.block.Block;
 
+import java.util.List;
+
 /**
  * TCon 物品/方块 Tag 定义。
  *
@@ -48,6 +50,24 @@ public final class TConTags {
 
     /** 全部工具部件（部件-模具关联的部件侧集合，供配方/附属 mod 使用）。 */
     public static final TagKey<Item> TOOL_PARTS = itemTag(TConstructNirvana.MODID, "tool_parts");
+
+    /** 采集类工具可用的 mineable 系列（工具物品 tag 与方块 tag 同名，DataGen 生成）。 */
+    public static final List<TagKey<Block>> MINEABLE_TAGS = List.of(
+            BlockTags.MINEABLE_WITH_PICKAXE,
+            BlockTags.MINEABLE_WITH_AXE,
+            BlockTags.MINEABLE_WITH_SHOVEL,
+            BlockTags.MINEABLE_WITH_HOE);
+
+    /** 与方块 mineable tag 同名的物品 tag（物品侧标记工具可采掘类别）。 */
+    public static TagKey<Item> itemTagFor(TagKey<Block> blockTag) {
+        return ItemTags.create(blockTag.location());
+    }
+
+    /** 本 mod 物品侧 mineable tag：pickaxe（其余按需在 DataGen 打同名 tag）。 */
+    public static final TagKey<Item> MINEABLE_PICKAXE_ITEMS = itemTagFor(BlockTags.MINEABLE_WITH_PICKAXE);
+    public static final TagKey<Item> MINEABLE_AXE_ITEMS = itemTagFor(BlockTags.MINEABLE_WITH_AXE);
+    public static final TagKey<Item> MINEABLE_SHOVEL_ITEMS = itemTagFor(BlockTags.MINEABLE_WITH_SHOVEL);
+    public static final TagKey<Item> MINEABLE_HOE_ITEMS = itemTagFor(BlockTags.MINEABLE_WITH_HOE);
 
     private static TagKey<Block> blockTag(String namespace, String path) {
         return BlockTags.create(ResourceLocation.fromNamespaceAndPath(namespace, path));

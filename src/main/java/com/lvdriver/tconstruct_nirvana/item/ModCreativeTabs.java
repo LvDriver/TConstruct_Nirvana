@@ -6,6 +6,7 @@ import com.lvdriver.tconstruct_nirvana.item.part.ModToolParts;
 import com.lvdriver.tconstruct_nirvana.item.part.ToolPart;
 import com.lvdriver.tconstruct_nirvana.item.pattern.ModPatterns;
 import com.lvdriver.tconstruct_nirvana.item.pattern.PatternItem;
+import com.lvdriver.tconstruct_nirvana.item.tool.ModTools;
 import com.lvdriver.tconstruct_nirvana.material.Material;
 import com.lvdriver.tconstruct_nirvana.material.ModMaterials;
 import net.minecraft.core.registries.Registries;
@@ -70,6 +71,18 @@ public final class ModCreativeTabs {
                     for (Material material : ModMaterials.getAllMaterials()) {
                         if (toolPart.canUseMaterial(material)) {
                             output.accept(toolPart.getItemstackWithMaterial(material));
+                            break;
+                        }
+                    }
+                }
+
+                // 工具：每工具第一个可用材料变体（1:1 旧版 addDefaultSubItems 默认行为）
+                for (com.lvdriver.tconstruct_nirvana.item.tool.TinkerToolItem tool : ModTools.getAllTools()) {
+                    for (Material material : ModMaterials.getAllMaterials()) {
+                        ItemStack built = tool.buildItem(
+                                java.util.Collections.nCopies(tool.getRequiredComponents().size(), material));
+                        if (tool.hasValidMaterials(built)) {
+                            output.accept(built);
                             break;
                         }
                     }

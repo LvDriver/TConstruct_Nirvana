@@ -4,13 +4,17 @@ import com.lvdriver.tconstruct_nirvana.block.ModBlockEntities;
 import com.lvdriver.tconstruct_nirvana.block.ModBlocks;
 import com.lvdriver.tconstruct_nirvana.config.TConConfig;
 import com.lvdriver.tconstruct_nirvana.data.ModDataComponents;
+import com.lvdriver.tconstruct_nirvana.event.TinkerToolEvents;
 import com.lvdriver.tconstruct_nirvana.fluid.ModFluids;
 import com.lvdriver.tconstruct_nirvana.item.ModCreativeTabs;
 import com.lvdriver.tconstruct_nirvana.item.ModItems;
 import com.lvdriver.tconstruct_nirvana.item.part.ModToolParts;
 import com.lvdriver.tconstruct_nirvana.item.pattern.ModPatterns;
+import com.lvdriver.tconstruct_nirvana.item.tool.ModTools;
 import com.lvdriver.tconstruct_nirvana.material.ModMaterials;
+import com.lvdriver.tconstruct_nirvana.modifier.ModModifiers;
 import com.lvdriver.tconstruct_nirvana.recipe.ModRecipeTypes;
+import com.lvdriver.tconstruct_nirvana.trait.ModTraits;
 import net.neoforged.bus.api.IEventBus;
 import net.neoforged.fml.ModContainer;
 import net.neoforged.fml.common.Mod;
@@ -46,8 +50,20 @@ public class TConstructNirvana {
         ModToolParts.getAllParts();
         var pattern = ModPatterns.PATTERN;
 
+        // 工具注册条目（构造时引用部件 get()，须在部件之后加载，注册事件期解析）
+        var tools = ModTools.PICKAXE;
+
         // 材料系统：静态注册全部材料与属性数据（1:1 自 Tinkers' Antique）
         ModMaterials.init();
+
+        // 修饰符系统：实例化注册 26 个修饰符（构造即注册）
+        ModModifiers.init();
+
+        // Trait 系统：实例化注册 53 个材料特质（构造即注册）
+        ModTraits.init();
+
+        // 工具运行期事件（EVENT_BUS：挖掘速度/采掘判定/格挡/物品 tick 等）
+        TinkerToolEvents.register();
 
         // 配置文件（矿物生成开关等）
         modContainer.registerConfig(ModConfig.Type.COMMON, TConConfig.SPEC);

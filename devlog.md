@@ -4,7 +4,7 @@
 > 目的：把"需要记住的事"从对话上下文搬到文件里，AI 按需读取，省 token、防遗忘。
 
 ## 项目状态
-- 当前阶段：会话3 完成（工具部件物品 + 模具系统）
+- 当前阶段：会话4 完成（工具组装系统 + 修饰符系统 + 材料特质系统）
 - 最后更新：2026-08-06
 - 旧源码路径：`./TinkersAntique-1.12/`（已解压，匠魂怀古 1.12.2 源码）
 
@@ -12,13 +12,14 @@
 - [x] 分析匠魂怀古源码模块结构，列出要移植的子系统清单
 - [x] 创建 NeoForge 1.21.1 MDK 工程（版本对齐：NeoForge 21.1.248 / Java 21 / Gradle 8.14.2）
 - [x] 会话2：材料与矿物系统（材料定义 + 钴/阿迪特矿 + 锭粒 + 世界生成 BiomeModifier + TCon 创造标签页）
-- [x] 配置 DataGen 并跑通 `runData`（46 个数据文件已生成）
-- [ ] 会话3：RecipeMatch→ItemTag 材料-物品关联体系（材料↔物品 addItem/addCommonItems 仍为遗留；部件已用 DataComponent 直存材料标识绕过）
+- [x] 配置 DataGen 并跑通 `runData`（100 个数据文件已生成）
 - [x] 会话3：工具部件系统（ToolPart + PartMaterialType + 部件数据 DataComponent + 模具 Pattern/Cast）
+- [ ] 会话3.5：RecipeMatch→ItemTag 材料-物品关联体系（材料↔物品 addItem/addCommonItems 仍为遗留；部件已用 DataComponent 直存材料标识绕过）
 - [ ] 会话4.5：附属扩展 API（公开注册表 + 事件钩子）
-- [ ] Trait/Modifier 体系（40 材料特质字符串占位 → 实际类，60+ 类）
+- [x] 会话4：工具组装系统（21 工具注册 + ToolData 公式 + 组装配方）+ 修饰符系统（26 修饰符）+ Trait 系统（53 特质）
+- [ ] 会话4.5b：ranged 完整化（自定义弹射物实体/拉弓 GUI/弩装填/箭袋）+ 完整修复机制（材料修复配方）+ 工具站/锻造厂 GUI（随工具组装）
 - [ ] 流体系统（熔融钴/阿迪特等，冶炼炉前置）
-- [ ] needs_cobalt_tool 工具侧接线（钴镐等）+ bolt_core/sharpening_kit 部件注册
+- [ ] needs_cobalt_tool 工具侧接线完善（数据驱动 level 判定已可用）+ sharpening_kit 部件注册
 - [ ] TConConfig 矿石生成开关接线（BiomeModifier 数据驱动限制）或移除
 - [ ] 确定 Mod 核心玩法（1:1 还原匠魂怀古，后续再调整/新增）
 - [ ] 定义注册清单：物品 / 方块 / 流体 / 实体 / 配方类型等
@@ -62,6 +63,19 @@
 | 2026-08-06 | 模具形状 ID = 部件物品注册名（如 tconstruct_nirvana:pick_head），Pattern/Cast 共用一套形状；关联走 ModToolParts.PARTS 静态注册表 + `tconstruct_nirvana:tool_parts` ItemTag | 1:1 旧版 Pattern TAG_PARTTYPE 存部件注册名；注册表查询 + Tag 供配方/附属使用 |
 | 2026-08-06 | bolt_core / sharpening_kit 部件本会话不注册 | BoltCore 双材料逻辑、SharpeningKit 属工具修饰子系统，留待对应会话，devlog 已记录 |
 | 2026-08-06 | 部件创造标签页只显示第一个可用材料变体（1:1 旧版 listAllPartMaterials=false 行为） | 40 材料 × 27 部件全列出会淹没标签页；完整材料变体后续加开关 |
+| 2026-08-06 | 工具属性合成 1:1 落 ToolData record（head→extra→handle 顺序，公式见用户确认）；MAX_DAMAGE 组件同步耐久、ATTRIBUTE_MODIFIERS 组件承载攻击/攻速（1.21.1 Item.getDefaultAttributeModifiers() 无参，无法按栈动态，改组件方案） | 用户确认的公式检查点；1.21.1 动态属性标准做法 |
+| 2026-08-06 | 攻击链 1.21.1 适配：不拦截原版攻击（无 PlayerAttackEvent），改 LivingIncomingDamageEvent 做 trait.damage 链 + cuttoff + modifyDamage 钩子；afterHit/耐久损耗在 hurtEnemy 覆写 | NeoForge 21.1 移除 PlayerAttackEvent/LivingHurtEvent/HarvestDropsEvent，对应替换为 LivingIncomingDamageEvent/BlockDropsEvent |
+| 2026-08-06 | 挖掘速度走 PlayerEvent.BreakSpeed、采掘判定走 PlayerEvent.HarvestCheck（needs_* tag → HarvestLevels 映射，Mattock 按斧/铲分等级）；AOE 扩展挂 BreakEvent；物品 tick 用 Item.inventoryTick（1.21.1 恢复） | 1.21.1 移除 getStrVsBlock/tool class 体系，mineable+needs tag 是唯一判定路径 |
+| 2026-08-06 | 修饰符/Trait 用静态注册表（Modifiers/Traits），不建 Registry（同材料先例）；identifier 即唯一键，材料挂载字符串直接匹配 | 纯数据/逻辑定义无需注册表，附属 API 会话再公开 accessor |
+| 2026-08-06 | 工具行为钩子（onToolDamage/afterHit/miningSpeed 等 16 个）提升到 Modifier 基类，Trait 继承；事件分发统一遍历 getActiveModifiers（trait + 修饰符实例去重） | necrotic/fiery 等是 Modifier 非 Trait，必须同一触发链 |
+| 2026-08-06 | 工具组装用特殊 CraftingRecipe（crafting_special，工作台按序摆部件→出工具，DataGen 生成），不做 GUI | 用户确认方案；工具站 GUI 后续会话 |
+| 2026-08-06 | 弓/箭等 ranged：注册 + 属性计算 1:1（LauncherData/ACCURACY 组件），发射为简化版（原版箭实体）；自定义弹射物实体/弩装填/箭袋留待会话4.5b | ranged 完整系统依赖实体系统，量级大 |
+| 2026-08-06 | BoltCore 简化为单材料部件（旧版双材料：核心+头），Bolt 组装时头部复用核心材料 | 双材料部件逻辑后续补 |
+| 2026-08-06 | 工具模型暂用代表部件贴图占位（生成器 singleTexture），完整部件组合渲染模型后续会话 | 旧版无整工具贴图（tmat 部件组合模型） |
+| 2026-08-06 | AOE 额外方块破坏前：采掘等级校验（requiredHarvestLevel 提取到 ToolHelper 复用）+ 手动派发 BreakEvent 尊重领地保护；`aoeInProgress` 实例标志防 BreakEvent 重入递归（security_review 发现并修复） | 低级锤不能 AOE 挖高级矿；额外方块须让领地 mod 可拦截；重入由 try/finally 复位 |
+| 2026-08-06 | security_review 遗留（后续会话）：ModCreative 无限耐久/无限槽须在应用入口接入时加创造/命令限定；silktouch 与 autosmelt/blasting 互斥 aspect；战牌格挡任意伤害源减半无冷却 | 现均不可达/低危，记录待办防回归 |
+| 2026-08-06 | AOE 1:1 细化（review 三轮闭环）：强度比过滤 `额外硬度/主硬度>10` 拒绝（防钴锤瞬破黑曜石）；俯视分轴（俯角>45° → width×height 水平面 + Y 向 depth 层，含 origin 层）；`damageTool` 早退（amount<=0||broken）+ maxDamage clamp | 旧版 canBreakExtraBlock/calcAOEBlocks 语义逐行对齐 |
+| 2026-08-06 | afterHit 钩子改由 `LivingDamageEvent.Post` 驱动（damageDealt = newDamage - blockedDamage），hurtEnemy 只留耐久/饥饿 | 1.21.1 无攻击结算后回调可拿实际伤害；necrotic 吸血因此拿到真实值；横扫副目标也触发 afterHit（与旧版差异已记录） |
 
 ## 子系统清单
 > 2026-08-05 首次分析 `./TinkersAntique-1.12/src/main/java/slimeknights/tconstruct/`，顶层 8 个子包：common / library / tools / smeltery / world / shared / gadgets / plugin
@@ -112,6 +126,11 @@
 - 物品模型贴图按注册名查找（`item/cobalt_ingot` → `textures/item/cobalt_ingot.png`），旧版 `ingot_cobalt.png` 命名不匹配会报 `Texture ... does not exist` → 贴图按注册名重命名
 - 1.21.1 移除 `Block#isBeaconBase`，信标基座改 `minecraft:beacon_base_blocks` tag
 - 旧版下界矿石贴图是 `nether_ore_cobalt/ardite`（非 ore_cobalt），1:1 沿用
+- 1.21.1 Item API 大改：`use` 返回 `InteractionResultHolder<ItemStack>`；`getDefaultAttributeModifiers()` 无参（动态属性写 `ATTRIBUTE_MODIFIERS` 组件）；无 `onLeftClickEntity/onBlockDestroyed/onBlockStartBreak/setDamage/getMaxDamage` 覆写点（改 `hurtEnemy/mineBlock/inventoryTick` + MAX_DAMAGE 组件）；`AttributeModifier` 构造为 `(ResourceLocation, double, Operation)`
+- NeoForge 21.1 移除 `PlayerAttackEvent/LivingHurtEvent/BlockEvent.HarvestDropsEvent` → 用 `LivingIncomingDamageEvent`（含 getOriginalAmount）/ `BlockDropsEvent`；`PlayerTickEvent` 在 `net.neoforged.neoforge.event.tick` 包（有 Pre/Post）；配方 `RecipeSerializer` 的 `codec()` 返回 `MapCodec` 且须实现 `streamCodec()`
+- 1.21.1 `RecipeManager.byType` 是 private → 用 `getAllRecipesFor`；`SpecialRecipeBuilder` 在 `net.minecraft.data.recipes` 且 `special()` 接收 `Function<CraftingBookCategory, Recipe>`；`save()` 不带命名空间时默认 `minecraft:`（须显式 `modid:name`）
+- 1.21.1 `Biome` 无公开温度/降雨 getter（TraitAridiculous 改 `#minecraft:is_hot` tag 判定）；`DamageTypeTags` 在 `net.minecraft.tags` 包；`Entity.getRandom()` 不存在（用 `level().getRandom()`）；`getMobType()` 移除（改 `EntityTypeTags.UNDEAD`）；`spawnSweepParticles` 移除（改 `broadcastEntityEvent(31)`）
+- DeferredHolder 直接传 `ItemStack.getOrDefault` 有泛型推断坑（CAP#1）→ fallback 显式泛型（`Map.<String,Integer>of()`）或组件加强类型 accessor（`ModDataComponents.traitLevelsType()`）
 - 静态初始化顺序坑：`ModToolParts.PARTS` 声明在 `part()` 调用之后时，`PARTS.put` 报 NPE（PARTS 尚未初始化）→ 被方法间接引用的静态字段必须声明在调用之前
 - `DeferredItem.get()` 在注册事件触发前调用会抛异常 → 构造器中"确保类加载"只能访问字段/调用静态方法，不能 `get()`
 - 静态块中前向引用后声明的静态字段是编译错误（非法前向引用）→ 把被引用的 Map 声明移到类顶部

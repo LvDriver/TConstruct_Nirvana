@@ -55,6 +55,9 @@ public final class TConDataGen {
                 List.of(new LootTableProvider.SubProviderEntry(TConBlockLoot::new, LootContextParamSets.BLOCK)),
                 event.getLookupProvider()));
 
+        // 配方（工具组装：部件 → 工具）
+        generator.addProvider(event.includeServer(), new TConRecipeProvider(packOutput, event.getLookupProvider()));
+
         /* ---------- 客户端数据 ---------- */
 
         // 方块状态/模型、物品模型、本地化

@@ -114,5 +114,120 @@ public class TConLanguageProvider extends LanguageProvider {
         add("ui.mininglevel.diamond", chinese ? "钻石" : "Diamond");
         add("ui.mininglevel.obsidian", chinese ? "黑曜石" : "Obsidian");
         add("ui.mininglevel.cobalt", chinese ? "钴" : "Cobalt");
+
+        // 工具（1:1 旧版工具名）
+        add("item.tconstruct_nirvana.pickaxe", chinese ? "镐" : "Pickaxe");
+        add("item.tconstruct_nirvana.shovel", chinese ? "铲" : "Shovel");
+        add("item.tconstruct_nirvana.hatchet", chinese ? "斧" : "Hatchet");
+        add("item.tconstruct_nirvana.mattock", chinese ? "鹤嘴锄" : "Mattock");
+        add("item.tconstruct_nirvana.kama", chinese ? "镰刀" : "Kama");
+        add("item.tconstruct_nirvana.hammer", chinese ? "锤" : "Hammer");
+        add("item.tconstruct_nirvana.excavator", chinese ? "挖掘机" : "Excavator");
+        add("item.tconstruct_nirvana.lumberaxe", chinese ? "伐木斧" : "Lumber Axe");
+        add("item.tconstruct_nirvana.scythe", chinese ? "大镰" : "Scythe");
+        add("item.tconstruct_nirvana.broadsword", chinese ? "宽剑" : "Broadsword");
+        add("item.tconstruct_nirvana.longsword", chinese ? "长剑" : "Longsword");
+        add("item.tconstruct_nirvana.rapier", chinese ? "细剑" : "Rapier");
+        add("item.tconstruct_nirvana.frypan", chinese ? "平底锅" : "Fry Pan");
+        add("item.tconstruct_nirvana.battlesign", chinese ? "战牌" : "Battle Sign");
+        add("item.tconstruct_nirvana.cleaver", chinese ? "斩首刀" : "Cleaver");
+        add("item.tconstruct_nirvana.shortbow", chinese ? "短弓" : "Shortbow");
+        add("item.tconstruct_nirvana.longbow", chinese ? "长弓" : "Longbow");
+        add("item.tconstruct_nirvana.crossbow", chinese ? "弩" : "Crossbow");
+        add("item.tconstruct_nirvana.arrow", chinese ? "箭" : "Arrow");
+        add("item.tconstruct_nirvana.bolt", chinese ? "弩矢" : "Bolt");
+        add("item.tconstruct_nirvana.shuriken", chinese ? "手里剑" : "Shuriken");
+        add("tooltip.tool.broken", chinese ? "已损坏" : "Broken");
+
+        // 工具属性显示（tooltip）
+        add("stat.durability", chinese ? "耐久：%s" : "Durability: %s");
+        add("stat.mininglevel", chinese ? "采掘等级：%s" : "Mining Level: %s");
+        add("stat.miningspeed", chinese ? "采掘速度：%s" : "Mining Speed: %s");
+        add("stat.attack", chinese ? "攻击力：%s" : "Attack: %s");
+        add("stat.free_modifiers", chinese ? "强化槽：%s" : "Modifiers: %s");
+
+        // 修饰符（1:1 旧版 identifier）
+        addModifier("haste", chinese ? "急速" : "Haste");
+        addModifier("sharpness", chinese ? "锋利" : "Sharpness");
+        addModifier("diamond", chinese ? "钻石" : "Diamond");
+        addModifier("emerald", chinese ? "绿宝石" : "Emerald");
+        addModifier("reinforced", chinese ? "加固" : "Reinforced");
+        addModifier("knockback", chinese ? "击退" : "Knockback");
+        addModifier("necrotic", chinese ? "凋灵之骨" : "Necrotic");
+        addModifier("fiery", chinese ? "烈焰" : "Fiery");
+        addModifier("beheading", chinese ? "斩首" : "Beheading");
+        addModifier("mending_moss", chinese ? "苔藓修复" : "Mending Moss");
+        addModifier("blasting", chinese ? "爆破" : "Blasting");
+        addModifier("silktouch", chinese ? "精准采集" : "Silk Touch");
+        addModifier("mod_autosmelt", chinese ? "自动冶炼" : "Auto-Smelt");
+        addModifier("glowing", chinese ? "发光" : "Glowing");
+        addModifier("luck", chinese ? "幸运" : "Luck");
+        addModifier("shulking", chinese ? "迷幻" : "Shulking");
+        addModifier("webbed", chinese ? "蛛网" : "Webbed");
+        addModifier("soulbound", chinese ? "灵魂绑定" : "Soulbound");
+        addModifier("incognito", chinese ? "隐匿" : "Incognito");
+        addModifier("creative", chinese ? "创造" : "Creative");
+        addModifier("bane_of_arthopods", chinese ? "节肢杀手" : "Bane of Arthopods");
+        addModifier("smite", chinese ? "亡灵杀手" : "Smite");
+        addModifier("harvestwidth", chinese ? "扩展宽" : "Expanded Width");
+        addModifier("harvestheight", chinese ? "扩展高" : "Expanded Height");
+        addModifier("fins", chinese ? "鱼鳍" : "Fins");
+        addModifier("extramodifier", chinese ? "额外强化" : "Extra Modifier");
+
+        // 材料特质（1:1 旧版 identifier，分级 trait 共用基础名）
+        addModifier("momentum", chinese ? "势头" : "Momentum");
+        addModifier("stonebound", chinese ? "石缚" : "Stonebound");
+        addModifier("jagged", chinese ? "锯齿" : "Jagged");
+        addModifier("depthdigger", chinese ? "深挖者" : "Depth Digger");
+        addModifier("unnatural", chinese ? "超凡" : "Unnatural");
+        addModifier("lightweight", chinese ? "轻盈" : "Lightweight");
+        addModifier("aquadynamic", chinese ? "流体动力" : "Aquadynamic");
+        addModifier("aridiculous", chinese ? "干旱狂热" : "Aridiculous");
+        addModifier("crumbling", chinese ? "崩解" : "Crumbling");
+        addModifier("coldblooded", chinese ? "冷血" : "Cold-Blooded");
+        addModifier("raging", chinese ? "狂暴" : "Raging");
+        addModifier("hellish", chinese ? "地狱" : "Hellish");
+        addModifier("holy", chinese ? "神圣" : "Holy");
+        addModifier("insatiable", chinese ? "贪婪" : "Insatiable");
+        addModifier("superheat", chinese ? "过热" : "Superheat");
+        addModifier("splintering", chinese ? "裂片" : "Splintering");
+        addModifier("fractured", chinese ? "碎裂" : "Fractured");
+        addModifier("crude", chinese ? "粗制" : "Crude");
+        addModifier("poisonous", chinese ? "剧毒" : "Poisonous");
+        addModifier("sharp", chinese ? "锋锐" : "Sharp");
+        addModifier("freezing", chinese ? "冻结" : "Freezing");
+        addModifier("spiky", chinese ? "尖刺" : "Spiky");
+        addModifier("prickly", chinese ? "多刺" : "Prickly");
+        addModifier("baconlicious", chinese ? "培根" : "Baconlicious");
+        addModifier("slimey_green", chinese ? "粘液（绿）" : "Slimey Green");
+        addModifier("slimey_blue", chinese ? "粘液（蓝）" : "Slimey Blue");
+        addModifier("enderference", chinese ? "末影干扰" : "Enderference");
+        addModifier("shocking", chinese ? "电击" : "Shocking");
+        addModifier("tasty", chinese ? "美味" : "Tasty");
+        addModifier("duritos", chinese ? "杜瑞托斯" : "Duritos");
+        addModifier("dense", chinese ? "致密" : "Dense");
+        addModifier("cheap", chinese ? "廉价" : "Cheap");
+        addModifier("cheapskate", chinese ? "守财奴" : "Cheapskate");
+        addModifier("ecological", chinese ? "生态" : "Ecological");
+        addModifier("petramor", chinese ? "石肤" : "Petramor");
+        addModifier("heavy", chinese ? "沉重" : "Heavy");
+        addModifier("stiff", chinese ? "僵硬" : "Stiff");
+        addModifier("writable", chinese ? "可写" : "Writable");
+        addModifier("magnetic", chinese ? "磁力" : "Magnetic");
+        addModifier("autosmelt", chinese ? "自动冶炼" : "Auto-Smelt");
+        addModifier("squeaky", chinese ? "吱吱" : "Squeaky");
+        addModifier("established", chinese ? "老练" : "Established");
+        addModifier("flammable", chinese ? "易燃" : "Flammable");
+        addModifier("alien", chinese ? "异形" : "Alien");
+        addModifier("splinters", chinese ? "倒刺" : "Splinters");
+        addModifier("breakable", chinese ? "易碎" : "Breakable");
+        addModifier("hovering", chinese ? "悬浮" : "Hovering");
+        addModifier("endspeed", chinese ? "末影速度" : "Endspeed");
+        addModifier("splitting", chinese ? "分裂" : "Splitting");
+    }
+
+    /** 修饰符/特质名称条目（modifier.<id>.name）。 */
+    private void addModifier(String id, String name) {
+        add("modifier." + id + ".name", name);
     }
 }
