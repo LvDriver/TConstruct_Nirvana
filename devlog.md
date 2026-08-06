@@ -61,7 +61,7 @@
 | 2026-08-06 | 部件材料用 PART_MATERIAL DataComponent 存材料 identifier 字符串（非 ResourceLocation） | 材料系统无注册表（ModMaterials 静态注册），identifier 即唯一键；模具形状才用 ResourceLocation（部件注册名） |
 | 2026-08-06 | 模具形状 ID = 部件物品注册名（如 tconstruct_nirvana:pick_head），Pattern/Cast 共用一套形状；关联走 ModToolParts.PARTS 静态注册表 + `tconstruct_nirvana:tool_parts` ItemTag | 1:1 旧版 Pattern TAG_PARTTYPE 存部件注册名；注册表查询 + Tag 供配方/附属使用 |
 | 2026-08-06 | bolt_core / sharpening_kit 部件本会话不注册 | BoltCore 双材料逻辑、SharpeningKit 属工具修饰子系统，留待对应会话，devlog 已记录 |
-| 2026-08-06 | 部件创造标签页只显示第一个可用材料变体（1:1 旧版 listAllPartMaterials=false 行为） | 40 材料 × 28 部件全列出会淹没标签页；完整材料变体后续加开关 |
+| 2026-08-06 | 部件创造标签页只显示第一个可用材料变体（1:1 旧版 listAllPartMaterials=false 行为） | 40 材料 × 27 部件全列出会淹没标签页；完整材料变体后续加开关 |
 
 ## 子系统清单
 > 2026-08-05 首次分析 `./TinkersAntique-1.12/src/main/java/slimeknights/tconstruct/`，顶层 8 个子包：common / library / tools / smeltery / world / shared / gadgets / plugin
@@ -156,11 +156,11 @@
 
 ### 2026-08-06 会话3：工具部件物品 + 模具系统（完成）
 - DataComponent：ModDataComponents 填充 PART_MATERIAL（Codec.STRING，材料 identifier）+ PATTERN_SHAPE（ResourceLocation.CODEC，模具形状 = 部件注册名，null=空白）
-- 部件系统（item/part/）：ToolPart（cost + statTypes 属性类型 + 材料 DataComponent 读写 + 1:1 属性 tooltip：head 耐久/采掘等级/采掘速度/攻击、handle 系数/耐久、extra 耐久、bow 拉弓速度/射程/伤害、bowstring 系数、shaft 系数/弹药、fletching 精准度/系数）+ Shard（cost=72，canUseMaterial 特殊）+ PartMaterialType（head/handle/extra/bow/bowstring/arrowHead/arrowShaft/fletching/crossbow 工厂）+ ModToolParts 注册 28 部件（27 ToolPart + shard，cost/属性类型 1:1 自 TinkerTools.registerToolParts）
+- 部件系统（item/part/）：ToolPart（cost + statTypes 属性类型 + 材料 DataComponent 读写 + 1:1 属性 tooltip：head 耐久/采掘等级/采掘速度/攻击、handle 系数/耐久、extra 耐久、bow 拉弓速度/射程/伤害、bowstring 系数、shaft 系数/弹药、fletching 精准度/系数）+ Shard（cost=72，canUseMaterial 特殊）+ PartMaterialType（head/handle/extra/bow/bowstring/arrowHead/arrowShaft/fletching/crossbow 工厂）+ ModToolParts 注册 27 部件（26 ToolPart + shard，cost/属性类型 1:1 自 TinkerTools.registerToolParts；boltCore 未注册）
 - 模具系统（item/pattern/）：PatternItem + CastItem（形状 DataComponent，getName 空白/带形状，cost tooltip）+ ModPatterns 注册 pattern/cast
-- 部件↔模具关联：形状 ID = 部件注册名 → ModToolParts.PARTS 静态注册表查询；`tconstruct_nirvana:tool_parts` ItemTag 生成（28 条目）
-- 创造标签页：模具（空白 + 28 形状 × pattern/cast）+ 部件（每部件第一个可用材料变体）
-- 资源：29 张贴图从旧版复制并按注册名重命名（parts/*.png 15 张 + 工具目录 head/guard/limb 等 14 张，映射自旧版 tmat 模型 layer0）；模型/lang（en_us+zh_cn：28 部件名 + pattern/cast + stat.* + ui.mininglevel.*）/tag 全部 DataGen
+- 部件↔模具关联：形状 ID = 部件注册名 → ModToolParts.PARTS 静态注册表查询；`tconstruct_nirvana:tool_parts` ItemTag 生成（27 条目）
+- 创造标签页：模具（空白 + 27 形状 × pattern/cast）+ 部件（每部件第一个可用材料变体）
+- 资源：29 张贴图从旧版复制并按注册名重命名（parts/*.png 15 张 + 工具目录 head/guard/limb 等 14 张，映射自旧版 tmat 模型 layer0）；模型/lang（en_us+zh_cn：27 部件名 + pattern/cast + stat.* + ui.mininglevel.*）/tag 全部 DataGen
 - **验证全通过**：`./gradlew check`（BUILD SUCCESSFUL）、`./gradlew build`（BUILD SUCCESSFUL）、`./gradlew runData`（73 个数据文件，32 新写）、`./gradlew runClient`（tconstruct_nirvana initialized → ResourceManager 加载完成 → 0 ERROR/Exception → 主菜单）
 - 踩坑修复：ModToolParts 静态初始化顺序（PARTS 声明在 part() 调用后 → NPE；移到类顶部）；DeferredItem.get() 注册前抛异常（主类只触发类加载不取值）
 - 遗留：bolt_core/sharpening_kit 未注册（ranged/工具修饰会话）；材料↔物品关联 RecipeMatch→ItemTag 未做（部件已用 DataComponent 绕过）
