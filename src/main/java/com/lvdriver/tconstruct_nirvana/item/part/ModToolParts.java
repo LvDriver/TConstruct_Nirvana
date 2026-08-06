@@ -93,8 +93,7 @@ public final class ModToolParts {
 
     /** 全部部件（含 shard），按注册顺序。 */
     public static List<DeferredItem<? extends ToolPart>> getAllParts() {
-        List<DeferredItem<? extends ToolPart>> all = new java.util.ArrayList<>(PARTS.values());
-        all.add(SHARD);
-        return Collections.unmodifiableList(all);
+        // shard 已在静态块登记进 PARTS，此处直接返回
+        return Collections.unmodifiableList(new java.util.ArrayList<>(PARTS.values()));
     }
 }
