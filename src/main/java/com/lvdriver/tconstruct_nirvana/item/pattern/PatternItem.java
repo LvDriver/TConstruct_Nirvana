@@ -63,19 +63,27 @@ public class PatternItem extends Item {
         if (shape == null) {
             return Component.translatable(baseKey + ".blank");
         }
-        // 旧版 translateFormatted(unloc + ".name", partName)："%s Pattern"
-        String partName = getPart(stack)
-                .map(part -> part.getName(ItemStack.EMPTY).getString())
-                .orElseGet(shape::toString);
-        return Component.translatable(baseKey + ".name", partName);
+        // 部件形状（旧版 translateFormatted(unloc + ".name", partName)："%s Pattern"）
+        java.util.Optional<ToolPart> part = getPart(stack);
+        if (part.isPresent()) {
+            String partName = part.get().getName(ItemStack.EMPTY).getString();
+            return Component.translatable(baseKey + ".name", partName);
+        }
+        // 铸造形状（旧版 cast_custom 的独立物品名，如 "Ingot Cast"）：item.<modid>.cast.ingot 等
+        return Component.translatable(baseKey + "." + shape.getPath());
     }
 
     @Override
     public void appendHoverText(ItemStack stack, TooltipContext context, List<Component> tooltip, TooltipFlag flag) {
         // 旧版 tooltip.pattern.cost：显示该模具制作对应部件的材料消耗（锭数）
-        getPart(stack).ifPresent(part -> {
-            float cost = part.getCost() / (float) Material.VALUE_Ingot;
-            tooltip.add(Component.translatable("tooltip.pattern.cost", DF.format(cost)));
-        });
+        ResourceLocation shape = getShape(stack);
+        java.util.Optional<ToolPart> part = getPart(stack);
+        Integer cost = part.isPresent()
+                ? part.get().getCost()
+                : shape == null ? null : ModPatterns.getCastShapeCost(shape);
+        if (cost != null) {
+            float costIngots = cost / (float) Material.VALUE_Ingot;
+            tooltip.add(Component.translatable("tooltip.pattern.cost", DF.format(costIngots)));
+        }
     }
 }

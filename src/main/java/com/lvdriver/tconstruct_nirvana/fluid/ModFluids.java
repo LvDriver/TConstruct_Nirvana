@@ -65,6 +65,10 @@ public final class ModFluids {
     private static final ResourceLocation LIQUID_FLOW = loc("block/liquid_flow");
     private static final ResourceLocation SLIME_STILL = loc("block/liquid_slime");
     private static final ResourceLocation SLIME_FLOW = loc("block/liquid_slime_flow");
+    private static final ResourceLocation POISON_STILL = loc("block/liquid_poison");
+    private static final ResourceLocation POISON_FLOW = loc("block/liquid_poison_flow");
+    private static final ResourceLocation MILK_STILL = loc("block/milk");
+    private static final ResourceLocation MILK_FLOW = loc("block/milk_flow");
 
     /** 一个流体的全部注册条目（type + 本体 + 方块 + 桶 + 客户端渲染参数）。 */
     public record FluidEntry(
@@ -146,6 +150,27 @@ public final class ModFluids {
     public static final FluidEntry BLOOD = liquid("blood", 0x540000, 336);
     /** 紫色史莱姆：温度 370，密度/粘度 1600（旧版 fluidSlime，无光）。 */
     public static final FluidEntry PURPLESLIME = slime("purpleslime", 0xefd236ff, 370);
+
+    // ============ 熔炼配方支撑流体（1:1 旧版 TinkerFluids，非合金输入，会话6 补注册） ============
+
+    /** 熔融绿宝石：熔点 999（旧版 fluidMetal("emerald", 0x58e78e)）。 */
+    public static final FluidEntry MOLTEN_EMERALD = metal("molten_emerald", 0x58e78e, 999, Rarity.COMMON);
+    /** 熔融钻石：熔点 999（旧版 fluidMetal("diamond", 0x8cf4e2)）。 */
+    public static final FluidEntry MOLTEN_DIAMOND = metal("molten_diamond", 0x8cf4e2, 999, Rarity.COMMON);
+    /** 熔融玻璃：熔点 625（旧版 fluidMetal("glass", 0xc0f5fe)）。 */
+    public static final FluidEntry MOLTEN_GLASS = metal("molten_glass", 0xc0f5fe, 625, Rarity.COMMON);
+    /** 钙质液：熔点 800（旧版 fluidStone，注册名 1:1 "notmilk"，lang 显示钙）。 */
+    public static final FluidEntry MOLTEN_CALCIUM = stone("notmilk", 0xcbc6a5, 800);
+    /** 毒液：熔点 336，水基 + 毒贴图（旧版 fluidPoison("venom", 0xb9b566)）。 */
+    public static final FluidEntry VENOM = register("venom", POISON_STILL, POISON_FLOW,
+            0xb9b566, 1000, 1000, 336, 0, Rarity.COMMON);
+    /** 乳：熔点 320，水基 + 奶贴图（旧版 fluidMilk("milk", 0xffffff)）。 */
+    public static final FluidEntry MILK = register("milk", MILK_STILL, MILK_FLOW,
+            0xffffff, 1000, 1000, 320, 0, Rarity.COMMON);
+    /** 绿色史莱姆：熔点 370（旧版 fluidSlime("greenslime", 0x82c873)，注册名 1:1）。 */
+    public static final FluidEntry GREEN_SLIME = slime("greenslime", 0x82c873, 370);
+    /** 蓝色史莱姆：熔点 370（旧版 fluidSlime("blueslime", 0xef67f0f5)，注册名 1:1）。 */
+    public static final FluidEntry BLUE_SLIME = slime("blueslime", 0xef67f0f5, 370);
 
     private ModFluids() {
     }

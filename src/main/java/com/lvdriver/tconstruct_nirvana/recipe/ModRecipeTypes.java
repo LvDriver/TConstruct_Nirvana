@@ -42,6 +42,42 @@ public final class ModRecipeTypes {
     public static final DeferredHolder<RecipeSerializer<?>, AlloyRecipeSerializer> ALLOY_SERIALIZER =
             RECIPE_SERIALIZERS.register("alloy", () -> AlloyRecipeSerializer.INSTANCE);
 
+    /** 熔炼配方类型（物品 → 流体 + 熔点）。 */
+    public static final DeferredHolder<RecipeType<?>, RecipeType<MeltingRecipe>> MELTING_TYPE =
+            RECIPE_TYPES.register("melting", () -> RecipeType.simple(
+                    ResourceLocation.fromNamespaceAndPath(TConstructNirvana.MODID, "melting")));
+
+    /** 熔炼配方序列化器。 */
+    public static final DeferredHolder<RecipeSerializer<?>, MeltingRecipeSerializer> MELTING_SERIALIZER =
+            RECIPE_SERIALIZERS.register("melting", () -> MeltingRecipeSerializer.INSTANCE);
+
+    /** 浇铸配方类型（模具 + 流体 → 物品 + 冷却时间）。 */
+    public static final DeferredHolder<RecipeType<?>, RecipeType<CastingRecipe>> CASTING_TYPE =
+            RECIPE_TYPES.register("casting", () -> RecipeType.simple(
+                    ResourceLocation.fromNamespaceAndPath(TConstructNirvana.MODID, "casting")));
+
+    /** 浇铸配方序列化器。 */
+    public static final DeferredHolder<RecipeSerializer<?>, CastingRecipeSerializer> CASTING_SERIALIZER =
+            RECIPE_SERIALIZERS.register("casting", () -> CastingRecipeSerializer.INSTANCE);
+
+    /** 桶浇铸配方类型（空桶 + 流体 → 满桶，通用规则）。 */
+    public static final DeferredHolder<RecipeType<?>, RecipeType<BucketCastingRecipe>> BUCKET_CASTING_TYPE =
+            RECIPE_TYPES.register("bucket_casting", () -> RecipeType.simple(
+                    ResourceLocation.fromNamespaceAndPath(TConstructNirvana.MODID, "bucket_casting")));
+
+    /** 桶浇铸配方序列化器。 */
+    public static final DeferredHolder<RecipeSerializer<?>, BucketCastingRecipeSerializer> BUCKET_CASTING_SERIALIZER =
+            RECIPE_SERIALIZERS.register("bucket_casting", () -> BucketCastingRecipeSerializer.INSTANCE);
+
+    /** 部件制作配方类型（模具 + 材料 → 部件 + 余料）。 */
+    public static final DeferredHolder<RecipeType<?>, RecipeType<PartRecipe>> PART_TYPE =
+            RECIPE_TYPES.register("part", () -> RecipeType.simple(
+                    ResourceLocation.fromNamespaceAndPath(TConstructNirvana.MODID, "part")));
+
+    /** 部件制作配方序列化器。 */
+    public static final DeferredHolder<RecipeSerializer<?>, PartRecipeSerializer> PART_SERIALIZER =
+            RECIPE_SERIALIZERS.register("part", () -> PartRecipeSerializer.INSTANCE);
+
     private ModRecipeTypes() {
     }
 

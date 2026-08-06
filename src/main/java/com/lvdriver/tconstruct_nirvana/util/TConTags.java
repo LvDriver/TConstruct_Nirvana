@@ -87,6 +87,43 @@ public final class TConTags {
     /** 旧版 Blocks.END_ROD → tconstruct_nirvana:end_rods。 */
     public static final TagKey<Item> END_RODS = itemTag(TConstructNirvana.MODID, "end_rods");
 
+    // 熔炼配方输入（旧版具体物品/无 c: 对应 oredict → mod 命名空间 tag，DataGen 加入原版物品；
+    // 其他 mod 可自行打同 tag 扩展"万物皆可熔"）
+    /** 旧版 Blocks.ICE → tconstruct_nirvana:ice。 */
+    public static final TagKey<Item> ICE = itemTag(TConstructNirvana.MODID, "ice");
+    /** 旧版 Blocks.SNOW（雪层）→ tconstruct_nirvana:snow。 */
+    public static final TagKey<Item> SNOW = itemTag(TConstructNirvana.MODID, "snow");
+    /** 旧版 Items.SNOWBALL → tconstruct_nirvana:snowballs。 */
+    public static final TagKey<Item> SNOWBALLS = itemTag(TConstructNirvana.MODID, "snowballs");
+    /** 旧版 Items.ROTTEN_FLESH → tconstruct_nirvana:rotten_flesh。 */
+    public static final TagKey<Item> ROTTEN_FLESH = itemTag(TConstructNirvana.MODID, "rotten_flesh");
+    /** 旧版 Items.SPIDER_EYE → tconstruct_nirvana:spider_eyes。 */
+    public static final TagKey<Item> SPIDER_EYES = itemTag(TConstructNirvana.MODID, "spider_eyes");
+    /** 旧版 Items.FISH(3) 河豚 → tconstruct_nirvana:pufferfish。 */
+    public static final TagKey<Item> PUFFERFISH = itemTag(TConstructNirvana.MODID, "pufferfish");
+    /** 旧版 Blocks.RAIL → tconstruct_nirvana:rails。 */
+    public static final TagKey<Item> RAILS = itemTag(TConstructNirvana.MODID, "rails");
+    /** 旧版 Blocks.ACTIVATOR_RAIL → tconstruct_nirvana:activator_rails。 */
+    public static final TagKey<Item> ACTIVATOR_RAILS = itemTag(TConstructNirvana.MODID, "activator_rails");
+    /** 旧版 Blocks.DETECTOR_RAIL → tconstruct_nirvana:detector_rails。 */
+    public static final TagKey<Item> DETECTOR_RAILS = itemTag(TConstructNirvana.MODID, "detector_rails");
+    /** 旧版 Blocks.GOLDEN_RAIL → tconstruct_nirvana:golden_rails。 */
+    public static final TagKey<Item> GOLDEN_RAILS = itemTag(TConstructNirvana.MODID, "golden_rails");
+    /** 旧版 Items.IRON_HORSE_ARMOR → tconstruct_nirvana:iron_horse_armors。 */
+    public static final TagKey<Item> IRON_HORSE_ARMORS = itemTag(TConstructNirvana.MODID, "iron_horse_armors");
+    /** 旧版 Items.GOLDEN_HORSE_ARMOR → tconstruct_nirvana:golden_horse_armors。 */
+    public static final TagKey<Item> GOLDEN_HORSE_ARMORS = itemTag(TConstructNirvana.MODID, "golden_horse_armors");
+    /** 旧版 oredict "clay"（粘土物品）→ tconstruct_nirvana:clay。 */
+    public static final TagKey<Item> CLAY = itemTag(TConstructNirvana.MODID, "clay");
+    /** 旧版 oredict "blockClay" → tconstruct_nirvana:clay_blocks。 */
+    public static final TagKey<Item> CLAY_BLOCKS = itemTag(TConstructNirvana.MODID, "clay_blocks");
+    /** 旧版 Blocks.BONE_BLOCK → tconstruct_nirvana:bone_blocks（无 c: 对应项）。 */
+    public static final TagKey<Item> BONE_BLOCKS = itemTag(TConstructNirvana.MODID, "bone_blocks");
+    /** 旧版 Blocks.STAINED_HARDENED_CLAY（染色陶瓦，浇铸成硬化粘土）→ tconstruct_nirvana:stained_terracotta。 */
+    public static final TagKey<Item> STAINED_TERRACOTTA = itemTag(TConstructNirvana.MODID, "stained_terracotta");
+    /** 普通沙（浇铸红沙用，旧版 Blocks.SAND meta 0；排除红沙防配方自循环）。 */
+    public static final TagKey<Item> SAND = itemTag(TConstructNirvana.MODID, "sand");
+
     /** 采集类工具可用的 mineable 系列（工具物品 tag 与方块 tag 同名，DataGen 生成）。 */
     public static final List<TagKey<Block>> MINEABLE_TAGS = List.of(
             BlockTags.MINEABLE_WITH_PICKAXE,

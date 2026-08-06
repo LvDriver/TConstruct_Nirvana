@@ -1,7 +1,6 @@
 package com.lvdriver.tconstruct_nirvana.impl;
 
 import com.lvdriver.tconstruct_nirvana.api.registry.PatternRegistry;
-import com.lvdriver.tconstruct_nirvana.item.part.ModToolParts;
 import com.lvdriver.tconstruct_nirvana.item.pattern.ModPatterns;
 import net.minecraft.resources.ResourceLocation;
 import net.minecraft.world.item.Item;
@@ -25,6 +24,6 @@ public final class PatternRegistryImpl implements PatternRegistry {
 
     @Override
     public boolean isKnownShape(ResourceLocation shapeId) {
-        return ModToolParts.getPart(shapeId).isPresent();
+        return ModPatterns.isKnownShape(shapeId);
     }
 }

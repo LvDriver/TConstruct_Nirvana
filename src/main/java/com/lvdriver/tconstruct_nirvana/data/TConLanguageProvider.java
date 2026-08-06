@@ -53,6 +53,14 @@ public class TConLanguageProvider extends LanguageProvider {
         FLUID_NAMES.put("molten_dirt", new String[]{"Molten Dirt", "熔融泥土"});
         FLUID_NAMES.put("blood", new String[]{"Blood", "血"});
         FLUID_NAMES.put("purpleslime", new String[]{"Purple Slime", "紫色史莱姆"});
+        FLUID_NAMES.put("molten_emerald", new String[]{"Molten Emerald", "熔融绿宝石"});
+        FLUID_NAMES.put("molten_diamond", new String[]{"Molten Diamond", "熔融钻石"});
+        FLUID_NAMES.put("molten_glass", new String[]{"Molten Glass", "熔融玻璃"});
+        FLUID_NAMES.put("notmilk", new String[]{"Calcium", "钙"});
+        FLUID_NAMES.put("venom", new String[]{"Venom", "毒液"});
+        FLUID_NAMES.put("milk", new String[]{"Milk", "乳"});
+        FLUID_NAMES.put("greenslime", new String[]{"Green Slime", "绿色史莱姆"});
+        FLUID_NAMES.put("blueslime", new String[]{"Blue Slime", "蓝色史莱姆"});
     }
 
     static {
@@ -132,7 +140,24 @@ public class TConLanguageProvider extends LanguageProvider {
         add("item.tconstruct_nirvana.pattern.name", chinese ? "%s 模具" : "%s Pattern");
         add("item.tconstruct_nirvana.cast.blank", chinese ? "空白浇铸模具" : "Blank Cast");
         add("item.tconstruct_nirvana.cast.name", chinese ? "%s 浇铸模具" : "%s Cast");
+        // 铸造形状模具（1:1 旧版 cast_custom 的 5 个 meta 名）
+        add("item.tconstruct_nirvana.cast.ingot", chinese ? "铸锭模具" : "Ingot Cast");
+        add("item.tconstruct_nirvana.cast.nugget", chinese ? "铸粒模具" : "Nugget Cast");
+        add("item.tconstruct_nirvana.cast.gem", chinese ? "铸宝石模具" : "Gem Cast");
+        add("item.tconstruct_nirvana.cast.plate", chinese ? "铸板模具" : "Plate Cast");
+        add("item.tconstruct_nirvana.cast.gear", chinese ? "铸齿轮模具" : "Gear Cast");
         add("tooltip.pattern.cost", chinese ? "材料消耗：%s" : "Material Cost: %s");
+
+        // JEI 分类（client/jei 包）
+        add("jei.tconstruct_nirvana.melting", chinese ? "熔炼" : "Melting");
+        add("jei.tconstruct_nirvana.casting", chinese ? "浇铸" : "Casting");
+        add("jei.tconstruct_nirvana.part", chinese ? "部件制作" : "Part Crafting");
+        add("jei.tconstruct_nirvana.alloy", chinese ? "合金" : "Alloying");
+        add("jei.tconstruct_nirvana.melting.temperature", chinese ? "所需炉温：%s" : "Temperature: %s");
+        add("jei.tconstruct_nirvana.casting.consumed", chinese ? "消耗模具" : "Consumes cast");
+        add("jei.tconstruct_nirvana.casting.basin", chinese ? "铸造盆（无模具）" : "Basin (no cast)");
+        add("jei.tconstruct_nirvana.casting.preference", chinese ? "输出取 c: tag 首选物品" : "Output: first item of c: tag");
+        add("jei.tconstruct_nirvana.part.material", chinese ? "材料消耗：%s mb（任意 craftable 材料）" : "Material: %s mb (any craftable material)");
 
         // 属性显示（1:1 旧版 stat.*.name）
         add("stat.head.name", chinese ? "头部" : "Head");

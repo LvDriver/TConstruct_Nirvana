@@ -1,5 +1,12 @@
 package com.lvdriver.tconstruct_nirvana.util;
 
+import com.mojang.serialization.Codec;
+import com.mojang.serialization.codecs.RecordCodecBuilder;
+import net.minecraft.core.registries.Registries;
+import net.minecraft.network.RegistryFriendlyByteBuf;
+import net.minecraft.network.codec.ByteBufCodecs;
+import net.minecraft.network.codec.StreamCodec;
+import net.minecraft.resources.ResourceLocation;
 import net.minecraft.tags.TagKey;
 import net.minecraft.world.item.Item;
 import net.minecraft.world.item.ItemStack;
@@ -25,6 +32,21 @@ public record ItemTagMatch(TagKey<Item> tag, int amount) {
     public boolean matches(ItemStack stack) {
         return !stack.isEmpty() && stack.is(tag);
     }
+
+    /** JSON 编解码（熔炼等数据驱动配方输入用，{@code {"tag":..,"amount":..}}）。 */
+    public static final Codec<ItemTagMatch> CODEC = RecordCodecBuilder.create(instance -> instance.group(
+            TagKey.codec(Registries.ITEM).fieldOf("tag").forGetter(ItemTagMatch::tag),
+            Codec.INT.fieldOf("amount").forGetter(ItemTagMatch::amount)
+    ).apply(instance, ItemTagMatch::new));
+
+    /** 网络同步编解码（与 {@link #CODEC} 同构）。 */
+    public static final StreamCodec<RegistryFriendlyByteBuf, ItemTagMatch> STREAM_CODEC =
+            StreamCodec.composite(
+                    ResourceLocation.STREAM_CODEC.map(
+                            loc -> TagKey.create(Registries.ITEM, loc), TagKey::location),
+                    ItemTagMatch::tag,
+                    ByteBufCodecs.VAR_INT, ItemTagMatch::amount,
+                    ItemTagMatch::new);
 
     @Override
     public String toString() {

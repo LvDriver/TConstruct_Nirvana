@@ -4,7 +4,7 @@
 > 目的：把"需要记住的事"从对话上下文搬到文件里，AI 按需读取，省 token、防遗忘。
 
 ## 项目状态
-- 当前阶段：会话5 完成（金属流体 + 温度系统 + 合金系统，不含冶炼炉结构）
+- 当前阶段：会话6 完成（全部自定义配方类型：熔炼/浇铸/桶浇铸/部件制作 + 合金核对 + JEI 预留）
 - 最后更新：2026-08-06
 - 旧源码路径：`./TinkersAntique-1.12/`（已解压，匠魂怀古 1.12.2 源码）
 
@@ -21,7 +21,9 @@
 - [ ] 箭袋：旧版匠魂怀古无此物（全库 grep 确认），1:1 原则跳过；如后续用户要求可自创
 - [ ] 工具站 GUI 增强：Shift 快速移动/拆解/修饰符按钮/修复按钮（当前最小版：5 部件槽+结果槽）
 - [x] 会话5：金属流体系统（26 流体注册 + 温度系统 + 合金配方 + c: tag）——熔炼/浇铸配方类型与冶炼炉事件触发点待冶炼炉会话
-- [ ] 熔炼/浇铸配方类型（MeltingRecipe/CastingRecipe 数据驱动版，熔炼炉会话接入）
+- [x] 会话6：全部自定义配方类型——熔炼/浇铸/桶浇铸/部件制作（Recipe+Serializer+注册+DataGen 561 条）+ 8 流体补注册 + 铸造形状 5 个 + JEI 4 分类（compileOnly 软依赖）
+- [ ] 熔炼/浇铸配方类型（MeltingRecipe/CastingRecipe 数据驱动版，熔炼炉会话接入）✓ 类型已完成，冶炼炉会话接入触发点
+- [ ] 冶炼炉多方块（后期）：炉内接线（熔炼/浇铸/合金匹配调用、部件熔炼/浇铸炉内逻辑、SmelteryEvent/MeltingEvent/CastingEvent 触发点）
 - [ ] needs_cobalt_tool 工具侧接线完善（数据驱动 level 判定已可用）+ sharpening_kit 部件注册
 - [ ] TConConfig 矿石生成开关接线（BiomeModifier 数据驱动限制）或移除
 - [ ] 确定 Mod 核心玩法（1:1 还原匠魂怀古，后续再调整/新增）
@@ -179,6 +181,25 @@
 - FluidIngredient 体系（1.21.1 新增）：`SizedFluidIngredient.FLAT_CODEC` JSON 为 `{"fluid":..,"amount":..}`/`{"tag":..,"amount":..}`；`FluidStack.CODEC` 输出 `{"id":..,"amount":..}`
 
 ## 会话记录
+### 2026-08-06 会话6：全部自定义配方类型 + 流体/模具补全 + JEI 预留（完成）
+- 配方类型（recipe/ 包，全部 Recipe+Serializer+注册到 ModRecipeTypes）：
+  - MeltingRecipe（物品 tag → 流体 + 熔点；温度自动 calcTemperature 1:1：300 + (amount/1296)^log9(2) × (流体温-300)，可显式覆盖；getUsableTemperature=max(1,temp-300)）
+  - CastingRecipe（模具+流体 → 物品；模具三态：形状 ID（部件注册名或铸造形状）/ 物品 tag（染色陶瓦/沙，消耗）/ null（铸造盆）；输出二态：静态物品 / 动态 c: tag 首选（1:1 旧版 PreferenceCastingRecipe——任何 mod 的锭/粒/块可铸出）；calcCooldownTime 1:1：24+(temp-300)×amount/1600；withTime 覆盖）
+  - BucketCastingRecipe（通用规则：c:buckets/empty 空桶 + 任意流体 → FluidUtil.getFilledBucket 满桶；时间 5/量 1000）
+  - PartRecipe（模具+材料 → 部件+余料，1:1 旧版 ToolBuilder.tryBuildToolPart：遍历 craftable 材料、getMatchValue 多槽求和 ≥ cost、canUseMaterial 过滤、leftover=(value-cost)/72 碎块；29 条 DataGen）
+  - AlloyRecipe 会话5 已完整（核对无缺）；ToolBuildRecipe/RepairRecipe 会话4/4.5b 已完整（核对无缺）
+- 8 流体补注册（ModFluids，1:1 旧版 TinkerFluids 温度/颜色/贴图类）：molten_emerald(999,金属)、molten_diamond(999,金属)、molten_glass(625,金属)、notmilk(800,石头类——注册名 1:1 旧版,lang 显示"钙")、venom(336,水基+毒贴图)、milk(320,水基+奶贴图)、greenslime/blueslime(370,史莱姆)；贴图 8 个从旧版复制（liquid_poison/liquid_poison_flow/milk/milk_flow ×2 mcmeta）
+- 铸造形状（ModPatterns.CAST_SHAPES，1:1 旧版 CastCustom 5 meta）：ingot/nugget/gem/plate/gear（含 cost 表 144/16/666/144/576）；PatternItem.getName 非部件形状 fallback（cast.<shape> lang key）；PatternRegistryImpl.isKnownShape 同步；创造页 +5 形状 cast
+- DataGen（TConRecipeProvider 扩展，全部输入 c: Tag，输出动态 tag）：
+  - melting 171 条：31 具体（冰/雪/雪球→水、腐肉→血、蛛眼/河豚→毒液、史莱姆球→绿史莱姆、骨粉/骨/骨块→钙、圆石/石→熔融石、黑曜石、铁轨×3/金铁轨、马铠×2、粘土×2、绿宝石/钻石 family×6、沙/玻璃块/玻璃板→玻璃）+ 20 金属 × 7（nugget/ingot/block/ore/plate/gear/dust）
+  - casting 351 条：11 具体（骨/骨块/绿宝石×2/钻石×2/玻璃板/黑曜石块/硬化粘土×2/红沙）+ 20 金属 × 5 动态输出（锭/粒/块/板/齿轮）+ 20 金属 × 4 形状 × 3 铸模流体（金 288/黄铜 144/铝黄铜 144，switchOutputs）
+  - part 29 条（ModToolParts.getAllParts 遍历）、bucket_casting 1 条、合金 10 条保留
+  - 输入 tag：金属 c:ores|ingots|nuggets|storage_blocks|plates|gears|dusts/<path>（path 同材料关联 pig_iron 等）；原版物品输入 14 个 mod 命名空间 tag（TConTags 新增 + TConItemTagsProvider 加入物品）；复用 c:bones/c:obsidians/c:stones/c:cobblestones/c:sands/c:glass_blocks/c:glass_panes/c:slime_balls/c:gems|c:ores|c:storage_blocks/*(emerald/diamond)
+- JEI 预留：build.gradle compileOnly `jei-1.21.1-common-api/neoforge-api:19.21.0.247`（腾讯镜像可拉取，gradle.properties 加 jei_version）；client/jei 包 TConJeiPlugin（@JeiPlugin，createFromVanilla 4 类型）+ 4 分类（MeltingRecipeCategory 物品→流体+熔点 tooltip；CastingRecipeCategory 模具三态+输出；PartRecipeCategory 模具+材料；AlloyRecipeCategory 多输入流体→输出）；lang 9 条
+- **验证**：`./gradlew build` BUILD SUCCESSFUL（多轮编译修复）；`./gradlew runData` 通过（836 文件：melting 171/casting 351/part 29/alloy 10 + tag/lang/模型）；配方 JSON 逐项抽查（温度 534=1/9 价值→1/2 温度系数 ✓ 数学 1:1）；`./gradlew runClient` 冒烟（initialized → 数据包加载 0 ERROR → 主菜单，新流体贴图/创造页无异常）
+- 踩坑修复：1.21.1 无 TagKey.streamCodec（RL.STREAM_CODEC.map 自定义）；无 StreamCodec.either（匿名布尔标记实现）；StreamCodec.unit 泛型推断失败（匿名类）；ResourceLocation.STREAM_CODEC/ByteBufCodecs.VAR_INT 是 ByteBuf 版——StreamCodec.composite 泛型 B 推断冲突（全匿名手写 encode/decode）；RecipeOutput 无 save（output.accept(id, recipe, null)）；ExtraCodecs.strictOptionalField 签名不同（optionalFieldOf(name, default)）；RecipeIngredientRole 在 mezz.jei.api.recipe 包（非 constants）；SizedFluidIngredient.getFluids() 取匹配流体；registerMelting(Item,Fluid,int) 第三参是**量**（非温度，温度自动算）
+- 遗留（冶炼炉会话）：seared 系列方块/灼热石流体（stone 熔炼已指向本 mod molten_stone）、泥砖/grout、史莱姆球/凝滞史莱姆块物品、钢浇铸（blazingBlood 未注册）、lavawood/clear glass、实体熔炼（EntityMeltingRecipe）；部件熔炼/浇铸为炉内逻辑（Tag 无法表达"带材料部件"输入，冶炼炉会话用 tool_parts tag+组件匹配实现）；oreNether/oreDense/orePoor/oreNugget 熔炼条目跳过（1.21.1 c: tag 无对应）；PartRecipe 消耗/副产物接入需部件加工台 GUI 会话；JEI alloy 输入为 SizedFluidIngredient 匹配流体快照（tag 未展开全部）
+- 下一步：冶炼炉多方块（含配方接入+事件触发点）或工具站 GUI 增强
 ### 2026-08-06 会话5：金属流体 + 温度系统 + 合金系统（完成）
 - 流体注册（fluid/ModFluids 重写）：26 种流体全注册——20 熔融金属（iron/gold/pigiron/cobalt/ardite/manyullyn/knightslime/alubrass/alumite/brass/copper/tin/bronze/zinc/lead/nickel/silver/electrum/steel/aluminum）+ 4 石头类（molten_stone/obsidian/clay/dirt）+ blood + purpleslime（合金输入支撑）；每流体 = FluidType（属性 1:1 旧版 TinkerFluids：金属 density 2000/viscosity 10000/light 10 + 各自温度/稀有度）+ BaseFlowingFluid.Source/Flowing + LiquidBlock + BucketItem；FluidEntry record 汇总全部条目（type/still/flowing/block/bucket/贴图/tint）；注册顺序 FLUID_TYPES→FLUIDS→ITEMS→BLOCKS
 - 温度系统：熔点 1:1 自旧版 setTemperature 写入 FluidType.Properties.temperature；附属 API `FluidRegistry.getTemperature(fluidId)`（default 方法，未注册返回 -1）

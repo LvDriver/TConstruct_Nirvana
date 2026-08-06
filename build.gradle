@@ -117,6 +117,11 @@ configurations {
 }
 
 dependencies {
+    // JEI API（compileOnly：仅编译期引用 JEI 类；运行时 JEI 缺失不影响本 mod 加载，软依赖）
+    // 版本：1.21.1 对应 JEI 19.21.x（客户端 recipe 分类插件见 client/jei 包）
+    compileOnly "mezz.jei:jei-${minecraft_version}-common-api:${jei_version}"
+    compileOnly "mezz.jei:jei-${minecraft_version}-neoforge-api:${jei_version}"
+
     // Example optional mod dependency with JEI
     // The JEI API is declared for compile time use, while the full JEI artifact is used at runtime
     // compileOnly "mezz.jei:jei-${mc_version}-common-api:${jei_version}"

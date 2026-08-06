@@ -74,6 +74,11 @@ public final class ModCreativeTabs {
                             new ItemStack(ModPatterns.CAST.get()),
                             shapeId(part)));
                 }
+                // 铸造形状模具（1:1 旧版 cast_custom：铸锭/粒/宝石/板/齿轮）
+                for (ResourceLocation shape : ModPatterns.CAST_SHAPES) {
+                    output.accept(PatternItem.setShape(
+                            new ItemStack(ModPatterns.CAST.get()), shape));
+                }
 
                 // 部件：每个部件第一个可用材料变体（1:1 旧版默认创造页行为）
                 for (DeferredItem<? extends ToolPart> part : ModToolParts.getAllParts()) {
