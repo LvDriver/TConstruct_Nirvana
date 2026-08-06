@@ -7,6 +7,8 @@ import com.lvdriver.tconstruct_nirvana.data.ModDataComponents;
 import com.lvdriver.tconstruct_nirvana.fluid.ModFluids;
 import com.lvdriver.tconstruct_nirvana.item.ModCreativeTabs;
 import com.lvdriver.tconstruct_nirvana.item.ModItems;
+import com.lvdriver.tconstruct_nirvana.item.part.ModToolParts;
+import com.lvdriver.tconstruct_nirvana.item.pattern.ModPatterns;
 import com.lvdriver.tconstruct_nirvana.material.ModMaterials;
 import com.lvdriver.tconstruct_nirvana.recipe.ModRecipeTypes;
 import net.neoforged.bus.api.IEventBus;
@@ -37,6 +39,12 @@ public class TConstructNirvana {
         ModRecipeTypes.register(modEventBus);
         ModDataComponents.register(modEventBus);
         ModCreativeTabs.register(modEventBus);
+
+        // 部件/模具注册条目在类加载时登记到 ModItems.ITEMS，此处确保类加载
+        // （DeferredRegister 条目必须先于 register() 登记，否则不会被注册；
+        // 注意不能调用 DeferredItem.get()，注册事件前会抛异常）
+        ModToolParts.getAllParts();
+        var pattern = ModPatterns.PATTERN;
 
         // 材料系统：静态注册全部材料与属性数据（1:1 自 Tinkers' Antique）
         ModMaterials.init();

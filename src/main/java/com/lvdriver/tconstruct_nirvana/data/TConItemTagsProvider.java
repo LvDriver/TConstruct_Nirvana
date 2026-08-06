@@ -1,6 +1,7 @@
 package com.lvdriver.tconstruct_nirvana.data;
 
 import com.lvdriver.tconstruct_nirvana.item.ModItems;
+import com.lvdriver.tconstruct_nirvana.item.part.ModToolParts;
 import com.lvdriver.tconstruct_nirvana.util.TConTags;
 import net.minecraft.core.HolderLookup;
 import net.minecraft.data.PackOutput;
@@ -41,5 +42,10 @@ public class TConItemTagsProvider extends ItemTagsProvider {
         copy(TConTags.ORES_ARDITE, TConTags.ORES_ARDITE_ITEMS);
         copy(TConTags.STORAGE_BLOCKS_COBALT, TConTags.STORAGE_BLOCKS_COBALT_ITEMS);
         copy(TConTags.STORAGE_BLOCKS_ARDITE, TConTags.STORAGE_BLOCKS_ARDITE_ITEMS);
+
+        // 全部工具部件（部件-模具关联的部件侧集合）
+        for (var part : ModToolParts.getAllParts()) {
+            tag(TConTags.TOOL_PARTS).add(part.get());
+        }
     }
 }

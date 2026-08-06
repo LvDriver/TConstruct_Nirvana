@@ -4,7 +4,7 @@
 > 目的：把"需要记住的事"从对话上下文搬到文件里，AI 按需读取，省 token、防遗忘。
 
 ## 项目状态
-- 当前阶段：会话2 完成（材料定义 + 矿物/金属物品 + 下界矿石生成 + 创造标签页）
+- 当前阶段：会话3 完成（工具部件物品 + 模具系统）
 - 最后更新：2026-08-06
 - 旧源码路径：`./TinkersAntique-1.12/`（已解压，匠魂怀古 1.12.2 源码）
 
@@ -13,11 +13,12 @@
 - [x] 创建 NeoForge 1.21.1 MDK 工程（版本对齐：NeoForge 21.1.248 / Java 21 / Gradle 8.14.2）
 - [x] 会话2：材料与矿物系统（材料定义 + 钴/阿迪特矿 + 锭粒 + 世界生成 BiomeModifier + TCon 创造标签页）
 - [x] 配置 DataGen 并跑通 `runData`（46 个数据文件已生成）
-- [ ] 会话3：RecipeMatch→ItemTag 材料-物品关联体系（材料/修饰符全局地基，优先）
-- [ ] 会话3：工具部件系统（ToolPart + PartMaterialType + 部件数据 DataComponent）
+- [ ] 会话3：RecipeMatch→ItemTag 材料-物品关联体系（材料↔物品 addItem/addCommonItems 仍为遗留；部件已用 DataComponent 直存材料标识绕过）
+- [x] 会话3：工具部件系统（ToolPart + PartMaterialType + 部件数据 DataComponent + 模具 Pattern/Cast）
+- [ ] 会话4.5：附属扩展 API（公开注册表 + 事件钩子）
 - [ ] Trait/Modifier 体系（40 材料特质字符串占位 → 实际类，60+ 类）
 - [ ] 流体系统（熔融钴/阿迪特等，冶炼炉前置）
-- [ ] needs_cobalt_tool 工具侧接线（钴镐等）
+- [ ] needs_cobalt_tool 工具侧接线（钴镐等）+ bolt_core/sharpening_kit 部件注册
 - [ ] TConConfig 矿石生成开关接线（BiomeModifier 数据驱动限制）或移除
 - [ ] 确定 Mod 核心玩法（1:1 还原匠魂怀古，后续再调整/新增）
 - [ ] 定义注册清单：物品 / 方块 / 流体 / 实体 / 配方类型等
@@ -41,10 +42,10 @@
 | 2026-08-05 | 资源先用旧版，后续手动重画 | 避免等待资源阻塞开发 |
 | 2026-08-05 | 必须考虑 500mod 整合包兼容（JEI/矿物词典等） | 目标就是整合包使用 |
 | 2026-08-05 | 冶炼炉多方块系统放到后期 | 最复杂的子系统，先铺基础设施 |
+| 2026-08-05 | 按子系统拆分 Reasonix 会话，串行推进 | 避免上下文膨胀导致缓存失效和代码不一致 |
 | 2026-08-05 | 脚手架版本：NeoForge 21.1.248 / moddev 2.0.91 / Gradle 8.14.2 / Parchment 2024.11.17 / JDK 21（Temurin） | 官方 MDK 21.1-mdg 分支模板；NeoForge 取 21.1.x 最新稳定版 |
 | 2026-08-05 | 网络环境特殊：services.gradle.org、plugins.gradle.org、mavenCentral 均不可达；Gradle 发行版走腾讯镜像，maven 仓库走腾讯 nexus maven-public 兜底 | 国内网络；本地已有 JDK 21，故移除官方 MDK 的 foojay toolchain 插件 |
 | 2026-08-05 | Parchment 官方仓库 maven.parchmentmc.org 已加入 build.gradle repositories（重定向到 ldtteam.jfrog.io/GCS，不稳定） | 兜底下载源 |
-| 2026-08-05 | 按子系统拆分 Reasonix 会话，串行推进 | 避免上下文膨胀导致缓存失效和代码不一致 |
 | 2026-08-06 | 材料系统落在新包 `material/`（Material + 8 类 stats record + ModMaterials 静态注册），不建 registry | 材料是纯数据定义，无需注册表；部件/物品才需要 DeferredRegister |
 | 2026-08-06 | 材料属性数据 1:1 移植自 `tools/TinkerMaterials.java`（40 材料全量）；特质先以字符串标识占位（如 "momentum"/"magnetic1"），Trait 实现留待修饰符会话 | 旧版 addTrait 依赖 ITrait 类（60+ 类），本会话不阻塞，数据先落 |
 | 2026-08-06 | 材料↔物品关联（addItem/addCommonItems/representativeItem，旧 RecipeMatch 体系）暂不移植，留待 RecipeMatch→ItemTag 会话 | 依赖 Mantle RecipeMatch，需按 1.21 Tag 体系重写 |
@@ -53,6 +54,14 @@
 | 2026-08-06 | 信标基座用 `minecraft:beacon_base_blocks` tag（1.21.1 已移除 Block#isBeaconBase） | 1.21 信标基座判定改为 tag（BeaconBlockEntity 硬编码检查） |
 | 2026-08-06 | 世界生成 1:1：每区块 20 矿脉（旧 rate=20）、size 5、替换 netherrack、Y 0~128（旧两段随机合并近似均匀）、BiomeModifier `add_features` + `#minecraft:is_nether` + underground_ores | BiomeModifier JSON 手写 provider（1.21.1 无 BiomeModifiersBuilder） |
 | 2026-08-06 | TConConfig 的 generateCobaltOre/generateArditeOre 开关暂不接线（BiomeModifier 是数据驱动，无法读运行时 config） | 待后续会话用数据条件/删除处理 |
+| 2026-08-06 | 配方输入一律用 Tag，禁止用具体物品 ID | 匠魂核心价值是"万物皆可熔"，用 Tag 才能熔其他 mod 的矿物 |
+| 2026-08-06 | 新增会话4.5：附属扩展 API | 公开材料/修饰符/部件/模具注册表 + 事件钩子，让附属 mod 能扩展 |
+| 2026-08-06 | AGENTS.md 新增"兼容性与附属生态"整节 | 每个会话都必须考虑 Tag 兼容、附属 API、软依赖，不单独提醒 |
+| 2026-08-06 | 部件↔属性类型映射直接挂在 ToolPart 上（statTypes 列表），不学旧版遍历工具查询 hasUseForStat | 工具尚未实现；映射来源 1:1 旧版工具定义（pick_head→HEAD、tool_rod→HANDLE、bow_limb→BOW+HEAD 等），工具会话可直接复用 |
+| 2026-08-06 | 部件材料用 PART_MATERIAL DataComponent 存材料 identifier 字符串（非 ResourceLocation） | 材料系统无注册表（ModMaterials 静态注册），identifier 即唯一键；模具形状才用 ResourceLocation（部件注册名） |
+| 2026-08-06 | 模具形状 ID = 部件物品注册名（如 tconstruct_nirvana:pick_head），Pattern/Cast 共用一套形状；关联走 ModToolParts.PARTS 静态注册表 + `tconstruct_nirvana:tool_parts` ItemTag | 1:1 旧版 Pattern TAG_PARTTYPE 存部件注册名；注册表查询 + Tag 供配方/附属使用 |
+| 2026-08-06 | bolt_core / sharpening_kit 部件本会话不注册 | BoltCore 双材料逻辑、SharpeningKit 属工具修饰子系统，留待对应会话，devlog 已记录 |
+| 2026-08-06 | 部件创造标签页只显示第一个可用材料变体（1:1 旧版 listAllPartMaterials=false 行为） | 40 材料 × 28 部件全列出会淹没标签页；完整材料变体后续加开关 |
 
 ## 子系统清单
 > 2026-08-05 首次分析 `./TinkersAntique-1.12/src/main/java/slimeknights/tconstruct/`，顶层 8 个子包：common / library / tools / smeltery / world / shared / gadgets / plugin
@@ -92,6 +101,8 @@
 - `needs_cobalt_tool`：钴/阿迪特矿需钴级工具采掘（1:1 还原旧版采掘等级 4），当前尚无钴工具 → 矿石暂无法正常采掘掉落，待工具会话接线
 - TConConfig 的 generateCobaltOre / generateArditeOre 开关未接线（BiomeModifier 为数据驱动，无法读运行时 config）
 - 材料特质为字符串占位（如 "momentum"），无实际游戏效果，待修饰符会话实现 Trait 类
+- bolt_core / sharpening_kit 部件未注册（BoltCore 双材料、SharpeningKit 属工具修饰子系统），待对应会话
+- 材料↔物品关联（旧 RecipeMatch addItem/addCommonItems）未实现：部件经 DataComponent 直存材料标识可用，但"钴锭→钴材料"等自动关联待 RecipeMatch→ItemTag 会话
 
 ## 已踩过的坑（随开发补充）
 - `.m2` 本地 Maven 仓库（`C:\Users\<user>\.m2\repository`）中曾有损坏的 parchment zip（25KB，正常 889KB），因 `mavenLocal()` 排仓库首位被优先选中，导致 jst 报 `ZipException: zip END header not found`、`createMinecraftArtifacts` 失败 → 删掉 `.m2/repository/org/parchmentmc` 后恢复（gradle modules-2 缓存有完好副本）
@@ -101,6 +112,9 @@
 - 物品模型贴图按注册名查找（`item/cobalt_ingot` → `textures/item/cobalt_ingot.png`），旧版 `ingot_cobalt.png` 命名不匹配会报 `Texture ... does not exist` → 贴图按注册名重命名
 - 1.21.1 移除 `Block#isBeaconBase`，信标基座改 `minecraft:beacon_base_blocks` tag
 - 旧版下界矿石贴图是 `nether_ore_cobalt/ardite`（非 ore_cobalt），1:1 沿用
+- 静态初始化顺序坑：`ModToolParts.PARTS` 声明在 `part()` 调用之后时，`PARTS.put` 报 NPE（PARTS 尚未初始化）→ 被方法间接引用的静态字段必须声明在调用之前
+- `DeferredItem.get()` 在注册事件触发前调用会抛异常 → 构造器中"确保类加载"只能访问字段/调用静态方法，不能 `get()`
+- 静态块中前向引用后声明的静态字段是编译错误（非法前向引用）→ 把被引用的 Map 声明移到类顶部
 
 ## 会话记录
 ### 2026-08-06 会话1：脚手架搭建（完成）
@@ -139,3 +153,15 @@
 - devlog 收工更新：待办补充会话3 及后续待办；已知 Bug 记录 3 条遗留限制
 - Git 存档并 push 至 GitHub（origin: https://github.com/LvDriver/TConstruct_Nirvana.git）
 - 下一会话建议：会话3 = RecipeMatch→ItemTag 材料-物品关联体系 + 工具部件系统（材料/修饰符全局地基，先铺）
+
+### 2026-08-06 会话3：工具部件物品 + 模具系统（完成）
+- DataComponent：ModDataComponents 填充 PART_MATERIAL（Codec.STRING，材料 identifier）+ PATTERN_SHAPE（ResourceLocation.CODEC，模具形状 = 部件注册名，null=空白）
+- 部件系统（item/part/）：ToolPart（cost + statTypes 属性类型 + 材料 DataComponent 读写 + 1:1 属性 tooltip：head 耐久/采掘等级/采掘速度/攻击、handle 系数/耐久、extra 耐久、bow 拉弓速度/射程/伤害、bowstring 系数、shaft 系数/弹药、fletching 精准度/系数）+ Shard（cost=72，canUseMaterial 特殊）+ PartMaterialType（head/handle/extra/bow/bowstring/arrowHead/arrowShaft/fletching/crossbow 工厂）+ ModToolParts 注册 28 部件（27 ToolPart + shard，cost/属性类型 1:1 自 TinkerTools.registerToolParts）
+- 模具系统（item/pattern/）：PatternItem + CastItem（形状 DataComponent，getName 空白/带形状，cost tooltip）+ ModPatterns 注册 pattern/cast
+- 部件↔模具关联：形状 ID = 部件注册名 → ModToolParts.PARTS 静态注册表查询；`tconstruct_nirvana:tool_parts` ItemTag 生成（28 条目）
+- 创造标签页：模具（空白 + 28 形状 × pattern/cast）+ 部件（每部件第一个可用材料变体）
+- 资源：29 张贴图从旧版复制并按注册名重命名（parts/*.png 15 张 + 工具目录 head/guard/limb 等 14 张，映射自旧版 tmat 模型 layer0）；模型/lang（en_us+zh_cn：28 部件名 + pattern/cast + stat.* + ui.mininglevel.*）/tag 全部 DataGen
+- **验证全通过**：`./gradlew check`（BUILD SUCCESSFUL）、`./gradlew build`（BUILD SUCCESSFUL）、`./gradlew runData`（73 个数据文件，32 新写）、`./gradlew runClient`（tconstruct_nirvana initialized → ResourceManager 加载完成 → 0 ERROR/Exception → 主菜单）
+- 踩坑修复：ModToolParts 静态初始化顺序（PARTS 声明在 part() 调用后 → NPE；移到类顶部）；DeferredItem.get() 注册前抛异常（主类只触发类加载不取值）
+- 遗留：bolt_core/sharpening_kit 未注册（ranged/工具修饰会话）；材料↔物品关联 RecipeMatch→ItemTag 未做（部件已用 DataComponent 绕过）
+- 下一步：RecipeMatch→ItemTag 材料-物品关联体系（或直接进工具组装/模具 GUI 会话）

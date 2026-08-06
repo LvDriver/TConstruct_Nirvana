@@ -2,19 +2,28 @@ package com.lvdriver.tconstruct_nirvana.item;
 
 import com.lvdriver.tconstruct_nirvana.TConstructNirvana;
 import com.lvdriver.tconstruct_nirvana.block.ModBlocks;
+import com.lvdriver.tconstruct_nirvana.item.part.ModToolParts;
+import com.lvdriver.tconstruct_nirvana.item.part.ToolPart;
+import com.lvdriver.tconstruct_nirvana.item.pattern.ModPatterns;
+import com.lvdriver.tconstruct_nirvana.item.pattern.PatternItem;
+import com.lvdriver.tconstruct_nirvana.material.Material;
+import com.lvdriver.tconstruct_nirvana.material.ModMaterials;
 import net.minecraft.core.registries.Registries;
 import net.minecraft.network.chat.Component;
+import net.minecraft.resources.ResourceLocation;
 import net.minecraft.world.item.CreativeModeTab;
 import net.minecraft.world.item.ItemStack;
 import net.neoforged.bus.api.IEventBus;
 import net.neoforged.neoforge.registries.DeferredHolder;
+import net.neoforged.neoforge.registries.DeferredItem;
 import net.neoforged.neoforge.registries.DeferredRegister;
 
 /**
  * 创造模式标签页注册中枢（DeferredRegister）。
  *
- * <p>TCon 标签页：放入当前会话注册的全部物品（钴/阿迪特矿石、金属块、锭、粒），
- * 后续会话注册的新物品按组追加。</p>
+ * <p>TCon 标签页：矿石/金属 + 模具（空白 + 各部件形状）+ 部件（每个部件一个
+ * 代表性材料变体，1:1 旧版 listAllPartMaterials=false 时创造页只显示第一个
+ * 可用材料变体）。</p>
  */
 public final class ModCreativeTabs {
 
@@ -39,8 +48,39 @@ public final class ModCreativeTabs {
                 // 粒
                 output.accept(ModItems.COBALT_NUGGET.get());
                 output.accept(ModItems.ARDITE_NUGGET.get());
+
+                // 模具：空白 + 各部件形状（图案模具）
+                output.accept(new ItemStack(ModPatterns.PATTERN.get()));
+                for (DeferredItem<? extends ToolPart> part : ModToolParts.getAllParts()) {
+                    output.accept(PatternItem.setShape(
+                            new ItemStack(ModPatterns.PATTERN.get()),
+                            shapeId(part)));
+                }
+                // 浇铸模具：空白 + 各部件形状
+                output.accept(new ItemStack(ModPatterns.CAST.get()));
+                for (DeferredItem<? extends ToolPart> part : ModToolParts.getAllParts()) {
+                    output.accept(PatternItem.setShape(
+                            new ItemStack(ModPatterns.CAST.get()),
+                            shapeId(part)));
+                }
+
+                // 部件：每个部件第一个可用材料变体（1:1 旧版默认创造页行为）
+                for (DeferredItem<? extends ToolPart> part : ModToolParts.getAllParts()) {
+                    ToolPart toolPart = part.get();
+                    for (Material material : ModMaterials.getAllMaterials()) {
+                        if (toolPart.canUseMaterial(material)) {
+                            output.accept(toolPart.getItemstackWithMaterial(material));
+                            break;
+                        }
+                    }
+                }
             })
             .build());
+
+    /** 部件注册名即模具形状 ID。 */
+    private static ResourceLocation shapeId(DeferredItem<? extends ToolPart> part) {
+        return ResourceLocation.fromNamespaceAndPath(TConstructNirvana.MODID, part.getId().getPath());
+    }
 
     private ModCreativeTabs() {
     }

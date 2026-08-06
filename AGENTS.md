@@ -31,7 +31,7 @@
 - Registry 类组织：`ModItems` / `ModBlocks` / `ModEntities` / `ModFluids` / `ModRecipeTypes` 集中管理，每个子系统一个类，禁止散落注册
 - 数据驱动内容用 DataGen 生成，不手写 JSON
 - 客户端专用逻辑放 `client` 子包，与服务端严格分端（注意 `@OnlyIn`/事件分发）
-- 包结构：`com.lvdriver.tconstruct_nirvana` → 子包 `item / block / entity / fluid / data / recipe / event / client / gui / util / world`
+- 包结构：`com.lvdriver.tconstruct_nirvana` → 子包 `item / block / entity / fluid / data / recipe / event / client / gui / util / world / api / impl`
 - 新 API 不确定时，以 NeoForge 官方文档与 MDK 模板为准，**不臆造 API 签名**
 
 ## 1.21.1 核心迁移约定（务必遵守）
@@ -42,6 +42,13 @@
   - 用 `@EventBusSubscriber` 时务必指明 `bus` 参数，不依赖默认值
 - **旧代码引用**：参考匠魂怀古源码时，明确指定文件路径、单文件读取，禁止整目录扫描；旧代码的 import / API 调用一律视为"待重写"，不直接复制
 - **Mantle 替代**：旧代码引用 `slimeknights.mantle.*` 的工具类时，用 1.21.1 NeoForge 原生 API 重写到 `util` 子包，不移植 Mantle
+
+## 兼容性与附属生态（匠魂核心价值，每个会话都必须考虑）
+- **万物皆可熔**：冶炼/浇铸/合金配方的输入一律用 Tag（`#c:ores/iron`、`#c:ingots/copper` 等），禁止用具体物品 ID，确保任何 mod 的矿物都能被冶炼炉熔化
+- **Tag 规范**：所有矿石/锭/粒/方块/流体打 `c:` 前缀 Tag（`c:ores/xxx`、`c:ingots/xxx`、`c:fluid/xxx`），旧版 OreDictionary 用法对应转成 1.21.1 `c:` Tag
+- **附属扩展 API**：材料/修饰符/部件/模具/流体注册表必须公开 accessor 方法，事件钩子（工具组装、修饰符触发、冶炼逻辑）放 `api` 子包；内部实现放 `impl` 子包，api 包不放实现类
+- **JEI 兼容**：配方分类用 `compileOnly` 依赖 + Optional 加载，不硬引用 JEI 类
+- **软依赖**：所有外部 mod 兼容代码用反射或 Optional，缺失依赖时不能崩溃
 
 ## 资源约定
 - 贴图/模型：先用旧版资源，后续手动重画
@@ -58,4 +65,10 @@
 7. 跨会话接力：每次开工先读 devlog.md 了解进度，收工前更新 devlog.md
 
 ## 已踩过的坑（随开发补充，每项一行）
-- （暂无）
+- `.m2` 本地 Maven 仓库损坏的 parchment zip 导致 jst 报 ZipException → 删掉 `.m2/repository/org/parchmentmc` 后恢复
+- services.gradle.org 不可达时，`gradle-wrapper.properties` 的 `distributionUrl` 已指向腾讯镜像
+- 1.21.1 类名/包与 1.20 不同：`BootstrapContext`（非 BootstapContext）、`RegistrySetBuilder` 在 `net.minecraft.core`、`BlockLootSubProvider` 在 `net.minecraft.data.loot`、无 `BiomeModifiersBuilder`、`BlockTags` 无 NETHERRACK 常量
+- `BlockLootSubProvider.getKnownBlocks()` 默认遍历全注册表会报 Missing loottable → 必须 override 只返回本 mod 方块
+- 物品模型贴图按注册名查找，旧版命名不匹配会报 Texture does not exist → 贴图按注册名重命名
+- 1.21.1 移除 `Block#isBeaconBase`，信标基座改 `minecraft:beacon_base_blocks` tag
+- 旧版下界矿石贴图是 `nether_ore_cobalt/ardite`（非 ore_cobalt），1:1 沿用

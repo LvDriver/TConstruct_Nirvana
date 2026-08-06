@@ -46,6 +46,9 @@ public final class TConTags {
     public static final TagKey<Item> NUGGETS_COBALT = itemTag("c", "nuggets/cobalt");
     public static final TagKey<Item> NUGGETS_ARDITE = itemTag("c", "nuggets/ardite");
 
+    /** 全部工具部件（部件-模具关联的部件侧集合，供配方/附属 mod 使用）。 */
+    public static final TagKey<Item> TOOL_PARTS = itemTag(TConstructNirvana.MODID, "tool_parts");
+
     private static TagKey<Block> blockTag(String namespace, String path) {
         return BlockTags.create(ResourceLocation.fromNamespaceAndPath(namespace, path));
     }
