@@ -79,6 +79,17 @@ public abstract class BlockMultiblockController extends BaseEntityBlock {
         }
     }
 
+    /** 控制器被拆除/替换时清除 servant 绑定（防止换位重建后结构无法成型）。 */
+    @Override
+    protected void onRemove(BlockState state, Level level, BlockPos pos, BlockState newState, boolean movedByPiston) {
+        if (!state.is(newState.getBlock()) && !level.isClientSide) {
+            if (level.getBlockEntity(pos) instanceof TileMultiblock tile) {
+                tile.onMasterRemoved();
+            }
+        }
+        super.onRemove(state, level, pos, newState, movedByPiston);
+    }
+
     @Override
     protected RenderShape getRenderShape(BlockState state) {
         return RenderShape.MODEL;

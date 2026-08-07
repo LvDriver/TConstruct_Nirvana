@@ -30,6 +30,8 @@ public abstract class TileMultiblock extends BlockEntity implements IMasterLogic
     protected boolean active;
     /** 上次检测到的结构信息。 */
     protected MultiblockDetection.MultiblockStructure info;
+    /** 上次检测结构的成员方块（控制器拆除时清除 servant 绑定用）。 */
+    protected java.util.List<BlockPos> lastStructureBlocks = java.util.List.of();
     /** 多方块检测器。 */
     protected MultiblockDetection multiblock;
     /** 结构内部最小坐标。 */
@@ -99,6 +101,7 @@ public abstract class TileMultiblock extends BlockEntity implements IMasterLogic
 
     protected final void updateStructureInfoInternal(MultiblockDetection.MultiblockStructure structure) {
         info = structure;
+        lastStructureBlocks = structure != null ? structure.blocks : java.util.List.of();
 
         if (structure == null) {
             structure = new MultiblockDetection.MultiblockStructure(0, 0, 0, java.util.List.of(worldPosition));
@@ -137,6 +140,24 @@ public abstract class TileMultiblock extends BlockEntity implements IMasterLogic
 
     public boolean isServerWorld() {
         return level != null && !level.isClientSide;
+    }
+
+    /**
+     * 控制器被拆除时调用：清除所有已绑定本主机的 servant 的 master 引用，
+     * 防止换位重建控制器后旧 servant 被 {@code isValidSlave} 拒绝导致结构无法成型。
+     */
+    public void onMasterRemoved() {
+        if (level == null || level.isClientSide) {
+            return;
+        }
+        for (BlockPos pos : lastStructureBlocks) {
+            if (level.isLoaded(pos) && level.getBlockEntity(pos) instanceof IServantLogic servant) {
+                if (worldPosition.equals(servant.getMasterPosition())) {
+                    servant.removeMaster();
+                }
+            }
+        }
+        lastStructureBlocks = java.util.List.of();
     }
 
     /* NBT / 网络同步 */

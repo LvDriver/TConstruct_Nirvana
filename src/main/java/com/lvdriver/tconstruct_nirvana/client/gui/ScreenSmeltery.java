@@ -66,7 +66,7 @@ public class ScreenSmeltery extends AbstractContainerScreen<ContainerSmeltery> {
     protected void renderBg(GuiGraphics graphics, float partialTick, int mouseX, int mouseY) {
         graphics.blit(BACKGROUND, this.leftPos, this.topPos, 0, 0, this.imageWidth, this.imageHeight);
 
-        // 液体罐：按层绘制（每层按量占高）
+        // 液体罐：按层绘制（自顶向下：i=0 画在最上层；点击命中从底部反推，两者自洽）
         List<FluidStack> fluids = fluids();
         if (!fluids.isEmpty()) {
             int cap = Math.max(1, capacity());

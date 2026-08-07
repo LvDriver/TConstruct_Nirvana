@@ -61,7 +61,55 @@ public class TileTank extends TileSmelteryComponent {
         event.registerBlockEntity(
                 Capabilities.FluidHandler.BLOCK,
                 ModBlockEntities.TANK.get(),
-                (be, direction) -> be.tank);
+                (be, direction) -> new IFluidHandler() {
+                    // 包装：外部管道 fill/drain 后刷新红石比较器（旧版 FluidTankAnimated 行为）
+                    @Override
+                    public int getTanks() {
+                        return be.tank.getTanks();
+                    }
+
+                    @Override
+                    public int getTankCapacity(int tank) {
+                        return be.tank.getTankCapacity(tank);
+                    }
+
+                    @Override
+                    public @org.jetbrains.annotations.NotNull FluidStack getFluidInTank(int tank) {
+                        return be.tank.getFluidInTank(tank);
+                    }
+
+                    @Override
+                    public int fill(FluidStack resource, net.neoforged.neoforge.fluids.capability.IFluidHandler.FluidAction action) {
+                        int filled = be.tank.fill(resource, action);
+                        if (filled > 0 && action.execute()) {
+                            be.onTankContentsChanged();
+                        }
+                        return filled;
+                    }
+
+                    @Override
+                    public @org.jetbrains.annotations.NotNull FluidStack drain(FluidStack resource, net.neoforged.neoforge.fluids.capability.IFluidHandler.FluidAction action) {
+                        FluidStack drained = be.tank.drain(resource, action);
+                        if (!drained.isEmpty() && action.execute()) {
+                            be.onTankContentsChanged();
+                        }
+                        return drained;
+                    }
+
+                    @Override
+                    public @org.jetbrains.annotations.NotNull FluidStack drain(int maxDrain, net.neoforged.neoforge.fluids.capability.IFluidHandler.FluidAction action) {
+                        FluidStack drained = be.tank.drain(maxDrain, action);
+                        if (!drained.isEmpty() && action.execute()) {
+                            be.onTankContentsChanged();
+                        }
+                        return drained;
+                    }
+
+                    @Override
+                    public boolean isFluidValid(int tank, FluidStack stack) {
+                        return be.tank.isFluidValid(tank, stack);
+                    }
+                });
     }
 
     /** 液体变化 → 更新红石比较器（1:1 旧版 onTankContentsChanged）。 */
