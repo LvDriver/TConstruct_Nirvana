@@ -391,6 +391,10 @@ public class TileSmeltery extends TileHeatingStructureFuelTank
     /**
      * 点击液体装桶（GUI 调用）：抽指定层 1000mb 液体，消耗玩家背包一个空桶
      * 并放入满桶（1:1 旧版 GuiSmeltery.handleTankClick）。
+     *
+     * <p>防复制（security_review）：要求该层液体 ≥ 1000mb 才允许装桶——
+     * {@code FluidUtil.getFilledBucket} 对任意非零量都返回满桶，不足 1 桶时
+     * 装桶会凭空增值（999mb → 1 满桶 → 倒回 → 再装）。</p>
      */
     public boolean fillBucketFromTank(net.minecraft.world.entity.player.Player player, int layerIndex) {
         if (player == null || player.level().isClientSide) {
@@ -400,10 +404,11 @@ public class TileSmeltery extends TileHeatingStructureFuelTank
             return false;
         }
         FluidStack liquid = liquids.getFluids().get(layerIndex);
-        int amount = Math.min(1000, liquid.getAmount());
-        if (amount <= 0) {
+        // 不足 1 桶拒绝装桶（防 999mb 换满桶复制）
+        if (liquid.getAmount() < 1000) {
             return false;
         }
+        int amount = 1000;
 
         // 找玩家背包里的空桶
         net.minecraft.world.entity.player.Inventory inv = player.getInventory();

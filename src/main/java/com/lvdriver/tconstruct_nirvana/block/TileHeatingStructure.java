@@ -87,8 +87,10 @@ public abstract class TileHeatingStructure extends TileMultiblock {
         setChanged();
     }
 
-    /** 调整物品栏大小（结构成型/失效时调用），保留已有物品。 */
+    /** 调整物品栏大小（结构成型/失效时调用），保留已有物品。尺寸 clamp 防篡改 NBT。 */
     public void resizeInventory(int size) {
+        // 上限 = 最大内部尺寸 9×9×9=729（1:1 旧版 MAX_SIZE=9），下限 0
+        size = Math.max(0, Math.min(729, size));
         SimpleContainer old = inventory;
         SimpleContainer fresh = new SimpleContainer(size);
         for (int i = 0; i < Math.min(old.getContainerSize(), size); i++) {

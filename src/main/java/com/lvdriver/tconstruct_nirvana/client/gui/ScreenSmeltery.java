@@ -41,16 +41,14 @@ public class ScreenSmeltery extends AbstractContainerScreen<ContainerSmeltery> {
         this.titleLabelX = 8;
     }
 
-    /** 当前液体列表（由 DataSlot 同步数据组装；每层 = (流体, 量)）。 */
+    /** 当前液体列表（由 DataSlot 同步数据组装；每层 = (流体, 量)，层序与服务端一致）。 */
     private List<FluidStack> fluids() {
         List<FluidStack> fluids = new ArrayList<>();
         int layers = menu.syncData.get(ContainerSmeltery.DATA_LAYERS).get();
         for (int i = 0; i < layers; i++) {
             int fluidId = menu.syncData.get(ContainerSmeltery.DATA_FLUID_START + i * 2).get();
             int amount = menu.syncData.get(ContainerSmeltery.DATA_FLUID_START + i * 2 + 1).get();
-            if (amount <= 0) {
-                continue;
-            }
+            // 保留 0 量层（同步窗口可能短暂存在），保证点击索引与服务端层号一致
             Fluid fluid = BuiltInRegistries.FLUID.byId(fluidId);
             if (fluid != null) {
                 fluids.add(new FluidStack(fluid, amount));
