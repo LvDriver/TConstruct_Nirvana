@@ -193,6 +193,7 @@
 - **验证**：`./gradlew check` BUILD SUCCESSFUL（3 轮编译修复 56→16→0 错误）；`./gradlew runData` 通过（数据文件核对：controller 8 变体/15 loot/14 tags）；`./gradlew runClient` 冒烟 ×2（initialized → ResourceManager 加载 → 无 ERROR）
 - 踩坑修复：静态初始化 get() 崩溃（VALID_SMELTERY_BLOCKS 静态 Set 含 SEARED.get() → 改懒初始化方法）；BlockStateProperties.ACTIVE 不存在 → BooleanProperty.create("active")；1.21.1 无 (BlockPos,BlockPos) isAreaLoaded → hasChunk 两角检查；AABB.offset(int) → move；getAllRecipesFor 返回 RecipeHolder；IFluidHandler 需 isFluidValid；FluidStack 1.21.1 无 getTintColor → IClientFluidTypeExtensions.of(type).getTintColor(fluid)；mouseScrolled 4 参；NbtUtils.readBlockPos(CompoundTag) 不存在 → putLongArray/asLong
 - 遗留：浇铸台/盆/龙头/沟槽/排液口（CastingEvent 触发点）留待下会话；GUI 温度/进度条与燃料贴图渲染未做（tint 色块占位）；游戏内实际建结构/熔矿流程未自动化验证（runClient 仅到主菜单）；炉内液体渲染模型（BE 内液体 3D 渲染）未做（GUI 可见）
+- review 修复（security 复查后）：ContainerSmeltery 客户端 NPE（tile 空占位防护）+ 液体/燃料改 DataSlot 同步（broadcastChanges 自动下发，客户端 setData 回填，液体层数上限 16）；fillBucketFromTank 抽指定层（drain(FluidStack) 非 drain(int) 底层）；TileHeatingStructure NBT 保存/恢复 inventorySize（加载后炉内物品不丢）；getValidSmelteryBlocks/isFloorBlock 覆盖全部 12 seared 变体；合金扣液先 SIMULATE 验证再 EXECUTE（防扣了输入填不满输出）；ACTIVE 状态 setBlock 落盘（1.21.1 无 getActualState，纹理切换生效）；getProgress 除零保护；MultiblockCuboid 死代码清理。旧版"结构失效弹出全部物品"行为 1:1 保留（与旧版一致，devlog 记录）
 - 下一步：浇铸系统（浇铸台/盆 + faucet/channel/drain + seared 楼梯/台阶）或工具站 GUI 增强
 
 ### 2026-08-06 会话6：全部自定义配方类型 + 流体/模具补全 + JEI 预留（完成）

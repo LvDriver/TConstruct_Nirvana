@@ -1,26 +1,45 @@
 package com.lvdriver.tconstruct_nirvana.gui;
 
 import com.lvdriver.tconstruct_nirvana.block.TileSmeltery;
+import com.lvdriver.tconstruct_nirvana.smeltery.SmelteryTank;
+import net.minecraft.core.registries.BuiltInRegistries;
 import net.minecraft.world.Container;
 import net.minecraft.world.SimpleContainer;
 import net.minecraft.world.entity.player.Inventory;
 import net.minecraft.world.entity.player.Player;
 import net.minecraft.world.inventory.AbstractContainerMenu;
 import net.minecraft.world.inventory.ContainerLevelAccess;
+import net.minecraft.world.inventory.DataSlot;
 import net.minecraft.world.inventory.Slot;
 import net.minecraft.world.item.ItemStack;
+import net.neoforged.neoforge.fluids.FluidStack;
+
+import java.util.ArrayList;
+import java.util.List;
 
 /**
  * 冶炼炉菜单（1:1 移植自 Tinkers' Antique {@code ContainerSmeltery} 简化版）。
  *
  * <p>冶炼炉物品栏大小 = 结构内部尺寸（宽×高×深，最多 9×9×9）；GUI 显示
  * 3 列 × 9 行 = 27 个可见槽（侧栏），通过滚动按钮翻页（1:1 旧版
- * ContainerSideInventory 滚动）。流体/燃料经菜单数据同步。</p>
+ * ContainerSideInventory 滚动）。流体/燃料经 DataSlot 同步（1.21.1
+ * broadcastChanges 自动下发，客户端 setData 回填）。</p>
  */
 public class ContainerSmeltery extends AbstractContainerMenu {
 
     /** 可见槽数（3 列 × 9 行，1:1 旧版 calcColumns=3）。 */
     public static final int VISIBLE_SLOTS = 27;
+
+    /** DataSlot 索引：燃料有无。 */
+    public static final int DATA_FUEL = 0;
+    /** DataSlot 索引：液体层数。 */
+    public static final int DATA_LAYERS = 1;
+    /** DataSlot 起始索引：每层 (流体 id, 量) 两两一组。 */
+    public static final int DATA_FLUID_START = 2;
+    /** 同步的液体层数上限。 */
+    public static final int MAX_FLUID_LAYERS = 16;
+    /** DataSlot 总数。 */
+    public static final int DATA_TOTAL = DATA_FLUID_START + MAX_FLUID_LAYERS * 2;
 
     private final TileSmeltery tile;
     private final ContainerLevelAccess access;
@@ -30,15 +49,21 @@ public class ContainerSmeltery extends AbstractContainerMenu {
     /** 可见槽视图（委托真实物品栏 + 偏移）。 */
     private final Container view;
 
+    /** 同步数据槽（燃料/液体，服务端读 BE、客户端由 setData 回填）。 */
+    public final List<DataSlot> syncData = new ArrayList<>();
+
     public ContainerSmeltery(int id, Inventory playerInventory, TileSmeltery tile, ContainerLevelAccess access) {
         super(com.lvdriver.tconstruct_nirvana.gui.ModMenuTypes.SMELTERY.get(), id);
         this.tile = tile;
         this.access = access;
 
-        // 可见槽视图：读取真实物品栏 offset+index
+        // 可见槽视图：读取真实物品栏 offset+index（tile 为空 = 客户端占位，返回空）
         this.view = new SimpleContainer(VISIBLE_SLOTS) {
             @Override
             public ItemStack getItem(int index) {
+                if (tile == null) {
+                    return ItemStack.EMPTY;
+                }
                 int real = scrollOffset + index;
                 if (real >= tile.getSizeInventory()) {
                     return ItemStack.EMPTY;
@@ -48,32 +73,34 @@ public class ContainerSmeltery extends AbstractContainerMenu {
 
             @Override
             public int getContainerSize() {
-                return Math.min(VISIBLE_SLOTS, tile.getSizeInventory() - scrollOffset);
+                return tile == null ? 0 : Math.min(VISIBLE_SLOTS, tile.getSizeInventory() - scrollOffset);
             }
 
             @Override
             public ItemStack removeItem(int index, int count) {
                 int real = scrollOffset + index;
-                return real < tile.getSizeInventory() ? tile.getInventory().removeItem(real, count) : ItemStack.EMPTY;
+                return tile != null && real < tile.getSizeInventory()
+                        ? tile.getInventory().removeItem(real, count) : ItemStack.EMPTY;
             }
 
             @Override
             public ItemStack removeItemNoUpdate(int index) {
                 int real = scrollOffset + index;
-                return real < tile.getSizeInventory() ? tile.getInventory().removeItemNoUpdate(real) : ItemStack.EMPTY;
+                return tile != null && real < tile.getSizeInventory()
+                        ? tile.getInventory().removeItemNoUpdate(real) : ItemStack.EMPTY;
             }
 
             @Override
             public void setItem(int index, ItemStack stack) {
                 int real = scrollOffset + index;
-                if (real < tile.getSizeInventory()) {
+                if (tile != null && real < tile.getSizeInventory()) {
                     tile.setInventorySlotContents(real, stack);
                 }
             }
 
             @Override
             public boolean isEmpty() {
-                return tile.getSizeInventory() == 0;
+                return tile == null || tile.getSizeInventory() == 0;
             }
         };
 
@@ -93,9 +120,12 @@ public class ContainerSmeltery extends AbstractContainerMenu {
         for (int col = 0; col < 9; col++) {
             addSlot(new Slot(playerInventory, col, 84 + col * 18, 142));
         }
+
+        // 数据槽：服务端从 BE 读值，broadcastChanges 自动下发；客户端 setData 回填
+        initDataSlots();
     }
 
-    /** 客户端构造（MenuType 工厂）：空 BE，槽内容由服务端广播同步。 */
+    /** 客户端构造（MenuType 工厂）：空 BE 占位，槽内容/数据由服务端同步。 */
     public ContainerSmeltery(int id, Inventory playerInventory) {
         this(id, playerInventory, null, ContainerLevelAccess.NULL);
     }
@@ -103,6 +133,66 @@ public class ContainerSmeltery extends AbstractContainerMenu {
     /** 服务端构造（方块右键打开）：真实 BE。 */
     public ContainerSmeltery(int id, Inventory playerInventory, TileSmeltery tile) {
         this(id, playerInventory, tile, ContainerLevelAccess.create(tile.getLevel(), tile.getBlockPos()));
+    }
+
+    private void initDataSlots() {
+        // 服务端：从 BE 读；客户端：standalone 占位由 setData 回填
+        syncData.add(addDataSlot(new DataSlot() {
+            @Override
+            public int get() {
+                return tile != null && tile.hasFuel() ? 1 : 0;
+            }
+
+            @Override
+            public void set(int value) {
+            }
+        }));
+        syncData.add(addDataSlot(new DataSlot() {
+            @Override
+            public int get() {
+                SmelteryTank tank = tank();
+                return tank == null ? 0 : Math.min(MAX_FLUID_LAYERS, tank.getFluids().size());
+            }
+
+            @Override
+            public void set(int value) {
+            }
+        }));
+        for (int i = 0; i < MAX_FLUID_LAYERS; i++) {
+            final int layer = i;
+            syncData.add(addDataSlot(new DataSlot() {
+                @Override
+                public int get() {
+                    SmelteryTank tank = tank();
+                    if (tank == null || layer >= tank.getFluids().size()) {
+                        return 0;
+                    }
+                    return BuiltInRegistries.FLUID.getId(tank.getFluids().get(layer).getFluid());
+                }
+
+                @Override
+                public void set(int value) {
+                }
+            }));
+            syncData.add(addDataSlot(new DataSlot() {
+                @Override
+                public int get() {
+                    SmelteryTank tank = tank();
+                    if (tank == null || layer >= tank.getFluids().size()) {
+                        return 0;
+                    }
+                    return tank.getFluids().get(layer).getAmount();
+                }
+
+                @Override
+                public void set(int value) {
+                }
+            }));
+        }
+    }
+
+    private SmelteryTank tank() {
+        return tile != null ? tile.getTank() : null;
     }
 
     public TileSmeltery getTile() {
@@ -115,6 +205,9 @@ public class ContainerSmeltery extends AbstractContainerMenu {
 
     /** 滚动（1:1 旧版侧栏滚动），返回是否成功。 */
     public boolean scroll(int amount) {
+        if (tile == null) {
+            return false;
+        }
         int max = Math.max(0, tile.getSizeInventory() - VISIBLE_SLOTS);
         int newOffset = Math.max(0, Math.min(max, scrollOffset + amount));
         if (newOffset != scrollOffset) {

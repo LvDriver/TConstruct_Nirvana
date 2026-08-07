@@ -27,6 +27,8 @@ public abstract class TileHeatingStructure extends TileMultiblock {
     public static final String TAG_ITEM_TEMPERATURES = "itemTemperatures";
     public static final String TAG_ITEM_TEMP_REQUIRED = "itemTempRequired";
     public static final String TAG_IS_HEATING = "isHeating";
+    /** 物品栏大小（1:1 旧版通过 resize 动态变化，NBT 需保存才能恢复槽位）。 */
+    public static final String TAG_INVENTORY_SIZE = "inventorySize";
 
     /** 加热精度倍率（1:1 旧版 TIME_FACTOR=8）。 */
     protected static final int TIME_FACTOR = 8;
@@ -106,7 +108,7 @@ public abstract class TileHeatingStructure extends TileMultiblock {
 
     /** 加热进度 0~1。 */
     public float getProgress(int index) {
-        if (index >= itemTemperatures.length) {
+        if (index >= itemTemperatures.length || itemTempRequired[index] == 0) {
             return 0f;
         }
         return (float) itemTemperatures[index] / (float) itemTempRequired[index];
@@ -233,6 +235,8 @@ public abstract class TileHeatingStructure extends TileMultiblock {
         tag.putIntArray(TAG_ITEM_TEMPERATURES, itemTemperatures);
         tag.putIntArray(TAG_ITEM_TEMP_REQUIRED, itemTempRequired);
         tag.putBoolean(TAG_IS_HEATING, isHeating);
+        // 先保存大小再存物品（加载时按大小 resize 后物品才能恢复到对应槽位）
+        tag.putInt(TAG_INVENTORY_SIZE, getSizeInventory());
         // 物品栏（ContainerHelper 需要 registries）
         net.minecraft.world.ContainerHelper.saveAllItems(tag, inventory.getItems(), registries);
     }
@@ -246,6 +250,11 @@ public abstract class TileHeatingStructure extends TileMultiblock {
         itemTemperatures = tag.getIntArray(TAG_ITEM_TEMPERATURES);
         itemTempRequired = tag.getIntArray(TAG_ITEM_TEMP_REQUIRED);
         isHeating = tag.getBoolean(TAG_IS_HEATING);
+        // 恢复物品栏大小（结构成型前构造器为 0 槽，加载时按保存值重建）
+        int size = tag.getInt(TAG_INVENTORY_SIZE);
+        if (size != getSizeInventory()) {
+            resizeInventory(size);
+        }
         net.minecraft.world.ContainerHelper.loadAllItems(tag, inventory.getItems(), registries);
     }
 }

@@ -293,35 +293,38 @@ public class TileSmeltery extends TileHeatingStructureFuelTank
                 matched = ALLOYING_PER_TICK;
             }
             while (matched > 0) {
-                // 扣输入：每个输入在槽中找匹配流体并抽取需要量（1:1 旧版 getFluids 语义）
-                boolean ok = true;
+                // 先模拟验证：所有输入可抽、输出可填（防止扣了输入却填不满输出）
+                boolean canApply = true;
                 for (net.neoforged.neoforge.fluids.crafting.SizedFluidIngredient need : recipe.getInputs()) {
-                    int needAmount = need.amount();
-                    FluidStack drained = drainMatching(need, needAmount);
-                    if (drained.isEmpty() || drained.getAmount() != needAmount) {
-                        ok = false;
+                    FluidStack simulated = drainMatching(need, need.amount(), IFluidHandler.FluidAction.SIMULATE);
+                    if (simulated.isEmpty() || simulated.getAmount() != need.amount()) {
+                        canApply = false;
                         break;
                     }
                 }
-                if (!ok) {
+                if (!canApply) {
                     break;
                 }
-                // 加输出
-                FluidStack toFill = recipe.getResult().copy();
-                int filled = liquids.fill(toFill, IFluidHandler.FluidAction.EXECUTE);
-                if (filled != recipe.getResult().getAmount()) {
+                // 输出空间检查（simulate）
+                FluidStack out = recipe.getResult();
+                if (liquids.fill(out.copy(), IFluidHandler.FluidAction.SIMULATE) != out.getAmount()) {
                     break;
                 }
+                // 实际执行：扣输入 → 加输出
+                for (net.neoforged.neoforge.fluids.crafting.SizedFluidIngredient need : recipe.getInputs()) {
+                    drainMatching(need, need.amount(), IFluidHandler.FluidAction.EXECUTE);
+                }
+                liquids.fill(out.copy(), IFluidHandler.FluidAction.EXECUTE);
                 matched--;
             }
         }
     }
 
     /** 从炉内抽取与输入匹配的流体（1:1 旧版按输入依次 drain）。 */
-    private FluidStack drainMatching(net.neoforged.neoforge.fluids.crafting.SizedFluidIngredient need, int amount) {
+    private FluidStack drainMatching(net.neoforged.neoforge.fluids.crafting.SizedFluidIngredient need, int amount, IFluidHandler.FluidAction action) {
         for (FluidStack liquid : liquids.getFluids()) {
             if (need.test(liquid)) {
-                return liquids.drain(liquid.copyWithAmount(amount), IFluidHandler.FluidAction.EXECUTE);
+                return liquids.drain(liquid.copyWithAmount(amount), action);
             }
         }
         return FluidStack.EMPTY;
@@ -402,8 +405,9 @@ public class TileSmeltery extends TileHeatingStructureFuelTank
             return false;
         }
 
-        // 抽液 → 装桶
-        FluidStack drained = liquids.drain(amount, IFluidHandler.FluidAction.EXECUTE);
+        // 抽液 → 装桶（按点击层抽取，非底层）
+        FluidStack toDrain = liquid.copyWithAmount(amount);
+        FluidStack drained = liquids.drain(toDrain, IFluidHandler.FluidAction.EXECUTE);
         if (drained.isEmpty()) {
             return false;
         }

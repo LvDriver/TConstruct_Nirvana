@@ -126,14 +126,30 @@ public final class ModBlocks {
     public static final DeferredBlock<BlockSmelteryController> SMELTERY_CONTROLLER = BLOCKS.registerBlock(
             "smeltery_controller", BlockSmelteryController::new, BlockSmelteryController.controllerProperties());
 
-    /** 冶炼炉墙体合法方块（1:1 旧版 validSmelteryBlocks）。懒初始化：注册事件前不可 get()。 */
+    /** 冶炼炉墙体合法方块（1:1 旧版 validSmelteryBlocks 含 seared 全变体）。懒初始化：注册事件前不可 get()。 */
     private static Set<net.minecraft.world.level.block.Block> validSmelteryBlocks;
 
     public static Set<net.minecraft.world.level.block.Block> getValidSmelteryBlocks() {
         if (validSmelteryBlocks == null) {
-            validSmelteryBlocks = Set.of(SEARED.get(), SEARED_TANK.get(), SEARED_GLASS.get());
+            Set<net.minecraft.world.level.block.Block> set = new java.util.HashSet<>();
+            for (SearedVariant variant : SEARED_VARIANTS) {
+                set.add(variant.block().get());
+            }
+            set.add(SEARED_TANK.get());
+            set.add(SEARED_GLASS.get());
+            validSmelteryBlocks = Set.copyOf(set);
         }
         return validSmelteryBlocks;
+    }
+
+    /** seared 方块（任意变体）判定，结构检测地板/墙体用。 */
+    public static boolean isSearedBlock(net.minecraft.world.level.block.Block block) {
+        for (SearedVariant variant : SEARED_VARIANTS) {
+            if (variant.block().get() == block) {
+                return true;
+            }
+        }
+        return false;
     }
 
     private static DeferredBlock<BlockSeared> registerSeared(String name) {

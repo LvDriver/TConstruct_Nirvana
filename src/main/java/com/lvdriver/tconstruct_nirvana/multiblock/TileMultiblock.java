@@ -90,9 +90,9 @@ public abstract class TileMultiblock extends BlockEntity implements IMasterLogic
             }
         }
 
-        // 状态变化 → 更新渲染
+        // 状态变化 → 写入 blockstate（1.21.1 无 getActualState 动态分支，须落盘）+ 更新渲染
         if (wasActive != active) {
-            level.sendBlockUpdated(worldPosition, state, state, 3);
+            level.setBlock(worldPosition, state.setValue(com.lvdriver.tconstruct_nirvana.block.BlockMultiblockController.ACTIVE, active), 3);
             setChanged();
         }
     }

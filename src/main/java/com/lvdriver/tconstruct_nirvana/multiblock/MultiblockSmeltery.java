@@ -56,8 +56,8 @@ public class MultiblockSmeltery extends MultiblockTinker {
 
     @Override
     public boolean isFloorBlock(Level world, BlockPos pos) {
-        // 地板仅允许 seared 方块（1:1 旧版，含全部 12 变体）
-        return world.getBlockState(pos).getBlock() == com.lvdriver.tconstruct_nirvana.block.ModBlocks.SEARED.get()
+        // 地板仅允许 seared 方块（1:1 旧版 isFloorBlock 只认 searedBlock，含全部 12 变体）
+        return com.lvdriver.tconstruct_nirvana.block.ModBlocks.isSearedBlock(world.getBlockState(pos).getBlock())
                 && isValidBlock(world, pos);
     }
 }

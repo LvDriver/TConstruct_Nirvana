@@ -210,9 +210,6 @@ public abstract class MultiblockCuboid extends MultiblockDetection {
             if (!isInnerBlock(world, pos)) {
                 return false;
             }
-            if (!world.isEmptyBlock(pos)) {
-                candidates.add(pos);
-            }
         }
 
         // 4 面墙
