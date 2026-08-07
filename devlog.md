@@ -198,6 +198,7 @@
 - review 三轮修复：客户端 clickMenuButton（tile==null）返回 true 放行发包（原恒 false 导致滚动/装桶包永不发出），服务端权威校验兜底
 - security_review 四轮修复：装桶要求该层液体 ≥1000mb（FluidUtil.getFilledBucket 对任意非零量返满桶，不足 1 桶装桶会 dupe）；resizeInventory clamp [0,729]（篡改 NBT inventorySize 防 OOM/负分配）；ScreenSmeltery 保留 0 量层保持点击索引与服务端层号对齐；security 终审 pass 可发布
 - security_review 五轮修复：loadAdditional 温度数组长度对齐（防篡改 NBT 两数组不等长 getProgress 越界）；SmelteryTank 容量 clamp [0, 729×144×8]（防超容量）；复审 pass
+- review 六轮修复（终审 should-fix×2）：控制器拆除清除 servant 绑定（TileMultiblock.lastStructureBlocks + onMasterRemoved + BlockMultiblockController.onRemove，ACTIVE 翻转不误清）+ TileTank capability 包装触发红石比较器刷新（simulate 不触发）+ isValidSlave 对失效主机残留绑定放行（换位重建彻底打通）；终审 pass ship as-is
 - 下一步：浇铸系统（浇铸台/盆 + faucet/channel/drain + seared 楼梯/台阶）或工具站 GUI 增强
 
 ### 2026-08-06 会话6：全部自定义配方类型 + 流体/模具补全 + JEI 预留（完成）
