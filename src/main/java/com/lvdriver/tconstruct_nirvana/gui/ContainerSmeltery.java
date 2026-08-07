@@ -215,6 +215,10 @@ public class ContainerSmeltery extends AbstractContainerMenu {
 
     @Override
     public boolean clickMenuButton(Player player, int id) {
+        // 客户端（tile==null）：返回 true 放行发包，服务端收到后校验并执行
+        if (tile == null) {
+            return true;
+        }
         // 0 = 上滚，1 = 下滚
         if (id == 0) {
             return scroll(-VISIBLE_SLOTS);
@@ -223,10 +227,7 @@ public class ContainerSmeltery extends AbstractContainerMenu {
             return scroll(VISIBLE_SLOTS);
         }
         // 2+ = 点击液体层装桶（1:1 旧版 handleTankClick）
-        if (tile != null) {
-            return tile.fillBucketFromTank(player, id - 2);
-        }
-        return false;
+        return tile.fillBucketFromTank(player, id - 2);
     }
 
     @Override
