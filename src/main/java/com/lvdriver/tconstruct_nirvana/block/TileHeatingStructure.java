@@ -257,6 +257,12 @@ public abstract class TileHeatingStructure extends TileMultiblock {
         if (size != getSizeInventory()) {
             resizeInventory(size);
         }
+        // 温度数组长度与物品栏对齐（防篡改 NBT 两数组不等长导致 getProgress 越界）
+        int tempLen = Math.min(itemTemperatures.length, itemTempRequired.length);
+        if (itemTemperatures.length != itemTempRequired.length) {
+            itemTemperatures = Arrays.copyOf(itemTemperatures, tempLen);
+            itemTempRequired = Arrays.copyOf(itemTempRequired, tempLen);
+        }
         net.minecraft.world.ContainerHelper.loadAllItems(tag, inventory.getItems(), registries);
     }
 }

@@ -1,5 +1,6 @@
 package com.lvdriver.tconstruct_nirvana.smeltery;
 
+import com.lvdriver.tconstruct_nirvana.material.Material;
 import net.minecraft.nbt.CompoundTag;
 import net.minecraft.nbt.ListTag;
 import net.minecraft.nbt.Tag;
@@ -164,7 +165,8 @@ public class SmelteryTank implements IFluidHandler {
     }
 
     public void readFromNBT(CompoundTag tag, net.minecraft.core.HolderLookup.Provider registries) {
-        maxCapacity = tag.getInt("LiquidCapacity");
+        // 容量 clamp 防篡改 NBT 超容量（上限 = 最大结构 729 槽 × 每槽 8 锭）
+        maxCapacity = Math.max(0, Math.min(729 * Material.VALUE_Ingot * 8, tag.getInt("LiquidCapacity")));
         if (liquids == null) {
             liquids = new ArrayList<>();
         }
