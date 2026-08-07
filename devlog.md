@@ -195,6 +195,8 @@
 - 遗留：浇铸台/盆/龙头/沟槽/排液口（CastingEvent 触发点）留待下会话；GUI 温度/进度条与燃料贴图渲染未做（tint 色块占位）；游戏内实际建结构/熔矿流程未自动化验证（runClient 仅到主菜单）；炉内液体渲染模型（BE 内液体 3D 渲染）未做（GUI 可见）
 - review 修复（security 复查后）：ContainerSmeltery 客户端 NPE（tile 空占位防护）+ 液体/燃料改 DataSlot 同步（broadcastChanges 自动下发，客户端 setData 回填，液体层数上限 16）；fillBucketFromTank 抽指定层（drain(FluidStack) 非 drain(int) 底层）；TileHeatingStructure NBT 保存/恢复 inventorySize（加载后炉内物品不丢）；getValidSmelteryBlocks/isFloorBlock 覆盖全部 12 seared 变体；合金扣液先 SIMULATE 验证再 EXECUTE（防扣了输入填不满输出）；ACTIVE 状态 setBlock 落盘（1.21.1 无 getActualState，纹理切换生效）；getProgress 除零保护；MultiblockCuboid 死代码清理。旧版"结构失效弹出全部物品"行为 1:1 保留（与旧版一致，devlog 记录）
 - review 二轮修复：SmelteryDataSlot 客户端回填生效（客户端 setData→set() 存 clientValue→get() 返回；服务端 get() 读 BE 实时值，MC 基类 checkAndClearUpdateFlag 自动推送）；合金 EXECUTE 逐输入扣量校验 + drainedBack 回滚（同层多输入场景零损失）；review 终审 pass 可交付
+- review 三轮修复：客户端 clickMenuButton（tile==null）返回 true 放行发包（原恒 false 导致滚动/装桶包永不发出），服务端权威校验兜底
+- security_review 四轮修复：装桶要求该层液体 ≥1000mb（FluidUtil.getFilledBucket 对任意非零量返满桶，不足 1 桶装桶会 dupe）；resizeInventory clamp [0,729]（篡改 NBT inventorySize 防 OOM/负分配）；ScreenSmeltery 保留 0 量层保持点击索引与服务端层号对齐；security 终审 pass 可发布
 - 下一步：浇铸系统（浇铸台/盆 + faucet/channel/drain + seared 楼梯/台阶）或工具站 GUI 增强
 
 ### 2026-08-06 会话6：全部自定义配方类型 + 流体/模具补全 + JEI 预留（完成）
