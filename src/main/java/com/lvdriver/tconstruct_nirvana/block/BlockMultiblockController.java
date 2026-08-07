@@ -71,6 +71,11 @@ public abstract class BlockMultiblockController extends BaseEntityBlock {
     }
 
     @Override
+    public BlockState getStateForPlacement(net.minecraft.world.item.context.BlockPlaceContext context) {
+        return this.defaultBlockState().setValue(FACING, context.getHorizontalDirection().getOpposite());
+    }
+
+    @Override
     public void setPlacedBy(Level level, BlockPos pos, BlockState state, LivingEntity placer, ItemStack stack) {
         // 放置后立即检测结构（1:1 旧版 onBlockPlacedBy）
         TileMultiblock te = getTile(level, pos);
