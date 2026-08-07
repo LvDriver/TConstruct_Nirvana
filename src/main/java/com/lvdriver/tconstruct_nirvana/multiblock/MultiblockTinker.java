@@ -22,6 +22,7 @@ public abstract class MultiblockTinker extends MultiblockCuboid {
 
     /**
      * 校验附属方块：已归属其他主机的方块无效（1:1 旧版 isValidSlave）。
+     * 例外：原主机已不存在（被拆除/失效）时放行，防止换位重建被残留绑定卡死。
      */
     protected boolean isValidSlave(Level world, BlockPos pos) {
         if (!world.isLoaded(pos)) {
@@ -29,6 +30,12 @@ public abstract class MultiblockTinker extends MultiblockCuboid {
         }
         if (world.getBlockEntity(pos) instanceof IServantLogic slave) {
             if (slave.hasValidMaster() && !tile.getBlockPos().equals(slave.getMasterPosition())) {
+                BlockPos masterPos = slave.getMasterPosition();
+                // 原主机不存在 → 残留绑定作废，放行
+                if (masterPos == null || !world.isLoaded(masterPos)
+                        || !(world.getBlockEntity(masterPos) instanceof TileMultiblock)) {
+                    return true;
+                }
                 return false;
             }
         }
