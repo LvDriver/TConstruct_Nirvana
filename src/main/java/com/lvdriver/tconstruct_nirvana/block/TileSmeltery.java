@@ -310,9 +310,23 @@ public class TileSmeltery extends TileHeatingStructureFuelTank
                 if (liquids.fill(out.copy(), IFluidHandler.FluidAction.SIMULATE) != out.getAmount()) {
                     break;
                 }
-                // 实际执行：扣输入 → 加输出
+                // 实际执行：扣输入 → 加输出（EXECUTE 校验实际扣量，不足则回滚已扣）
+                java.util.List<FluidStack> drainedBack = new java.util.ArrayList<>();
+                boolean executed = true;
                 for (net.neoforged.neoforge.fluids.crafting.SizedFluidIngredient need : recipe.getInputs()) {
-                    drainMatching(need, need.amount(), IFluidHandler.FluidAction.EXECUTE);
+                    FluidStack drained = drainMatching(need, need.amount(), IFluidHandler.FluidAction.EXECUTE);
+                    if (drained.isEmpty() || drained.getAmount() != need.amount()) {
+                        executed = false;
+                        break;
+                    }
+                    drainedBack.add(drained);
+                }
+                if (!executed) {
+                    // 回滚已扣输入（放回炉内）
+                    for (FluidStack rollback : drainedBack) {
+                        liquids.fill(rollback, IFluidHandler.FluidAction.EXECUTE);
+                    }
+                    break;
                 }
                 liquids.fill(out.copy(), IFluidHandler.FluidAction.EXECUTE);
                 matched--;

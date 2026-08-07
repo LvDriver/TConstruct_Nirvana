@@ -136,58 +136,54 @@ public class ContainerSmeltery extends AbstractContainerMenu {
     }
 
     private void initDataSlots() {
-        // 服务端：从 BE 读；客户端：standalone 占位由 setData 回填
-        syncData.add(addDataSlot(new DataSlot() {
-            @Override
-            public int get() {
-                return tile != null && tile.hasFuel() ? 1 : 0;
-            }
-
-            @Override
-            public void set(int value) {
-            }
-        }));
-        syncData.add(addDataSlot(new DataSlot() {
-            @Override
-            public int get() {
-                SmelteryTank tank = tank();
-                return tank == null ? 0 : Math.min(MAX_FLUID_LAYERS, tank.getFluids().size());
-            }
-
-            @Override
-            public void set(int value) {
-            }
-        }));
+        // 服务端：get() 读 BE 实时值（broadcastChanges 经 checkAndClearUpdateFlag 自动下发）；
+        // 客户端：tile==null，set() 由 setData 回填保存，get() 返回回填值供 Screen 渲染
+        syncData.add(addDataSlot(new SmelteryDataSlot(() -> tile != null && tile.hasFuel() ? 1 : 0)));
+        syncData.add(addDataSlot(new SmelteryDataSlot(() -> {
+            SmelteryTank tank = tank();
+            return tank == null ? 0 : Math.min(MAX_FLUID_LAYERS, tank.getFluids().size());
+        })));
         for (int i = 0; i < MAX_FLUID_LAYERS; i++) {
             final int layer = i;
-            syncData.add(addDataSlot(new DataSlot() {
-                @Override
-                public int get() {
-                    SmelteryTank tank = tank();
-                    if (tank == null || layer >= tank.getFluids().size()) {
-                        return 0;
-                    }
-                    return BuiltInRegistries.FLUID.getId(tank.getFluids().get(layer).getFluid());
+            syncData.add(addDataSlot(new SmelteryDataSlot(() -> {
+                SmelteryTank tank = tank();
+                if (tank == null || layer >= tank.getFluids().size()) {
+                    return 0;
                 }
+                return BuiltInRegistries.FLUID.getId(tank.getFluids().get(layer).getFluid());
+            })));
+            syncData.add(addDataSlot(new SmelteryDataSlot(() -> {
+                SmelteryTank tank = tank();
+                if (tank == null || layer >= tank.getFluids().size()) {
+                    return 0;
+                }
+                return tank.getFluids().get(layer).getAmount();
+            })));
+        }
+    }
 
-                @Override
-                public void set(int value) {
-                }
-            }));
-            syncData.add(addDataSlot(new DataSlot() {
-                @Override
-                public int get() {
-                    SmelteryTank tank = tank();
-                    if (tank == null || layer >= tank.getFluids().size()) {
-                        return 0;
-                    }
-                    return tank.getFluids().get(layer).getAmount();
-                }
+    /**
+     * 冶炼炉数据槽：服务端从 BE 实时取值（供 broadcastChanges 推送），
+     * 客户端由 {@code setData} 回填保存（供 Screen 渲染）。
+     */
+    private class SmelteryDataSlot extends DataSlot {
 
-                @Override
-                public void set(int value) {
-                }
-            }));
+        private final java.util.function.IntSupplier serverGetter;
+        private int clientValue;
+
+        SmelteryDataSlot(java.util.function.IntSupplier serverGetter) {
+            this.serverGetter = serverGetter;
+        }
+
+        @Override
+        public int get() {
+            // 客户端（tile==null）返回回填值；服务端读 BE
+            return tile != null ? serverGetter.getAsInt() : clientValue;
+        }
+
+        @Override
+        public void set(int value) {
+            this.clientValue = value;
         }
     }
 
