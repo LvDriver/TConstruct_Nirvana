@@ -55,6 +55,14 @@ public final class ModCreativeTabs {
                 output.accept(ModBlocks.TOOL_STATION.get());
                 output.accept(ModBlocks.TOOL_FORGE.get());
 
+                // 冶炼炉（会话7）：seared 变体 + 玻璃 + 储罐 + 控制器
+                for (ModBlocks.SearedVariant variant : ModBlocks.SEARED_VARIANTS) {
+                    output.accept(variant.block().get());
+                }
+                output.accept(ModBlocks.SEARED_GLASS.get());
+                output.accept(ModBlocks.SEARED_TANK.get());
+                output.accept(ModBlocks.SMELTERY_CONTROLLER.get());
+
                 // 流体桶（1:1 旧版 FluidRegistry.addBucketForFluid 入创造页行为）
                 for (ModFluids.FluidEntry fluid : ModFluids.FLUIDS_ALL) {
                     output.accept(fluid.bucket().get());

@@ -25,6 +25,18 @@ public final class ModBlockEntities {
                                     ModBlocks.TOOL_STATION.get(), ModBlocks.TOOL_FORGE.get())
                             .build(null));
 
+    /** 冶炼炉控制器方块实体（多方块主机，会话7）。 */
+    public static final DeferredHolder<BlockEntityType<?>, BlockEntityType<TileSmeltery>> SMELTERY =
+            BLOCK_ENTITIES.register("smeltery",
+                    () -> BlockEntityType.Builder.of(TileSmeltery::new, ModBlocks.SMELTERY_CONTROLLER.get())
+                            .build(null));
+
+    /** seared 储罐方块实体（会话7）。 */
+    public static final DeferredHolder<BlockEntityType<?>, BlockEntityType<TileTank>> TANK =
+            BLOCK_ENTITIES.register("tank",
+                    () -> BlockEntityType.Builder.of(TileTank::new, ModBlocks.SEARED_TANK.get())
+                            .build(null));
+
     private ModBlockEntities() {
     }
 

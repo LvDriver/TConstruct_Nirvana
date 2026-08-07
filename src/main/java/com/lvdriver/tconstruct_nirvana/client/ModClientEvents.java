@@ -38,6 +38,7 @@ public final class ModClientEvents {
     @SubscribeEvent
     public static void onRegisterMenuScreens(RegisterMenuScreensEvent event) {
         event.register(ModMenuTypes.TOOL_STATION.get(), TinkerStationScreen::new);
+        event.register(ModMenuTypes.SMELTERY.get(), com.lvdriver.tconstruct_nirvana.client.gui.ScreenSmeltery::new);
     }
 
     /** 流体渲染属性注册（贴图 + 染色，1:1 旧版 FluidColored 颜色体系）。 */

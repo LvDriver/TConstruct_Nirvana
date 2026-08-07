@@ -175,6 +175,16 @@ public final class ModFluids {
     private ModFluids() {
     }
 
+    /** 按注册名查找流体本体（如 "blood"/"molten_iron"），未注册返回 null。 */
+    public static Fluid findFluid(String id) {
+        for (FluidEntry entry : FLUIDS_ALL) {
+            if (entry.id().getPath().equals(id)) {
+                return entry.still().get();
+            }
+        }
+        return null;
+    }
+
     /** 熔融金属（旧版 FluidMolten：密度 2000、粘度 10000、亮度 10）。 */
     private static FluidEntry metal(String name, int color, int temperature, Rarity rarity) {
         return register(name, METAL_STILL, METAL_FLOW, color, 2000, 10000, temperature, 10, rarity);

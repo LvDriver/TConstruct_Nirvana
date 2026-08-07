@@ -36,6 +36,15 @@ public class TConBlockTagsProvider extends BlockTagsProvider {
                 .add(ModBlocks.ARDITE_BLOCK.get())
                 .add(ModBlocks.TOOL_FORGE.get());
 
+        // 冶炼炉（会话7）：seared 系列 + 储罐 + 控制器镐可采，玻璃镐可采
+        for (ModBlocks.SearedVariant variant : ModBlocks.SEARED_VARIANTS) {
+            tag(BlockTags.MINEABLE_WITH_PICKAXE).add(variant.block().get());
+        }
+        tag(BlockTags.MINEABLE_WITH_PICKAXE)
+                .add(ModBlocks.SEARED_GLASS.get())
+                .add(ModBlocks.SEARED_TANK.get())
+                .add(ModBlocks.SMELTERY_CONTROLLER.get());
+
         // 斧可采（工具站木质）
         tag(BlockTags.MINEABLE_WITH_AXE)
                 .add(ModBlocks.TOOL_STATION.get());

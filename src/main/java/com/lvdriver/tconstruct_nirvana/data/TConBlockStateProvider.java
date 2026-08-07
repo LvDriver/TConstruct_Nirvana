@@ -1,7 +1,9 @@
 package com.lvdriver.tconstruct_nirvana.data;
 
+import com.lvdriver.tconstruct_nirvana.block.BlockSmelteryController;
 import com.lvdriver.tconstruct_nirvana.block.ModBlocks;
 import com.lvdriver.tconstruct_nirvana.fluid.ModFluids;
+import net.minecraft.core.Direction;
 import net.minecraft.data.PackOutput;
 import net.neoforged.neoforge.client.model.generators.BlockStateProvider;
 import net.neoforged.neoforge.client.model.generators.ModelFile;
@@ -42,6 +44,43 @@ public class TConBlockStateProvider extends BlockStateProvider {
                 models().cubeAll("tool_station", modLoc("block/tool_station")));
         simpleBlockWithItem(ModBlocks.TOOL_FORGE.get(),
                 models().cubeAll("tool_forge", modLoc("block/block_cobalt")));
+
+        // 冶炼炉（会话7）：seared 12 变体 + 玻璃 + 储罐 + 控制器
+        for (ModBlocks.SearedVariant variant : ModBlocks.SEARED_VARIANTS) {
+            simpleBlockWithItem(variant.block().get(),
+                    models().cubeAll("seared_" + variant.name(), modLoc("block/smeltery/seared_" + variant.name())));
+        }
+        simpleBlockWithItem(ModBlocks.SEARED_GLASS.get(),
+                models().cubeAll("seared_glass", modLoc("block/smeltery/seared_window_side")));
+        simpleBlockWithItem(ModBlocks.SEARED_TANK.get(),
+                models().cubeBottomTop("seared_tank",
+                        modLoc("block/smeltery/seared_tank_side"),
+                        modLoc("block/smeltery/seared_tank_top"),
+                        modLoc("block/smeltery/seared_tank_top")));
+
+        // 控制器：facing × active 两态（active 用发光贴图，1:1 旧版 smeltery_active/inactive）
+        ModelFile inactive = models().cubeAll("smeltery_controller",
+                modLoc("block/smeltery/smeltery_inactive"));
+        ModelFile active = models().cubeAll("smeltery_controller_active",
+                modLoc("block/smeltery/smeltery_active"));
+        getVariantBuilder(ModBlocks.SMELTERY_CONTROLLER.get())
+                .partialState().with(BlockSmelteryController.FACING, Direction.NORTH)
+                .with(BlockSmelteryController.ACTIVE, false).modelForState().modelFile(inactive).rotationY(0).addModel()
+                .partialState().with(BlockSmelteryController.FACING, Direction.SOUTH)
+                .with(BlockSmelteryController.ACTIVE, false).modelForState().modelFile(inactive).rotationY(180).addModel()
+                .partialState().with(BlockSmelteryController.FACING, Direction.WEST)
+                .with(BlockSmelteryController.ACTIVE, false).modelForState().modelFile(inactive).rotationY(270).addModel()
+                .partialState().with(BlockSmelteryController.FACING, Direction.EAST)
+                .with(BlockSmelteryController.ACTIVE, false).modelForState().modelFile(inactive).rotationY(90).addModel()
+                .partialState().with(BlockSmelteryController.FACING, Direction.NORTH)
+                .with(BlockSmelteryController.ACTIVE, true).modelForState().modelFile(active).rotationY(0).addModel()
+                .partialState().with(BlockSmelteryController.FACING, Direction.SOUTH)
+                .with(BlockSmelteryController.ACTIVE, true).modelForState().modelFile(active).rotationY(180).addModel()
+                .partialState().with(BlockSmelteryController.FACING, Direction.WEST)
+                .with(BlockSmelteryController.ACTIVE, true).modelForState().modelFile(active).rotationY(270).addModel()
+                .partialState().with(BlockSmelteryController.FACING, Direction.EAST)
+                .with(BlockSmelteryController.ACTIVE, true).modelForState().modelFile(active).rotationY(90).addModel();
+        simpleBlockItem(ModBlocks.SMELTERY_CONTROLLER.get(), inactive);
 
         // 流体方块：占位模型（无 elements，particle = 类别贴图；实际表面由
         // LiquidBlockRenderer 按 IClientFluidTypeExtensions 的 still/flow 贴图渲染）

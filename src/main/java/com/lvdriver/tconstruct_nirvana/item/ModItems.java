@@ -8,6 +8,8 @@ import net.neoforged.bus.api.IEventBus;
 import net.neoforged.neoforge.registries.DeferredItem;
 import net.neoforged.neoforge.registries.DeferredRegister;
 
+import java.util.List;
+
 /**
  * 物品注册中枢（DeferredRegister）。
  *
@@ -39,6 +41,14 @@ public final class ModItems {
     public static final DeferredItem<BlockItem> ARDITE_BLOCK_ITEM = ITEMS.registerSimpleBlockItem(ModBlocks.ARDITE_BLOCK);
     public static final DeferredItem<BlockItem> TOOL_STATION_ITEM = ITEMS.registerSimpleBlockItem(ModBlocks.TOOL_STATION);
     public static final DeferredItem<BlockItem> TOOL_FORGE_ITEM = ITEMS.registerSimpleBlockItem(ModBlocks.TOOL_FORGE);
+
+    // 冶炼炉方块物品（会话7）
+    public static final DeferredItem<BlockItem> SEARED_GLASS_ITEM = ITEMS.registerSimpleBlockItem(ModBlocks.SEARED_GLASS);
+    public static final DeferredItem<BlockItem> SEARED_TANK_ITEM = ITEMS.registerSimpleBlockItem(ModBlocks.SEARED_TANK);
+    public static final DeferredItem<BlockItem> SMELTERY_CONTROLLER_ITEM = ITEMS.registerSimpleBlockItem(ModBlocks.SMELTERY_CONTROLLER);
+    public static final List<DeferredItem<BlockItem>> SEARED_VARIANT_ITEMS = ModBlocks.SEARED_VARIANTS.stream()
+            .map(v -> ITEMS.registerSimpleBlockItem(v.block()))
+            .toList();
 
     private ModItems() {
     }

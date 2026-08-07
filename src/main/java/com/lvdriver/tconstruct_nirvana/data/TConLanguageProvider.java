@@ -113,6 +113,25 @@ public class TConLanguageProvider extends LanguageProvider {
         addBlock(ModBlocks.TOOL_STATION, chinese ? "工具站" : "Tool Station");
         addBlock(ModBlocks.TOOL_FORGE, chinese ? "锻造厂" : "Tool Forge");
 
+        // 冶炼炉（会话7）：seared 12 变体 + 玻璃/储罐/控制器
+        add("block.tconstruct_nirvana.seared_stone", chinese ? "焦黑石" : "Seared Stone");
+        add("block.tconstruct_nirvana.seared_cobble", chinese ? "焦黑圆石" : "Seared Cobble");
+        add("block.tconstruct_nirvana.seared_paver", chinese ? "焦黑石板" : "Seared Paver");
+        add("block.tconstruct_nirvana.seared_brick", chinese ? "焦黑砖" : "Seared Bricks");
+        add("block.tconstruct_nirvana.seared_brick_cracked", chinese ? "裂纹焦黑砖" : "Cracked Seared Bricks");
+        add("block.tconstruct_nirvana.seared_brick_fancy", chinese ? "华丽焦黑砖" : "Fancy Seared Bricks");
+        add("block.tconstruct_nirvana.seared_brick_square", chinese ? "方形焦黑砖" : "Square Seared Bricks");
+        add("block.tconstruct_nirvana.seared_brick_triangle", chinese ? "三角焦黑砖" : "Triangle Seared Bricks");
+        add("block.tconstruct_nirvana.seared_brick_small", chinese ? "小焦黑砖" : "Small Seared Bricks");
+        add("block.tconstruct_nirvana.seared_road", chinese ? "焦黑路砖" : "Seared Road");
+        add("block.tconstruct_nirvana.seared_tile", chinese ? "焦黑瓦" : "Seared Tiles");
+        add("block.tconstruct_nirvana.seared_creeper", chinese ? "焦黑苦力怕纹" : "Seared Creeper");
+        addBlock(ModBlocks.SEARED_GLASS, chinese ? "焦黑玻璃" : "Seared Glass");
+        addBlock(ModBlocks.SEARED_TANK, chinese ? "焦黑储罐" : "Seared Tank");
+        addBlock(ModBlocks.SMELTERY_CONTROLLER, chinese ? "冶炼炉控制器" : "Smeltery Controller");
+        add("gui.smeltery.name", chinese ? "冶炼炉" : "Smeltery");
+        add("gui.tconstruct_nirvana.smeltery.empty", chinese ? "空" : "Empty");
+
         addItem(ModItems.COBALT_INGOT, chinese ? "钴锭" : "Cobalt Ingot");
         addItem(ModItems.ARDITE_INGOT, chinese ? "阿迪特锭" : "Ardite Ingot");
         addItem(ModItems.COBALT_NUGGET, chinese ? "钴粒" : "Cobalt Nugget");

@@ -25,6 +25,11 @@ public final class ModMenuTypes {
             MENU_TYPES.register("tool_station", () -> new MenuType<>(
                     TinkerStationMenu::new, net.minecraft.world.flag.FeatureFlags.REGISTRY.allFlags()));
 
+    /** 冶炼炉菜单（会话7）。 */
+    public static final DeferredHolder<MenuType<?>, MenuType<ContainerSmeltery>> SMELTERY =
+            MENU_TYPES.register("smeltery", () -> new MenuType<>(
+                    ContainerSmeltery::new, net.minecraft.world.flag.FeatureFlags.REGISTRY.allFlags()));
+
     private ModMenuTypes() {
     }
 

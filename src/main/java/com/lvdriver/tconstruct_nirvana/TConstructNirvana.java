@@ -72,6 +72,9 @@ public class TConstructNirvana {
         // 配置文件（矿物生成开关等）
         modContainer.registerConfig(ModConfig.Type.COMMON, TConConfig.SPEC);
 
+        // 方块实体 capability（seared 储罐流体能力，1.21.1 范式）
+        modEventBus.addListener(com.lvdriver.tconstruct_nirvana.block.TileTank::registerCapabilities);
+
         LOGGER.info("{} initialized", MODID);
     }
 }

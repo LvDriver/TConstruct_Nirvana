@@ -4,7 +4,7 @@
 > 目的：把"需要记住的事"从对话上下文搬到文件里，AI 按需读取，省 token、防遗忘。
 
 ## 项目状态
-- 当前阶段：会话6 完成（全部自定义配方类型：熔炼/浇铸/桶浇铸/部件制作 + 合金核对 + JEI 预留）
+- 当前阶段：会话7 完成（冶炼炉多方块结构系统：seared 方块 + 多块检测 + 炉体逻辑 + GUI）
 - 最后更新：2026-08-06
 - 旧源码路径：`./TinkersAntique-1.12/`（已解压，匠魂怀古 1.12.2 源码）
 
@@ -22,13 +22,14 @@
 - [ ] 工具站 GUI 增强：Shift 快速移动/拆解/修饰符按钮/修复按钮（当前最小版：5 部件槽+结果槽）
 - [x] 会话5：金属流体系统（26 流体注册 + 温度系统 + 合金配方 + c: tag）——熔炼/浇铸配方类型与冶炼炉事件触发点待冶炼炉会话
 - [x] 会话6：全部自定义配方类型——熔炼/浇铸/桶浇铸/部件制作（Recipe+Serializer+注册+DataGen 561 条）+ 8 流体补注册 + 铸造形状 5 个 + JEI 4 分类（compileOnly 软依赖）
-- [ ] 熔炼/浇铸配方类型（MeltingRecipe/CastingRecipe 数据驱动版，熔炼炉会话接入）✓ 类型已完成，冶炼炉会话接入触发点
-- [ ] 冶炼炉多方块（后期）：炉内接线（熔炼/浇铸/合金匹配调用、部件熔炼/浇铸炉内逻辑、SmelteryEvent/MeltingEvent/CastingEvent 触发点）
+- [x] 熔炼/浇铸配方类型（MeltingRecipe/CastingRecipe 数据驱动版，冶炼炉会话接入触发点）✓ 类型已完成；MeltingEvent 触发点已接入（会话7），CastingEvent 待浇铸台会话
+- [x] 冶炼炉多方块（会话7）：seared 方块 12 变体 + 玻璃/储罐/控制器 + 多块检测 + 炉体逻辑（熔炼/合金/部件熔炼/实体熔炼/燃料）+ MeltingEvent 触发点 + GUI 最小版
+- [ ] 浇铸系统（后续会话）：浇铸台/盆（BlockCasting + TileCasting + CastingEvent 触发点）、龙头/沟槽/排液口（faucet/channel/drain）、seared 楼梯/台阶
+- [ ] 冶炼炉 GUI 增强：温度/进度条显示、燃料液体贴图渲染（当前 tint 色块占位）、Shift 快速移动
 - [ ] needs_cobalt_tool 工具侧接线完善（数据驱动 level 判定已可用）+ sharpening_kit 部件注册
 - [ ] TConConfig 矿石生成开关接线（BiomeModifier 数据驱动限制）或移除
 - [ ] 确定 Mod 核心玩法（1:1 还原匠魂怀古，后续再调整/新增）
 - [ ] 定义注册清单：物品 / 方块 / 流体 / 实体 / 配方类型等
-- [ ] 冶炼炉多方块（后期）
 
 ## 关键决策
 | 日期 | 决策 | 原因 |
@@ -181,6 +182,19 @@
 - FluidIngredient 体系（1.21.1 新增）：`SizedFluidIngredient.FLAT_CODEC` JSON 为 `{"fluid":..,"amount":..}`/`{"tag":..,"amount":..}`；`FluidStack.CODEC` 输出 `{"id":..,"amount":..}`
 
 ## 会话记录
+### 2026-08-06 会话7：冶炼炉多方块结构系统（完成）
+- 方块（block/）：`BlockSeared` 12 变体（stone/cobble/paver/brick/cracked/fancy/square/triangle/small/road/tile/creeper，独立注册替代旧版 1 方块+meta，硬度 3/抗爆 20/金属音 1:1）、`BlockSearedGlass`（0.3 硬度透明玻璃，旧版 CTM 简化）、`BlockTank`（4000mb 储罐 + 比较器 + 液体亮度）、`BlockMultiblockController` 抽象基类（FACING+ACTIVE 状态、放置即检测、未成型不可开 GUI、禁旋转）、`BlockSmelteryController`（成型喷火粒子）
+- 多块检测（新包 `multiblock/`，去 Mantle）：`IMasterLogic/IServantLogic` 接口 + `MultiblockDetection`（MultiblockStructure/assignMultiBlock/isAreaLoaded 适配）+ `MultiblockCuboid`（地板→逐层墙→天花板，hasFrame/hasCeiling 可选）+ `MultiblockTinker`（isValidSlave：已归属其他主机的 servant 拒绝）+ `MultiblockSmeltery`（有地板无顶、地板仅 seared、墙体 validSmelteryBlocks={seared,tank,glass}、必须含至少 1 个 tank）
+- BE 链：`TileMultiblock`（active/minPos/maxPos/checkMultiblockStructure/NBT/网络包）→ `TileHeatingStructure`（TIME_FACTOR=8 加热、fuel/temperature/needsFuel、itemTemperatures 数组、SimpleContainer 组合替代旧版 TileInventory）→ `TileHeatingStructureFuelTank`（searchForFuel/consumeFuel 从 tank 抽 50mb 岩浆、结构尺寸调整物品栏、掉出多余物品）→ `TileSmeltery`（每秒结构检测+4tick 加热+15s 全检+炉内阻塞检测、熔炼/合金/实体熔炼/部件熔炼、MeltingEvent 触发、MenuProvider）；`TileSmelteryComponent`（servant 基类：master 位置 NBT）；`TileTank`（FluidTank 4000mb + RegisterCapabilitiesEvent 注册 FLUID_HANDLER capability）
+- 炉内逻辑：熔炼 = `RecipeManager.getAllRecipesFor(MELTING_TYPE)`（1.21.1 返回 RecipeHolder 需 .value()）+ ItemTagMatch 匹配；部件熔炼 = TOOL_PARTS tag + PART_MATERIAL → Material.getFluidId → 熔出 cost mb（**差异**：旧版仅 stone 部件注册熔炼，本版扩展为全部带流体关联的材料，金属部件可熔回）；合金 = AlloyRecipe.matchesAmount + SizedFluidIngredient.test 匹配 drain（每 tick 上限 10mb）；实体熔炼 = ItemEntity 可熔即拾取 + 活体生物有燃料时 lava 伤害 2 + blood 20mb；燃料 = SmelteryFuels 注册表（lava 50mb→100 tick，1:1 旧版 registerSmelteryFuel；不足 50mb 按 in²/50 折算——旧版 bug 公式 1:1 保留）
+- 事件：`MeltingEvent` 触发点接入 onItemFinishedHeating（NeoForge.EVENT_BUS.post，可取消/改流体/温度/量）；SmelteryEvent 基类生效；CastingEvent 待浇铸台会话
+- GUI 最小版：`ContainerSmeltery`（27 可见槽侧栏 + clickMenuButton 0/1 滚动 + 2+idx 点击液体装桶）+ `ScreenSmeltery`（旧版 smeltery.png 背景、液体 tint 色块分层渲染 + tooltip、滚轮滚动、点击液体消耗背包空桶装桶，1:1 旧版 handleTankClick）；燃料区指示；smeltery 菜单注册 RegisterMenuScreensEvent
+- 资源：旧版 smeltery 贴图 18 张复制（seared 12 变体 + tank side/top + window side/top + smeltery active/inactive）+ gui/smeltery.png；DataGen：15 blockstate + 15 loot + 14 pickaxe tag + lang（12 变体中英文名 + GUI 提示）
+- **验证**：`./gradlew check` BUILD SUCCESSFUL（3 轮编译修复 56→16→0 错误）；`./gradlew runData` 通过（数据文件核对：controller 8 变体/15 loot/14 tags）；`./gradlew runClient` 冒烟 ×2（initialized → ResourceManager 加载 → 无 ERROR）
+- 踩坑修复：静态初始化 get() 崩溃（VALID_SMELTERY_BLOCKS 静态 Set 含 SEARED.get() → 改懒初始化方法）；BlockStateProperties.ACTIVE 不存在 → BooleanProperty.create("active")；1.21.1 无 (BlockPos,BlockPos) isAreaLoaded → hasChunk 两角检查；AABB.offset(int) → move；getAllRecipesFor 返回 RecipeHolder；IFluidHandler 需 isFluidValid；FluidStack 1.21.1 无 getTintColor → IClientFluidTypeExtensions.of(type).getTintColor(fluid)；mouseScrolled 4 参；NbtUtils.readBlockPos(CompoundTag) 不存在 → putLongArray/asLong
+- 遗留：浇铸台/盆/龙头/沟槽/排液口（CastingEvent 触发点）留待下会话；GUI 温度/进度条与燃料贴图渲染未做（tint 色块占位）；游戏内实际建结构/熔矿流程未自动化验证（runClient 仅到主菜单）；炉内液体渲染模型（BE 内液体 3D 渲染）未做（GUI 可见）
+- 下一步：浇铸系统（浇铸台/盆 + faucet/channel/drain + seared 楼梯/台阶）或工具站 GUI 增强
+
 ### 2026-08-06 会话6：全部自定义配方类型 + 流体/模具补全 + JEI 预留（完成）
 - 配方类型（recipe/ 包，全部 Recipe+Serializer+注册到 ModRecipeTypes）：
   - MeltingRecipe（物品 tag → 流体 + 熔点；温度自动 calcTemperature 1:1：300 + (amount/1296)^log9(2) × (流体温-300)，可显式覆盖；getUsableTemperature=max(1,temp-300)）

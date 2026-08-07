@@ -30,17 +30,32 @@ public class TConBlockLoot extends BlockLootSubProvider {
         dropSelf(ModBlocks.ARDITE_BLOCK.get());
         dropSelf(ModBlocks.TOOL_STATION.get());
         dropSelf(ModBlocks.TOOL_FORGE.get());
+
+        // 冶炼炉（会话7）：seared 变体/玻璃/储罐/控制器全部掉自身
+        for (ModBlocks.SearedVariant variant : ModBlocks.SEARED_VARIANTS) {
+            dropSelf(variant.block().get());
+        }
+        dropSelf(ModBlocks.SEARED_GLASS.get());
+        dropSelf(ModBlocks.SEARED_TANK.get());
+        dropSelf(ModBlocks.SMELTERY_CONTROLLER.get());
     }
 
     /** 仅处理本 mod 方块，避免遍历全注册表（vanilla 方块无对应 loot builder）。 */
     @Override
     protected Iterable<Block> getKnownBlocks() {
-        return List.of(
+        List<Block> blocks = new java.util.ArrayList<>(List.of(
                 ModBlocks.COBALT_ORE.get(),
                 ModBlocks.ARDITE_ORE.get(),
                 ModBlocks.COBALT_BLOCK.get(),
                 ModBlocks.ARDITE_BLOCK.get(),
                 ModBlocks.TOOL_STATION.get(),
-                ModBlocks.TOOL_FORGE.get());
+                ModBlocks.TOOL_FORGE.get(),
+                ModBlocks.SEARED_GLASS.get(),
+                ModBlocks.SEARED_TANK.get(),
+                ModBlocks.SMELTERY_CONTROLLER.get()));
+        for (ModBlocks.SearedVariant variant : ModBlocks.SEARED_VARIANTS) {
+            blocks.add(variant.block().get());
+        }
+        return blocks;
     }
 }
