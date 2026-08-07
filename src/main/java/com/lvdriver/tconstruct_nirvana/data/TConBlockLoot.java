@@ -38,6 +38,19 @@ public class TConBlockLoot extends BlockLootSubProvider {
         dropSelf(ModBlocks.SEARED_GLASS.get());
         dropSelf(ModBlocks.SEARED_TANK.get());
         dropSelf(ModBlocks.SMELTERY_CONTROLLER.get());
+
+        // 浇铸系统（会话8）：浇铸台/盆/龙头/沟槽/排液口掉自身；台阶按单块掉落（1:1 原版 SlabBlock）
+        dropSelf(ModBlocks.CASTING_TABLE.get());
+        dropSelf(ModBlocks.CASTING_BASIN.get());
+        dropSelf(ModBlocks.FAUCET.get());
+        dropSelf(ModBlocks.CHANNEL.get());
+        dropSelf(ModBlocks.DRAIN.get());
+        for (ModBlocks.SearedStairsEntry stairs : ModBlocks.SEARED_STAIRS) {
+            dropSelf(stairs.block().get());
+        }
+        for (ModBlocks.SearedSlabEntry slab : ModBlocks.SEARED_SLABS) {
+            add(slab.block().get(), createSlabItemTable(slab.block().get()));
+        }
     }
 
     /** 仅处理本 mod 方块，避免遍历全注册表（vanilla 方块无对应 loot builder）。 */
@@ -52,9 +65,20 @@ public class TConBlockLoot extends BlockLootSubProvider {
                 ModBlocks.TOOL_FORGE.get(),
                 ModBlocks.SEARED_GLASS.get(),
                 ModBlocks.SEARED_TANK.get(),
-                ModBlocks.SMELTERY_CONTROLLER.get()));
+                ModBlocks.SMELTERY_CONTROLLER.get(),
+                ModBlocks.CASTING_TABLE.get(),
+                ModBlocks.CASTING_BASIN.get(),
+                ModBlocks.FAUCET.get(),
+                ModBlocks.CHANNEL.get(),
+                ModBlocks.DRAIN.get()));
         for (ModBlocks.SearedVariant variant : ModBlocks.SEARED_VARIANTS) {
             blocks.add(variant.block().get());
+        }
+        for (ModBlocks.SearedStairsEntry stairs : ModBlocks.SEARED_STAIRS) {
+            blocks.add(stairs.block().get());
+        }
+        for (ModBlocks.SearedSlabEntry slab : ModBlocks.SEARED_SLABS) {
+            blocks.add(slab.block().get());
         }
         return blocks;
     }

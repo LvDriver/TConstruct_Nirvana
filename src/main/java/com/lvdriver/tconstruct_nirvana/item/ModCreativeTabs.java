@@ -63,6 +63,19 @@ public final class ModCreativeTabs {
                 output.accept(ModBlocks.SEARED_TANK.get());
                 output.accept(ModBlocks.SMELTERY_CONTROLLER.get());
 
+                // 浇铸系统（会话8）：浇铸台/盆/龙头/沟槽/排液口 + seared 楼梯/台阶
+                output.accept(ModBlocks.CASTING_TABLE.get());
+                output.accept(ModBlocks.CASTING_BASIN.get());
+                output.accept(ModBlocks.FAUCET.get());
+                output.accept(ModBlocks.CHANNEL.get());
+                output.accept(ModBlocks.DRAIN.get());
+                for (ModBlocks.SearedStairsEntry stairs : ModBlocks.SEARED_STAIRS) {
+                    output.accept(stairs.block().get());
+                }
+                for (ModBlocks.SearedSlabEntry slab : ModBlocks.SEARED_SLABS) {
+                    output.accept(slab.block().get());
+                }
+
                 // 流体桶（1:1 旧版 FluidRegistry.addBucketForFluid 入创造页行为）
                 for (ModFluids.FluidEntry fluid : ModFluids.FLUIDS_ALL) {
                     output.accept(fluid.bucket().get());

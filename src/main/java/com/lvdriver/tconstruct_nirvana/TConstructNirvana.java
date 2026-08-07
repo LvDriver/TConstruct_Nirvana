@@ -74,6 +74,10 @@ public class TConstructNirvana {
 
         // 方块实体 capability（seared 储罐流体能力，1.21.1 范式）
         modEventBus.addListener(com.lvdriver.tconstruct_nirvana.block.TileTank::registerCapabilities);
+        // 会话8：浇铸台/盆流体能力 + 排液口流体能力（代理冶炼炉主罐）+ 沟槽流体能力
+        modEventBus.addListener(com.lvdriver.tconstruct_nirvana.block.CastingBlockEntity::registerCapabilities);
+        modEventBus.addListener(com.lvdriver.tconstruct_nirvana.block.TileDrain::registerCapabilities);
+        modEventBus.addListener(com.lvdriver.tconstruct_nirvana.block.TileChannel::registerCapabilities);
 
         LOGGER.info("{} initialized", MODID);
     }

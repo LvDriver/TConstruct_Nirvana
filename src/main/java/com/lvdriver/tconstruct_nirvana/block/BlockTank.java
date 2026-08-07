@@ -39,6 +39,24 @@ public class BlockTank extends BaseEntityBlock {
         return simpleCodec(BlockTank::new);
     }
 
+    /** 桶/流体容器交互：倒入或取出液体（1:1 移植自旧版 BlockTank.onBlockActivated
+     * 的 {@code FluidUtil.interactWithFluidHandler} 调用）。经 capability 路径读写，
+     * 与管道共用包装逻辑（fill/drain 后刷新红石比较器）。 */
+    @Override
+    protected net.minecraft.world.ItemInteractionResult useItemOn(
+            net.minecraft.world.item.ItemStack stack, BlockState state, Level level, BlockPos pos,
+            net.minecraft.world.entity.player.Player player, net.minecraft.world.InteractionHand hand,
+            net.minecraft.world.phys.BlockHitResult hitResult) {
+        net.neoforged.neoforge.fluids.capability.IFluidHandler handler =
+                level.getCapability(net.neoforged.neoforge.capabilities.Capabilities.FluidHandler.BLOCK,
+                        pos, hitResult.getDirection());
+        if (handler != null && net.neoforged.neoforge.fluids.FluidUtil.interactWithFluidHandler(player, hand, handler)) {
+            return net.minecraft.world.ItemInteractionResult.sidedSuccess(level.isClientSide);
+        }
+        // 非流体容器/无可交互液体 → 回退默认（无 GUI，最终 PASS）
+        return net.minecraft.world.ItemInteractionResult.PASS_TO_DEFAULT_BLOCK_INTERACTION;
+    }
+
     @Override
     public BlockEntity newBlockEntity(BlockPos pos, BlockState state) {
         return new TileTank(pos, state);

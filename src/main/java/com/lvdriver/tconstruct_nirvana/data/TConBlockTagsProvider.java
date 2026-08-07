@@ -49,6 +49,20 @@ public class TConBlockTagsProvider extends BlockTagsProvider {
         tag(BlockTags.MINEABLE_WITH_AXE)
                 .add(ModBlocks.TOOL_STATION.get());
 
+        // 浇铸系统（会话8）：浇铸台/盆/龙头/沟槽/排液口 + seared 楼梯/台阶镐可采
+        tag(BlockTags.MINEABLE_WITH_PICKAXE)
+                .add(ModBlocks.CASTING_TABLE.get())
+                .add(ModBlocks.CASTING_BASIN.get())
+                .add(ModBlocks.FAUCET.get())
+                .add(ModBlocks.CHANNEL.get())
+                .add(ModBlocks.DRAIN.get());
+        for (ModBlocks.SearedStairsEntry stairs : ModBlocks.SEARED_STAIRS) {
+            tag(BlockTags.MINEABLE_WITH_PICKAXE).add(stairs.block().get());
+        }
+        for (ModBlocks.SearedSlabEntry slab : ModBlocks.SEARED_SLABS) {
+            tag(BlockTags.MINEABLE_WITH_PICKAXE).add(slab.block().get());
+        }
+
         // 钴级采掘（旧版 harvestLevel = 4）
         tag(TConTags.NEEDS_COBALT_TOOL)
                 .add(ModBlocks.COBALT_ORE.get())

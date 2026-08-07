@@ -4,8 +4,9 @@
 > 目的：把"需要记住的事"从对话上下文搬到文件里，AI 按需读取，省 token、防遗忘。
 
 ## 项目状态
-- 当前阶段：会话7 完成（冶炼炉多方块结构系统：seared 方块 + 多块检测 + 炉体逻辑 + GUI）
-- 最后更新：2026-08-06
+- 当前阶段：会话8 完成（浇铸系统：浇铸台/盆 + 龙头/沟槽/排液口 + CastingEvent 触发点 + seared 楼梯/台阶）
+- 最后更新：2026-08-07
+- 环境注意：公司加密软件会破坏 java 源文件（read_file 报 NUL 字节 / git 显示 ` D` 工作区删除）——恢复流程：让用户粘贴代码重建 + `git diff` 校验（重建后 diff 为空 = 字节级一致）；已用此流程恢复 BlockMultiblockController.java
 - 旧源码路径：`./TinkersAntique-1.12/`（已解压，匠魂怀古 1.12.2 源码）
 
 ## 待办（按优先级）
@@ -24,7 +25,7 @@
 - [x] 会话6：全部自定义配方类型——熔炼/浇铸/桶浇铸/部件制作（Recipe+Serializer+注册+DataGen 561 条）+ 8 流体补注册 + 铸造形状 5 个 + JEI 4 分类（compileOnly 软依赖）
 - [x] 熔炼/浇铸配方类型（MeltingRecipe/CastingRecipe 数据驱动版，冶炼炉会话接入触发点）✓ 类型已完成；MeltingEvent 触发点已接入（会话7），CastingEvent 待浇铸台会话
 - [x] 冶炼炉多方块（会话7）：seared 方块 12 变体 + 玻璃/储罐/控制器 + 多块检测 + 炉体逻辑（熔炼/合金/部件熔炼/实体熔炼/燃料）+ MeltingEvent 触发点 + GUI 最小版
-- [ ] 浇铸系统（后续会话）：浇铸台/盆（BlockCasting + TileCasting + CastingEvent 触发点）、龙头/沟槽/排液口（faucet/channel/drain）、seared 楼梯/台阶
+- [x] 浇铸系统（会话8）：浇铸台/盆（BlockCasting + CastingBlockEntity + CastingEvent 触发点）+ 龙头/沟槽/排液口（faucet/channel/drain）+ seared 楼梯/台阶
 - [ ] 冶炼炉 GUI 增强：温度/进度条显示、燃料液体贴图渲染（当前 tint 色块占位）、Shift 快速移动
 - [ ] needs_cobalt_tool 工具侧接线完善（数据驱动 level 判定已可用）+ sharpening_kit 部件注册
 - [ ] TConConfig 矿石生成开关接线（BiomeModifier 数据驱动限制）或移除
@@ -136,8 +137,21 @@
 - 材料与修饰符的 RecipeMatch 体系是全局地基（Material 和 Modifier 都继承它），优先重写
 
 ## 已知 Bug
+- ✅ 已修复（2026-08-07 调试会话）：浇铸系统不可用 —— 冶炼炉熔炼金/铁/钴/阿迪特块后，排液口+龙头无法排出到浇铸台锭铸模/浇铸盆；创造物品栏滑动时悬停模具物品概率崩溃
+  - 修复方式①（浇铸-排液口）：`ModBlocks.getValidSmelteryBlocks()` 补入 `DRAIN.get()`（排液口）。根因：1:1 旧版 `validSmelteryBlocks` 含 `smelteryIO`，新版移植漏掉排液口 → 玩家把墙换成排液口后结构检测失败 → 冶炼炉 active=false → `TileDrain.getSmeltery()` 返回 null → 龙头取不到液。修复后需重放控制器/排液口触发重检（或等服务端每秒重检自动恢复）
+  - 修复方式②（浇铸-桶交互）：`BlockCasting` 覆写 `useItemOn` 经 capability + `FluidUtil.interactWithFluidHandler` 处理桶倒入/取出。根因：旧版 1.12 桶交互在物品侧（ItemBucket.onItemUse 自动检查方块 capability），1.21.1 移到方块侧，缺失导致手持熔融金属桶右键盆只把桶当物品放进槽内
+  - 修复方式③（浇铸-防护）：`TileDrain` capability 在炉子未成型（getTank() null）时返回 null（原来包 `ExtractOnlyWrapper(null)` 龙头 drain 会 NPE）
+  - 修复方式④（创造栏崩溃）：`PatternItem.appendHoverText` 的三目表达式 `int : Integer` 按 JLS 15.25 统一为 int，`ModPatterns.getCastShapeCost` 对未知形状返回 null 时自动拆箱 NPE → 改显式 if-else。崩溃日志：`crash-2026-08-07_13.48/13.52`，`Cannot invoke "java.lang.Integer.intValue()"` at PatternItem.java:83
+  - 修复方式⑤（浇铸-客户端同步）：`CastingBlockEntity` 加 `syncToClient()`，在 `setItem/fill/drain/finishCasting/reset` 数据变化后向追踪玩家发 `ClientboundBlockEntityDataPacket`。根因：数据变化只 `sendBlockUpdated(flag 2)`（仅刷新渲染、不携带 BE 数据），客户端显示陈旧状态 → 冷却完成不渲染输出物品、交互后"铸模消失"（实为客户端一直显示初始空数据）。用户实证：旧炉子进存档时渲染正常（加载时 NBT 全量同步）、运行中冷却完成不渲染（无同步包），恰好印证
+  - 操作说明（非 bug，1:1 旧版）：浇铸台/盆**输出槽有物品时拒绝注入**（龙头无声 reset）→ 熔一整块铁浇出第一锭后须先拿走锭再浇下一锭，否则"浇不出来"；浇铸盆要求两槽全空（模具槽残留物品会导致无模具配方不匹配）；冷却时间 = 1:1 旧版 `24 + (温度-300)×量/1600`（铁锭 66 tick、铁块 403 tick），浇注速率 6mb/tick 亦为旧版 Config 值
+  - 调试埋点：`TileFaucet.doTransfer/pour` 加 debug 日志（`[Faucet]`：无源/无目标/源无液/目标拒收），下次龙头不流液可直接定位环节
+  - 操作说明（排液口+龙头搭法，1:1 旧版 TileFaucet.doTransfer 取液=朝向相邻格、输出=正下方）：龙头必须与排液口**同层相邻**（点击排液口侧面放置，FACING 朝排液口）或**排液口正下方**（点击排液口底面，FACING=UP）；龙头正下方放浇铸台/盆。实测日志：龙头源位置 getCapability null（`[Faucet] no fluid source`）均为搭法错位（龙头放排液口上方一层，源取到第二层墙）或炉子未成型（x=33 炉子 walls too short）；`[Drain]` 日志（getSmeltery null 时输出位置/master/loaded）可区分搭法错位 vs 未绑定
+- ✅ 已修复并实证（2026-08-07 调试会话）：冶炼炉控制器无效 —— 多方块结构搭建正确但无火焰粒子特效、无法右键开 GUI；焦黑储罐也无法用岩浆桶右键倒入岩浆
+  - **用户实证**：修复后储罐可用岩浆桶倒入 ✓；控制器拆除后重新放置 → GUI 正常打开、正常读取储罐内岩浆 ✓（首次放置打不开、拆放后正常；疑似首次放置时结构未完整或朝向问题，未复现，诊断日志已埋点）
+  - 修复方式①：`TileMultiblock.checkMultiblockStructure` 状态变化时向追踪玩家发送 `ClientboundBlockEntityDataPacket`（`ServerLevel.getChunkSource().chunkMap.getPlayers(new ChunkPos(...), false)`），同步 BE.active 到客户端。根因：`setBlock(ACTIVE, 3)` 只同步 blockstate 不带 BE 数据，客户端 BE.active 恒 false → 无粒子 + `useWithoutItem` 返回 PASS（1.21.1 客户端 PASS 不发送 `ServerboundUseItemOnPacket`）→ 服务端 GUI 永远收不到右键（旧版 1.12 客户端自跑结构检测且总是发包，迁移时漏了 BE 数据同步）
+  - 修复方式②：`BlockTank` 覆写 `useItemOn`，经 `Capabilities.FluidHandler.BLOCK` capability + `FluidUtil.interactWithFluidHandler(player, hand, handler)` 实现桶倒入/取出（1:1 旧版 BlockTank.onBlockActivated），成功返回 `ItemInteractionResult.sidedSuccess(level.isClientSide)`，失败回退 PASS_TO_DEFAULT_BLOCK_INTERACTION
 - （无功能性 Bug；以下为已知限制/遗留，详见会话记录与关键决策）
-- 冶炼事件类（SmelteryEvent/MeltingEvent/CastingEvent）已发布但无触发点，待冶炼炉会话接入
+- 冶炼事件类（SmelteryEvent/MeltingEvent/CastingEvent）已发布：MeltingEvent 接入冶炼炉（会话7）、CastingEvent 接入浇铸台/盆（会话8）
 - `needs_cobalt_tool`：钴/阿迪特矿需钴级工具采掘（1:1 还原旧版采掘等级 4），当前尚无钴工具 → 矿石暂无法正常采掘掉落，待工具会话接线
 - TConConfig 的 generateCobaltOre / generateArditeOre 开关未接线（BiomeModifier 为数据驱动，无法读运行时 config）
 - 材料特质为字符串占位（如 "momentum"），无实际游戏效果，待修饰符会话实现 Trait 类
@@ -180,8 +194,30 @@
 - `BlockBehaviour` 在 `net.minecraft.world.level.block.state` 包（写错成 `block.BlockBehaviour` 编译报"程序包不存在"）
 - FluidType 默认翻译 key = `fluid_type.<modid>.<名>`（`Util.makeDescriptionId("fluid_type", key)`）；1.21.1 FluidType 渲染属性经 `RegisterClientExtensionsEvent.registerFluidType(IClientFluidTypeExtensions, FluidType...)`（MOD bus，仅客户端）
 - FluidIngredient 体系（1.21.1 新增）：`SizedFluidIngredient.FLAT_CODEC` JSON 为 `{"fluid":..,"amount":..}`/`{"tag":..,"amount":..}`；`FluidStack.CODEC` 输出 `{"id":..,"amount":..}`
+- 1.21.1 客户端 `Block.useItemOn`/`useWithoutItem` 返回 `PASS` 时**不发送交互包**（MultiPlayerGameMode 判断 `consumesAction()`，1.20.2+ 优化）→ 靠"客户端先判定再开 GUI"的方块（多方块控制器未成型 PASS）服务端永远收不到右键；须保证客户端状态正确或客户端返回 SUCCESS
+- 服务端 `level.setBlock(..., 3)` 只同步 blockstate，**不带 BE 数据** → BE 字段（如多方块 active）必须显式发 `ClientboundBlockEntityDataPacket` 给追踪玩家（`serverLevel.getChunkSource().chunkMap.getPlayers(new ChunkPos(x>>4, z>>4), false).forEach(p -> p.connection.send(pkt))`；`PlayerList.broadcastAll` 1.21.1 无三参 (Packet, ResourceKey, BlockPos) 版，两参版广播全维度太粗暴）
+- 1.21.1 `BlockBehaviour.useItemOn` 返回 `ItemInteractionResult`（非 InteractionResult）且带 ItemStack+InteractionHand 参数；`useWithoutItem` 无 hand 参数 → 需要 hand 的方块交互（桶倒液）必须覆写 `useItemOn`，成功返回 `ItemInteractionResult.sidedSuccess(level.isClientSide)`
+- Java 三目运算符类型统一坑：`cond ? int : Integer` 按 JLS 15.25 统一为 **int**（对 Integer 分支自动拆箱）→ 返回 null 的 Integer 直接 NPE（`Cannot invoke "Integer.intValue()"`）→ 可空 Integer 参与三目必须显式 if-else，禁止与基本类型混用
+- 冶炼炉合法墙体集合（`getValidSmelteryBlocks`）移植时漏排液口：1:1 核对旧版 `TinkerSmeltery.validSmelteryBlocks`（含 searedBlock/searedTank/smelteryIO/searedGlass/searedLadder）→ 排液口进墙导致结构检测失败、冶炼炉整个失效（表现像"龙头排不出液"，实为炉子未成型）；排液口/储罐等"功能方块"是否允许作墙体须逐项对照旧版集合
+- 1.21.1 桶交互从"物品侧"移到"方块侧"：1.12 的 `ItemBucket.onItemUse` 会自动检查点击方块的 FLUID_HANDLER capability 倒液/取液；1.21.1 桶的 Item.useOn 不处理普通方块 → 所有可被桶交互的方块（储罐/浇铸台/盆等）必须自行覆写 `useItemOn` + `FluidUtil.interactWithFluidHandler`，缺失的表现是"桶右键被当物品放进槽内"
+- capability 返回 null 的坑：BE capability lambda 里代理对象（如冶炼炉主罐）可能为 null（炉子未成型）→ 不能包一层 `Wrapper(null)`（调用方 drain 时 NPE）→ 直接返回 null，调用方按"取不到液"处理
+- `sendBlockUpdated(..., 2)` 只刷新渲染、**不携带 BE 数据**：BE 的槽位/液体等数据变化后客户端显示陈旧（"冷却完成不渲染输出""槽位显示错乱"）→ 必须显式发 `ClientboundBlockEntityDataPacket`（ChunkMap.getPlayers）同步全量 NBT；此坑已踩三次（TileMultiblock active / 本项），凡 BE 数据驱动客户端渲染的都要检查
 
 ## 会话记录
+### 2026-08-07 会话8：浇铸系统（完成）
+- 浇铸台/盆：`BlockCasting`（旧版单方块 TYPE 两态 → 1.21.1 注册两个独立方块 casting_table/casting_basin 共用类，isBasin 构造标志）+ `CastingBlockEntity`（2 槽 SimpleContainer + 动态容量 FluidTank：空罐注入时先查配方定容量，1:1 旧版 FluidHandlerCasting；fill 的 EXECUTE 才发 CastingEvent（onCastingStart 可取消），满液冷却 timer 完成后发 CastingEvent（onCastingFinish 可改 output/取消=保留液体模具冷却重来）；consumeCast/switchOutputs 1:1；interact 放/取 1 个物品；比较器=输出槽有物 15；NBT+全量 update tag 同步）；capability FLUID_HANDLER（CastingFluidHandler）
+- **配方台/盆区分**：CastingRecipe 补 `basin` 布尔字段（旧版 registerTableCasting/registerBasinCasting 双注册表 → 单表标记）；规则：cast==null（铸块）或 tag 模具（染色陶瓦/沙清洗）→ basin，形状模具 → table；serializer codec/stream 加字段，DataGen 3 个 helper 自动标记（351 条配方重生成）
+- 龙头：`BlockFaucet`（FACING 禁 DOWN + 5 AABB + 右键/红石上升沿延迟 2 tick）+ `TileFaucet`（TRANSACTION_AMOUNT=144 / LIQUID_TRANSFER=6 / 气体按负密度过滤（1.21.1 无 isGaseous）/ drained 缓冲 NBT 持久化 / 排空自动续抽或停止）
+- 沟槽：`BlockChannel`（DOWN+NORTH/SOUTH/WEST/EAST 5 个 BooleanProperty，multipart 模型；连接状态写入 BlockState——1.21.1 无 getActualState）+ `TileChannel`（36mb 罐 + locked 防同 tick 抽注（1:1 ChannelTank.locked）/ 向下优先侧向均分 / 红石控制向下输出 / IN 与 UP 侧注入 capability 只进不出 / 右键切换连接并同步邻居 + channel.connected.* 消息）+ `ItemChannel`（自定义 BlockItem，放置后按点击面自动连接，1:1 旧版 ItemChannel）
+- 排液口：`BlockDrain`（水平 4 向 + FluidUtil 桶交互）+ `TileDrain extends TileSmelteryComponent`（capability 代理冶炼炉主罐：side==null → ExtractOnlyWrapper 只读（1:1 旧版），side!=null → 完整主罐）
+- seared 楼梯/台阶：12 StairBlock + 12 SlabBlock（seared_stairs_*/seared_slab_*，材质=对应变体贴图），加入 `getValidSmelteryBlocks`（1:1 旧版 searedStairsSlabs 可作冶炼炉墙体）
+- 客户端：`FluidBoxRenderer`（FluidType still 贴图 + tint 画 6 面半透明盒）+ `TileCastingRenderer`（槽内物品 + 液体按比例）/`TileFaucetRenderer`（嘴下滴液柱）/`TileChannelRenderer`（通道内液体 + down 滴液），BlockEntityRenderers.register 注册
+- 资源：旧版 casting_table/basin/faucet/faucet_top/channel 模型 JSON 复制并替换贴图路径（tconstruct: → tconstruct_nirvana:），贴图 10 张复制
+- **验证**：`./gradlew build` 多轮 BUILD SUCCESSFUL（第 2 轮修复内通过）；`runData` 通过（1022 文件 +156，basin 字段/新方块 blockstate/loot/lang/tag 核对）；`runClient` 冒烟（initialized → Sound engine → blocks atlas，0 模型 WARN/无 ERROR）；security_review 三轮闭环（2 MEDIUM + 4 LOW + 续审 2 项全修复）
+- 踩坑修复：`newBlockEntity`/`getTicker` 是 **EntityBlock 接口方法**，普通 Block 必须 implements EntityBlock（BlockFaucet 漏写导致龙头无 BE）；`useItemOn` 返回 `ItemInteractionResult`（非 InteractionResult）；`stairsBlock/slabBlock` 不生成物品模型（ModelBakery WARN）→ TConItemModelProvider withExistingParent 补 24 个；方法引用不能直接 cast 通配符泛型（先赋变量）；`getRecipeFor` 返回 `Optional<RecipeHolder<T>>`（需 .map(RecipeHolder::value)）；BE 构造引用需 (pos,state) 两参 lambda（BlockEntitySupplier 签名）；MultiPartBlockStateBuilder 在 `model.generators` 包（非 blockstate 子包）；setNormal(Pose,...)（PoseStack.Pose 而非 Matrix3f）；ModBlockEntities 静态初始化自引用 → 用完全限定名 `ModBlockEntities.X.get()`
+- 遗留：沟槽客户端流动动画简化（IN 侧显示为 OUT 喷嘴视觉，流动方向不单独同步）；龙头触发声用 LEVER_CLICK 替代旧版自定义 faucet_trigger、完成声用 LAVA_POP；sizzle 用 LAVA_AMBIENT；`setBlock` 驱动沟槽连接渲染（无 didPlace 信息，邻居后放置需右键补连）；排液口桶交互为只读（1:1 旧版，倒液走侧向管道）；CastingEvent 取消在 finish 时=冷却重试（监听器持续取消则持续重试，由其自担）；冶炼炉 GUI 增强/龙头 GUI 待后续
+- 下一步：冶炼炉 GUI 增强或工具站 GUI 增强
+
 ### 2026-08-06 会话7：冶炼炉多方块结构系统（完成）
 - 方块（block/）：`BlockSeared` 12 变体（stone/cobble/paver/brick/cracked/fancy/square/triangle/small/road/tile/creeper，独立注册替代旧版 1 方块+meta，硬度 3/抗爆 20/金属音 1:1）、`BlockSearedGlass`（0.3 硬度透明玻璃，旧版 CTM 简化）、`BlockTank`（4000mb 储罐 + 比较器 + 液体亮度）、`BlockMultiblockController` 抽象基类（FACING+ACTIVE 状态、放置即检测、未成型不可开 GUI、禁旋转）、`BlockSmelteryController`（成型喷火粒子）
 - 多块检测（新包 `multiblock/`，去 Mantle）：`IMasterLogic/IServantLogic` 接口 + `MultiblockDetection`（MultiblockStructure/assignMultiBlock/isAreaLoaded 适配）+ `MultiblockCuboid`（地板→逐层墙→天花板，hasFrame/hasCeiling 可选）+ `MultiblockTinker`（isValidSlave：已归属其他主机的 servant 拒绝）+ `MultiblockSmeltery`（有地板无顶、地板仅 seared、墙体 validSmelteryBlocks={seared,tank,glass}、必须含至少 1 个 tank）

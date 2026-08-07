@@ -89,6 +89,10 @@ public abstract class TileMultiblock extends BlockEntity implements IMasterLogic
                         level.sendBlockUpdated(worldPosition, state, state, 3);
                     }
                 }
+                com.lvdriver.tconstruct_nirvana.TConstructNirvana.LOGGER.debug(
+                        "[Smeltery] structure check at {} facing-back={}: {} (active {} -> {})",
+                        worldPosition, facing, structure == null ? "FAIL" : structure.xd + "x" + structure.yd + "x" + structure.zd,
+                        wasActive, active);
             }
         }
 
@@ -96,6 +100,18 @@ public abstract class TileMultiblock extends BlockEntity implements IMasterLogic
         if (wasActive != active) {
             level.setBlock(worldPosition, state.setValue(com.lvdriver.tconstruct_nirvana.block.BlockMultiblockController.ACTIVE, active), 3);
             setChanged();
+            // 同步 BE 数据（active）到客户端：setBlock 只同步 blockstate，不带 BE 数据；
+            // 客户端 BE.active 不更新会导致 animateTick 无粒子、useWithoutItem 返回 PASS
+            // （1.21.1 客户端 PASS 不发送交互包 → 服务端 GUI 无法打开）。
+            // 等价替代旧版"客户端也执行结构检测"的行为（1:1 语义）。
+            if (level instanceof net.minecraft.server.level.ServerLevel serverLevel) {
+                var packet = getUpdatePacket();
+                if (packet != null) {
+                    serverLevel.getChunkSource().chunkMap
+                            .getPlayers(new net.minecraft.world.level.ChunkPos(worldPosition.getX() >> 4, worldPosition.getZ() >> 4), false)
+                            .forEach(p -> p.connection.send(packet));
+                }
+            }
         }
     }
 

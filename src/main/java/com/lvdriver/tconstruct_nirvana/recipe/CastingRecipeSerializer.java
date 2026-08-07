@@ -44,9 +44,10 @@ public class CastingRecipeSerializer implements RecipeSerializer<CastingRecipe> 
             OUTPUT_CODEC.fieldOf("result").forGetter(CastingRecipe::getOutput),
             net.minecraft.util.ExtraCodecs.POSITIVE_INT.fieldOf("time").forGetter(CastingRecipe::getTime),
             com.mojang.serialization.Codec.BOOL.optionalFieldOf("consumes_cast", false).forGetter(CastingRecipe::consumesCast),
-            com.mojang.serialization.Codec.BOOL.optionalFieldOf("switch_outputs", false).forGetter(CastingRecipe::switchOutputs)
-    ).apply(instance, (cast, fluid, output, time, consumesCast, switchOutputs) ->
-            new CastingRecipe(cast.orElse(null), fluid, output, time, consumesCast, switchOutputs)));
+            com.mojang.serialization.Codec.BOOL.optionalFieldOf("switch_outputs", false).forGetter(CastingRecipe::switchOutputs),
+            com.mojang.serialization.Codec.BOOL.optionalFieldOf("basin", false).forGetter(CastingRecipe::isBasin)
+    ).apply(instance, (cast, fluid, output, time, consumesCast, switchOutputs, basin) ->
+            new CastingRecipe(cast.orElse(null), fluid, output, time, consumesCast, switchOutputs, basin)));
 
     /** 模具流编解码（可选形状/tag 模具，1.21.1 泛型约束：须为 RegistryFriendlyByteBuf 版）。 */
     private static final StreamCodec<RegistryFriendlyByteBuf, Optional<Either<ResourceLocation, TagKey<Item>>>> CAST_STREAM =
@@ -117,10 +118,12 @@ public class CastingRecipeSerializer implements RecipeSerializer<CastingRecipe> 
                     Optional<Either<ResourceLocation, TagKey<Item>>> cast = CAST_STREAM.decode(buffer);
                     FluidStack fluid = FluidStack.STREAM_CODEC.decode(buffer);
                     Either<ItemStack, TagKey<Item>> output = OUTPUT_STREAM_CODEC.decode(buffer);
-                    int time = buffer.readVarInt();
+                    // 正数校验防损坏/篡改数据包产生负冷却（security_review）
+                    int time = Math.max(0, buffer.readVarInt());
                     boolean consumesCast = buffer.readBoolean();
                     boolean switchOutputs = buffer.readBoolean();
-                    return new CastingRecipe(cast.orElse(null), fluid, output, time, consumesCast, switchOutputs);
+                    boolean basin = buffer.readBoolean();
+                    return new CastingRecipe(cast.orElse(null), fluid, output, time, consumesCast, switchOutputs, basin);
                 }
 
                 @Override
@@ -131,6 +134,7 @@ public class CastingRecipeSerializer implements RecipeSerializer<CastingRecipe> 
                     buffer.writeVarInt(recipe.getTime());
                     buffer.writeBoolean(recipe.consumesCast());
                     buffer.writeBoolean(recipe.switchOutputs());
+                    buffer.writeBoolean(recipe.isBasin());
                 }
             };
 

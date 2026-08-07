@@ -76,11 +76,16 @@ public class PatternItem extends Item {
     @Override
     public void appendHoverText(ItemStack stack, TooltipContext context, List<Component> tooltip, TooltipFlag flag) {
         // 旧版 tooltip.pattern.cost：显示该模具制作对应部件的材料消耗（锭数）
+        // 注意：不能用三目合并（int : Integer 会统一为 int 并对 null 自动拆箱 → NPE，
+        // 未知形状的模具（既非部件也非铸造形状）悬停即崩）
         ResourceLocation shape = getShape(stack);
         java.util.Optional<ToolPart> part = getPart(stack);
-        Integer cost = part.isPresent()
-                ? part.get().getCost()
-                : shape == null ? null : ModPatterns.getCastShapeCost(shape);
+        Integer cost = null;
+        if (part.isPresent()) {
+            cost = part.get().getCost();
+        } else if (shape != null) {
+            cost = ModPatterns.getCastShapeCost(shape);
+        }
         if (cost != null) {
             float costIngots = cost / (float) Material.VALUE_Ingot;
             tooltip.add(Component.translatable("tooltip.pattern.cost", DF.format(costIngots)));

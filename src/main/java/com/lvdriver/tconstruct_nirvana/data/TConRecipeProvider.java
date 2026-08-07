@@ -398,27 +398,27 @@ public class TConRecipeProvider extends RecipeProvider {
         save(output, new MeltingRecipe(input, result, temperature), modLoc("melting/" + name));
     }
 
-    /** 浇铸：静态输出 + 形状模具（castShape 为 null = 无模具/铸造盆）。 */
+    /** 浇铸：静态输出 + 形状模具（castShape 为 null = 无模具/铸造盆 → 1:1 旧版 registerBasinCasting）。 */
     private void castingStatic(RecipeOutput output, String name, ResourceLocation castShape,
                                FluidStack fluid, ItemStack result, int time,
                                boolean consumesCast, boolean switchOutputs) {
         save(output, CastingRecipe.ofShape(castShape, fluid, result, consumesCast, switchOutputs)
-                .withTime(time), modLoc("casting/" + name));
+                .withTime(time).withBasin(castShape == null), modLoc("casting/" + name));
     }
 
-    /** 浇铸：tag 模具（消耗输入物品，如染色陶瓦/沙；1:1 旧版 RecipeMatch.of(物品) 作模具）。 */
+    /** 浇铸：tag 模具（消耗输入物品，如染色陶瓦/沙；1:1 旧版 RecipeMatch.of(物品) 作模具，均走盆）。 */
     private void castingTagCast(RecipeOutput output, String name, TagKey<Item> castTag,
                                 FluidStack fluid, ItemStack result, int time) {
-        save(output, CastingRecipe.ofTag(castTag, fluid, result, time, true, false),
-                modLoc("casting/" + name));
+        save(output, CastingRecipe.ofTag(castTag, fluid, result, time, true, false)
+                .withBasin(true), modLoc("casting/" + name));
     }
 
-    /** 浇铸：动态输出（输出 = c: tag 首选物品，1:1 旧版 PreferenceCastingRecipe）。 */
+    /** 浇铸：动态输出（输出 = c: tag 首选物品，1:1 旧版 PreferenceCastingRecipe；castShape 为 null = 铸块走盆）。 */
     private void castingDynamic(RecipeOutput output, String name, ResourceLocation castShape,
                                 FluidStack fluid, TagKey<Item> resultTag,
                                 boolean consumesCast, boolean switchOutputs) {
-        save(output, CastingRecipe.ofTagOutput(castShape, fluid, resultTag, consumesCast, switchOutputs),
-                modLoc("casting/" + name));
+        save(output, CastingRecipe.ofTagOutput(castShape, fluid, resultTag, consumesCast, switchOutputs)
+                .withBasin(castShape == null), modLoc("casting/" + name));
     }
 
     private static ResourceLocation modLoc(String path) {

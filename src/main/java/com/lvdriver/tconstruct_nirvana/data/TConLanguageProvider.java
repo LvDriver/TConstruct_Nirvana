@@ -23,6 +23,46 @@ public class TConLanguageProvider extends LanguageProvider {
     /** 部件名：注册名 → (英文, 中文)。 */
     private static final Map<String, String[]> PART_NAMES = new LinkedHashMap<>();
 
+    /** seared 变体中文名（楼梯/台阶名拼接用）。 */
+    private static final Map<String, String> SEARED_ZH = new LinkedHashMap<>();
+
+    static {
+        SEARED_ZH.put("stone", "焦黑石");
+        SEARED_ZH.put("cobble", "焦黑圆石");
+        SEARED_ZH.put("paver", "焦黑石板");
+        SEARED_ZH.put("brick", "焦黑砖");
+        SEARED_ZH.put("brick_cracked", "裂纹焦黑砖");
+        SEARED_ZH.put("brick_fancy", "华丽焦黑砖");
+        SEARED_ZH.put("brick_square", "方形焦黑砖");
+        SEARED_ZH.put("brick_triangle", "三角焦黑砖");
+        SEARED_ZH.put("brick_small", "小焦黑砖");
+        SEARED_ZH.put("road", "焦黑路砖");
+        SEARED_ZH.put("tile", "焦黑瓦");
+        SEARED_ZH.put("creeper", "焦黑苦力怕纹");
+    }
+
+    /** seared 变体英文名（楼梯/台阶名拼接用）。 */
+    private static String searedEnName(String variant) {
+        return switch (variant) {
+            case "stone" -> "Stone";
+            case "cobble" -> "Cobble";
+            case "paver" -> "Paver";
+            case "brick" -> "Brick";
+            case "brick_cracked" -> "Cracked Brick";
+            case "brick_fancy" -> "Fancy Brick";
+            case "brick_square" -> "Square Brick";
+            case "brick_triangle" -> "Triangle Brick";
+            case "brick_small" -> "Small Brick";
+            case "road" -> "Road";
+            case "tile" -> "Tile";
+            default -> "Creeper";
+        };
+    }
+
+    private static String searedZhName(String variant) {
+        return SEARED_ZH.getOrDefault(variant, variant);
+    }
+
     /** 流体名：注册名 → (英文, 中文)。1:1 自旧版 lang（熔融金属/石头/血/史莱姆）。 */
     private static final Map<String, String[]> FLUID_NAMES = new LinkedHashMap<>();
 
@@ -131,6 +171,29 @@ public class TConLanguageProvider extends LanguageProvider {
         addBlock(ModBlocks.SMELTERY_CONTROLLER, chinese ? "冶炼炉控制器" : "Smeltery Controller");
         add("gui.smeltery.name", chinese ? "冶炼炉" : "Smeltery");
         add("gui.tconstruct_nirvana.smeltery.empty", chinese ? "空" : "Empty");
+
+        // 浇铸系统（会话8）：浇铸台/盆/龙头/沟槽/排液口 + seared 楼梯/台阶
+        addBlock(ModBlocks.CASTING_TABLE, chinese ? "浇铸台" : "Casting Table");
+        addBlock(ModBlocks.CASTING_BASIN, chinese ? "浇铸盆" : "Casting Basin");
+        addBlock(ModBlocks.FAUCET, chinese ? "龙头" : "Faucet");
+        addBlock(ModBlocks.CHANNEL, chinese ? "沟槽" : "Channel");
+        addBlock(ModBlocks.DRAIN, chinese ? "排液口" : "Drain");
+        for (ModBlocks.SearedStairsEntry stairs : ModBlocks.SEARED_STAIRS) {
+            String baseZh = searedZhName(stairs.name());
+            add("block.tconstruct_nirvana.seared_stairs_" + stairs.name(),
+                    chinese ? baseZh + "楼梯" : "Seared " + searedEnName(stairs.name()) + " Stairs");
+        }
+        for (ModBlocks.SearedSlabEntry slab : ModBlocks.SEARED_SLABS) {
+            String baseZh = searedZhName(slab.name());
+            add("block.tconstruct_nirvana.seared_slab_" + slab.name(),
+                    chinese ? baseZh + "台阶" : "Seared " + searedEnName(slab.name()) + " Slab");
+        }
+        // 沟槽连接状态消息（1:1 旧版 channel.connected.*）
+        add("message.tconstruct_nirvana.channel.connected.out", chinese ? "流体输出" : "Fluid output");
+        add("message.tconstruct_nirvana.channel.connected.in", chinese ? "流体输入" : "Fluid input");
+        add("message.tconstruct_nirvana.channel.connected.none", chinese ? "已断开" : "Disconnected");
+        add("message.tconstruct_nirvana.channel.connected_down.allow", chinese ? "允许向下输出" : "Falling fluid allowed");
+        add("message.tconstruct_nirvana.channel.connected_down.disallow", chinese ? "禁止向下输出" : "Falling fluid blocked");
 
         addItem(ModItems.COBALT_INGOT, chinese ? "钴锭" : "Cobalt Ingot");
         addItem(ModItems.ARDITE_INGOT, chinese ? "阿迪特锭" : "Ardite Ingot");

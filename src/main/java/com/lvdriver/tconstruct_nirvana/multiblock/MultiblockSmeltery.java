@@ -27,6 +27,8 @@ public class MultiblockSmeltery extends MultiblockTinker {
         hasTank = false;
         MultiblockStructure ret = super.detectMultiblock(world, center, limit);
         if (!hasTank) {
+            com.lvdriver.tconstruct_nirvana.TConstructNirvana.LOGGER.debug(
+                    "[Smeltery] detect FAIL: no seared_tank in structure");
             return null;
         }
         return ret;

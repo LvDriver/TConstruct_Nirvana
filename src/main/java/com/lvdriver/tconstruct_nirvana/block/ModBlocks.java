@@ -137,9 +137,141 @@ public final class ModBlocks {
             }
             set.add(SEARED_TANK.get());
             set.add(SEARED_GLASS.get());
+            // 排液口是冶炼炉流体接口（1:1 旧版 smelteryIO 在 validSmelteryBlocks 内）；
+            // 缺失会导致玩家把墙换成排液口后结构检测失败、冶炼炉失效
+            set.add(DRAIN.get());
+            // 1:1 旧版 searedStairsSlabs 也可作墙体
+            for (SearedStairsEntry stairs : SEARED_STAIRS) {
+                set.add(stairs.block().get());
+            }
+            for (SearedSlabEntry slab : SEARED_SLABS) {
+                set.add(slab.block().get());
+            }
             validSmelteryBlocks = Set.copyOf(set);
         }
         return validSmelteryBlocks;
+    }
+
+    /* ---------- 浇铸系统（会话8） ---------- */
+
+    /** 浇铸台（模具浇铸：锭/粒/宝石等，1:1 旧版 BlockCasting TYPE=TABLE）。 */
+    public static final DeferredBlock<BlockCasting> CASTING_TABLE = BLOCKS.register(
+            "casting_table", () -> new BlockCasting(BlockCasting.castingProperties(), false));
+
+    /** 浇铸盆（无模具铸块/清洗，1:1 旧版 BlockCasting TYPE=BASIN）。 */
+    public static final DeferredBlock<BlockCasting> CASTING_BASIN = BLOCKS.register(
+            "casting_basin", () -> new BlockCasting(BlockCasting.castingProperties(), true));
+
+    /** 龙头（从上方/侧方容器抽液浇注，1:1 旧版 BlockFaucet）。 */
+    public static final DeferredBlock<BlockFaucet> FAUCET = BLOCKS.register(
+            "faucet", () -> new BlockFaucet(BlockFaucet.faucetProperties()));
+
+    /** 沟槽（流体分配通道，1:1 旧版 BlockChannel）。 */
+    public static final DeferredBlock<BlockChannel> CHANNEL = BLOCKS.register(
+            "channel", () -> new BlockChannel(BlockChannel.channelProperties()));
+
+    /** 排液口（冶炼炉流体接口，1:1 旧版 BlockSmelteryIO）。 */
+    public static final DeferredBlock<BlockDrain> DRAIN = BLOCKS.register(
+            "drain", () -> new BlockDrain(BlockDrain.drainProperties()));
+
+    /* ---------- seared 楼梯/台阶（会话8，1:1 旧版 BlockSearedStairs/BlockSearedSlab 拆分） ---------- */
+
+    /** seared 楼梯条目（名称 + 方块，1:1 旧版 searedStairs* 12 个独立方块）。 */
+    public record SearedStairsEntry(String name, DeferredBlock<net.minecraft.world.level.block.StairBlock> block) {
+    }
+
+    /** seared 台阶条目（名称 + 方块，1:1 旧版 seared_slab/seared_slab2 的 12 变体拆分）。 */
+    public record SearedSlabEntry(String name, DeferredBlock<net.minecraft.world.level.block.SlabBlock> block) {
+    }
+
+    public static final DeferredBlock<net.minecraft.world.level.block.StairBlock> SEARED_STAIRS_STONE =
+            registerSearedStairs("seared_stairs_stone", SEARED_STONE);
+    public static final DeferredBlock<net.minecraft.world.level.block.StairBlock> SEARED_STAIRS_COBBLE =
+            registerSearedStairs("seared_stairs_cobble", SEARED_COBBLE);
+    public static final DeferredBlock<net.minecraft.world.level.block.StairBlock> SEARED_STAIRS_PAVER =
+            registerSearedStairs("seared_stairs_paver", SEARED_PAVER);
+    public static final DeferredBlock<net.minecraft.world.level.block.StairBlock> SEARED_STAIRS_BRICK =
+            registerSearedStairs("seared_stairs_brick", SEARED_BRICK);
+    public static final DeferredBlock<net.minecraft.world.level.block.StairBlock> SEARED_STAIRS_BRICK_CRACKED =
+            registerSearedStairs("seared_stairs_brick_cracked", SEARED_BRICK_CRACKED);
+    public static final DeferredBlock<net.minecraft.world.level.block.StairBlock> SEARED_STAIRS_BRICK_FANCY =
+            registerSearedStairs("seared_stairs_brick_fancy", SEARED_BRICK_FANCY);
+    public static final DeferredBlock<net.minecraft.world.level.block.StairBlock> SEARED_STAIRS_BRICK_SQUARE =
+            registerSearedStairs("seared_stairs_brick_square", SEARED_BRICK_SQUARE);
+    public static final DeferredBlock<net.minecraft.world.level.block.StairBlock> SEARED_STAIRS_BRICK_TRIANGLE =
+            registerSearedStairs("seared_stairs_brick_triangle", SEARED_BRICK_TRIANGLE);
+    public static final DeferredBlock<net.minecraft.world.level.block.StairBlock> SEARED_STAIRS_BRICK_SMALL =
+            registerSearedStairs("seared_stairs_brick_small", SEARED_BRICK_SMALL);
+    public static final DeferredBlock<net.minecraft.world.level.block.StairBlock> SEARED_STAIRS_ROAD =
+            registerSearedStairs("seared_stairs_road", SEARED_ROAD);
+    public static final DeferredBlock<net.minecraft.world.level.block.StairBlock> SEARED_STAIRS_TILE =
+            registerSearedStairs("seared_stairs_tile", SEARED_TILE);
+    public static final DeferredBlock<net.minecraft.world.level.block.StairBlock> SEARED_STAIRS_CREEPER =
+            registerSearedStairs("seared_stairs_creeper", SEARED_CREEPER);
+
+    /** 全部 12 个 seared 楼梯（DataGen/创造页遍历用）。 */
+    public static final List<SearedStairsEntry> SEARED_STAIRS = List.of(
+            new SearedStairsEntry("stone", SEARED_STAIRS_STONE),
+            new SearedStairsEntry("cobble", SEARED_STAIRS_COBBLE),
+            new SearedStairsEntry("paver", SEARED_STAIRS_PAVER),
+            new SearedStairsEntry("brick", SEARED_STAIRS_BRICK),
+            new SearedStairsEntry("brick_cracked", SEARED_STAIRS_BRICK_CRACKED),
+            new SearedStairsEntry("brick_fancy", SEARED_STAIRS_BRICK_FANCY),
+            new SearedStairsEntry("brick_square", SEARED_STAIRS_BRICK_SQUARE),
+            new SearedStairsEntry("brick_triangle", SEARED_STAIRS_BRICK_TRIANGLE),
+            new SearedStairsEntry("brick_small", SEARED_STAIRS_BRICK_SMALL),
+            new SearedStairsEntry("road", SEARED_STAIRS_ROAD),
+            new SearedStairsEntry("tile", SEARED_STAIRS_TILE),
+            new SearedStairsEntry("creeper", SEARED_STAIRS_CREEPER));
+
+    public static final DeferredBlock<net.minecraft.world.level.block.SlabBlock> SEARED_SLAB_STONE =
+            registerSearedSlab("seared_slab_stone");
+    public static final DeferredBlock<net.minecraft.world.level.block.SlabBlock> SEARED_SLAB_COBBLE =
+            registerSearedSlab("seared_slab_cobble");
+    public static final DeferredBlock<net.minecraft.world.level.block.SlabBlock> SEARED_SLAB_PAVER =
+            registerSearedSlab("seared_slab_paver");
+    public static final DeferredBlock<net.minecraft.world.level.block.SlabBlock> SEARED_SLAB_BRICK =
+            registerSearedSlab("seared_slab_brick");
+    public static final DeferredBlock<net.minecraft.world.level.block.SlabBlock> SEARED_SLAB_BRICK_CRACKED =
+            registerSearedSlab("seared_slab_brick_cracked");
+    public static final DeferredBlock<net.minecraft.world.level.block.SlabBlock> SEARED_SLAB_BRICK_FANCY =
+            registerSearedSlab("seared_slab_brick_fancy");
+    public static final DeferredBlock<net.minecraft.world.level.block.SlabBlock> SEARED_SLAB_BRICK_SQUARE =
+            registerSearedSlab("seared_slab_brick_square");
+    public static final DeferredBlock<net.minecraft.world.level.block.SlabBlock> SEARED_SLAB_BRICK_TRIANGLE =
+            registerSearedSlab("seared_slab_brick_triangle");
+    public static final DeferredBlock<net.minecraft.world.level.block.SlabBlock> SEARED_SLAB_BRICK_SMALL =
+            registerSearedSlab("seared_slab_brick_small");
+    public static final DeferredBlock<net.minecraft.world.level.block.SlabBlock> SEARED_SLAB_ROAD =
+            registerSearedSlab("seared_slab_road");
+    public static final DeferredBlock<net.minecraft.world.level.block.SlabBlock> SEARED_SLAB_TILE =
+            registerSearedSlab("seared_slab_tile");
+    public static final DeferredBlock<net.minecraft.world.level.block.SlabBlock> SEARED_SLAB_CREEPER =
+            registerSearedSlab("seared_slab_creeper");
+
+    /** 全部 12 个 seared 台阶（DataGen/创造页遍历用）。 */
+    public static final List<SearedSlabEntry> SEARED_SLABS = List.of(
+            new SearedSlabEntry("stone", SEARED_SLAB_STONE),
+            new SearedSlabEntry("cobble", SEARED_SLAB_COBBLE),
+            new SearedSlabEntry("paver", SEARED_SLAB_PAVER),
+            new SearedSlabEntry("brick", SEARED_SLAB_BRICK),
+            new SearedSlabEntry("brick_cracked", SEARED_SLAB_BRICK_CRACKED),
+            new SearedSlabEntry("brick_fancy", SEARED_SLAB_BRICK_FANCY),
+            new SearedSlabEntry("brick_square", SEARED_SLAB_BRICK_SQUARE),
+            new SearedSlabEntry("brick_triangle", SEARED_SLAB_BRICK_TRIANGLE),
+            new SearedSlabEntry("brick_small", SEARED_SLAB_BRICK_SMALL),
+            new SearedSlabEntry("road", SEARED_SLAB_ROAD),
+            new SearedSlabEntry("tile", SEARED_SLAB_TILE),
+            new SearedSlabEntry("creeper", SEARED_SLAB_CREEPER));
+
+    private static DeferredBlock<net.minecraft.world.level.block.StairBlock> registerSearedStairs(
+            String name, DeferredBlock<? extends Block> base) {
+        return BLOCKS.register(name, () -> new net.minecraft.world.level.block.StairBlock(
+                base.get().defaultBlockState(), BlockSeared.searedProperties()));
+    }
+
+    private static DeferredBlock<net.minecraft.world.level.block.SlabBlock> registerSearedSlab(String name) {
+        return BLOCKS.register(name, () -> new net.minecraft.world.level.block.SlabBlock(BlockSeared.searedProperties()));
     }
 
     /** seared 方块（任意变体）判定，结构检测地板/墙体用。 */

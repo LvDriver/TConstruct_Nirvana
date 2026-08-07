@@ -50,6 +50,25 @@ public final class ModItems {
             .map(v -> ITEMS.registerSimpleBlockItem(v.block()))
             .toList();
 
+    // 浇铸系统方块物品（会话8）
+    public static final DeferredItem<BlockItem> CASTING_TABLE_ITEM = ITEMS.registerSimpleBlockItem(ModBlocks.CASTING_TABLE);
+    public static final DeferredItem<BlockItem> CASTING_BASIN_ITEM = ITEMS.registerSimpleBlockItem(ModBlocks.CASTING_BASIN);
+    public static final DeferredItem<BlockItem> FAUCET_ITEM = ITEMS.registerSimpleBlockItem(ModBlocks.FAUCET);
+    /** 沟槽物品（自定义：放置后按点击面建立连接，1:1 旧版 ItemChannel）。 */
+    public static final DeferredItem<ItemChannel> CHANNEL_ITEM = ITEMS.register("channel",
+            () -> new ItemChannel(ModBlocks.CHANNEL.get(), new Item.Properties()));
+    public static final DeferredItem<BlockItem> DRAIN_ITEM = ITEMS.registerSimpleBlockItem(ModBlocks.DRAIN);
+
+    /** seared 楼梯方块物品（12 个）。 */
+    public static final List<DeferredItem<BlockItem>> SEARED_STAIRS_ITEMS = ModBlocks.SEARED_STAIRS.stream()
+            .map(s -> ITEMS.registerSimpleBlockItem(s.block()))
+            .toList();
+
+    /** seared 台阶方块物品（12 个）。 */
+    public static final List<DeferredItem<BlockItem>> SEARED_SLABS_ITEMS = ModBlocks.SEARED_SLABS.stream()
+            .map(s -> ITEMS.registerSimpleBlockItem(s.block()))
+            .toList();
+
     private ModItems() {
     }
 

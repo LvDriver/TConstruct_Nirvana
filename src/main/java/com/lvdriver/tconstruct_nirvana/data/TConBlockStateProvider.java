@@ -1,5 +1,8 @@
 package com.lvdriver.tconstruct_nirvana.data;
 
+import com.lvdriver.tconstruct_nirvana.block.BlockChannel;
+import com.lvdriver.tconstruct_nirvana.block.BlockDrain;
+import com.lvdriver.tconstruct_nirvana.block.BlockFaucet;
 import com.lvdriver.tconstruct_nirvana.block.BlockSmelteryController;
 import com.lvdriver.tconstruct_nirvana.block.ModBlocks;
 import com.lvdriver.tconstruct_nirvana.fluid.ModFluids;
@@ -7,6 +10,7 @@ import net.minecraft.core.Direction;
 import net.minecraft.data.PackOutput;
 import net.neoforged.neoforge.client.model.generators.BlockStateProvider;
 import net.neoforged.neoforge.client.model.generators.ModelFile;
+import net.neoforged.neoforge.client.model.generators.MultiPartBlockStateBuilder;
 import net.neoforged.neoforge.common.data.ExistingFileHelper;
 
 /**
@@ -89,6 +93,73 @@ public class TConBlockStateProvider extends BlockStateProvider {
             ModelFile model = models().getBuilder("block/fluid/" + name)
                     .texture("particle", entry.stillTexture());
             simpleBlock(entry.block().get(), model);
+        }
+
+        // 浇铸系统（会话8）：浇铸台/盆/龙头/沟槽/排液口 + seared 楼梯/台阶
+        castingSystem();
+    }
+
+    /** 浇铸系统方块状态与模型（会话8）。 */
+    private void castingSystem() {
+        // 浇铸台/盆（模型文件复制自旧版 casting_table/casting_basin）
+        ModelFile castingTable = models().getExistingFile(modLoc("block/casting_table"));
+        ModelFile castingBasin = models().getExistingFile(modLoc("block/casting_basin"));
+        getVariantBuilder(ModBlocks.CASTING_TABLE.get())
+                .partialState().modelForState().modelFile(castingTable).addModel();
+        getVariantBuilder(ModBlocks.CASTING_BASIN.get())
+                .partialState().modelForState().modelFile(castingBasin).addModel();
+        simpleBlockItem(ModBlocks.CASTING_TABLE.get(), castingTable);
+        simpleBlockItem(ModBlocks.CASTING_BASIN.get(), castingBasin);
+
+        // 龙头：5 朝向（UP 用顶部模型，其他 y 旋转；1:1 旧版 faucet.json）
+        ModelFile faucet = models().getExistingFile(modLoc("block/faucet"));
+        ModelFile faucetTop = models().getExistingFile(modLoc("block/faucet_top"));
+        getVariantBuilder(ModBlocks.FAUCET.get())
+                .partialState().with(BlockFaucet.FACING, Direction.UP).modelForState().modelFile(faucetTop).addModel()
+                .partialState().with(BlockFaucet.FACING, Direction.SOUTH).modelForState().modelFile(faucet).addModel()
+                .partialState().with(BlockFaucet.FACING, Direction.NORTH).modelForState().modelFile(faucet).rotationY(180).addModel()
+                .partialState().with(BlockFaucet.FACING, Direction.WEST).modelForState().modelFile(faucet).rotationY(90).addModel()
+                .partialState().with(BlockFaucet.FACING, Direction.EAST).modelForState().modelFile(faucet).rotationY(270).addModel();
+        simpleBlockItem(ModBlocks.FAUCET.get(), faucet);
+
+        // 排液口：cube 模型（前/后贴图）+ 朝向旋转（1:1 旧版 smeltery_io.json）
+        ModelFile drain = models().getBuilder("drain")
+                .parent(models().getExistingFile(mcLoc("block/cube")))
+                .texture("down", modLoc("block/smeltery/drain_front"))
+                .texture("up", modLoc("block/smeltery/drain_front"))
+                .texture("north", modLoc("block/smeltery/drain_back"))
+                .texture("south", modLoc("block/smeltery/drain_front"))
+                .texture("west", modLoc("block/smeltery/drain_front"))
+                .texture("east", modLoc("block/smeltery/drain_front"))
+                .texture("particle", modLoc("block/smeltery/drain_front"));
+        getVariantBuilder(ModBlocks.DRAIN.get())
+                .partialState().with(BlockDrain.FACING, Direction.SOUTH).modelForState().modelFile(drain).addModel()
+                .partialState().with(BlockDrain.FACING, Direction.NORTH).modelForState().modelFile(drain).rotationY(180).addModel()
+                .partialState().with(BlockDrain.FACING, Direction.WEST).modelForState().modelFile(drain).rotationY(90).addModel()
+                .partialState().with(BlockDrain.FACING, Direction.EAST).modelForState().modelFile(drain).rotationY(270).addModel();
+        simpleBlockItem(ModBlocks.DRAIN.get(), drain);
+
+        // 沟槽：multipart（中心 + down 喷口 + 4 侧连接，1:1 旧版 channel.json）
+        ModelFile channelCenter = models().getExistingFile(modLoc("block/channel/center"));
+        ModelFile channelCenterOut = models().getExistingFile(modLoc("block/channel/center_out"));
+        ModelFile channelSideOut = models().getExistingFile(modLoc("block/channel/side_out"));
+        MultiPartBlockStateBuilder builder = getMultipartBuilder(ModBlocks.CHANNEL.get());
+        builder.part().modelFile(channelCenter).addModel().condition(BlockChannel.DOWN, false).end();
+        builder.part().modelFile(channelCenterOut).addModel().condition(BlockChannel.DOWN, true).end();
+        builder.part().modelFile(channelSideOut).addModel().condition(BlockChannel.NORTH, true).end();
+        builder.part().modelFile(channelSideOut).rotationY(90).addModel().condition(BlockChannel.EAST, true).end();
+        builder.part().modelFile(channelSideOut).rotationY(180).addModel().condition(BlockChannel.SOUTH, true).end();
+        builder.part().modelFile(channelSideOut).rotationY(270).addModel().condition(BlockChannel.WEST, true).end();
+        simpleBlockItem(ModBlocks.CHANNEL.get(), channelCenter);
+
+        // seared 楼梯/台阶（12 + 12，贴图 = 对应 seared 变体；双台阶状态引用对应完整方块模型）
+        for (ModBlocks.SearedStairsEntry stairs : ModBlocks.SEARED_STAIRS) {
+            stairsBlock(stairs.block().get(), modLoc("block/smeltery/seared_" + stairs.name()));
+        }
+        for (ModBlocks.SearedSlabEntry slab : ModBlocks.SEARED_SLABS) {
+            slabBlock(slab.block().get(),
+                    modLoc("block/seared_" + slab.name()),
+                    modLoc("block/smeltery/seared_" + slab.name()));
         }
     }
 }

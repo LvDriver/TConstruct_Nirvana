@@ -48,6 +48,8 @@ public abstract class MultiblockCuboid extends MultiblockDetection {
 
         // 无框架时：主机若低于最低内部位置则结构非法
         if (!hasFrame && masterY < center.getY()) {
+            com.lvdriver.tconstruct_nirvana.TConstructNirvana.LOGGER.debug(
+                    "[Smeltery] detect FAIL: master below lowest internal pos (masterY={}, floorInnerY={})", masterY, center.getY());
             return null;
         }
 
@@ -62,12 +64,16 @@ public abstract class MultiblockCuboid extends MultiblockDetection {
         int xd = (edges[Direction.SOUTH.get2DDataValue()] - edges[Direction.NORTH.get2DDataValue()]) - 1;
         int zd = (edges[Direction.EAST.get2DDataValue()] - edges[Direction.WEST.get2DDataValue()]) - 1;
         if (xd > limit || zd > limit) {
+            com.lvdriver.tconstruct_nirvana.TConstructNirvana.LOGGER.debug(
+                    "[Smeltery] detect FAIL: walls too far (xd={}, zd={}, limit={})", xd, zd, limit);
             return null;
         }
 
         // 地板
         if (hasFloor) {
             if (!detectFloor(world, center.below(), edges, subBlocks)) {
+                com.lvdriver.tconstruct_nirvana.TConstructNirvana.LOGGER.debug(
+                        "[Smeltery] detect FAIL: floor invalid at y={}", center.below().getY());
                 return null;
             }
         }
@@ -82,6 +88,8 @@ public abstract class MultiblockCuboid extends MultiblockDetection {
 
         // 无墙？
         if (height < 1 + masterY - center.getY()) {
+            com.lvdriver.tconstruct_nirvana.TConstructNirvana.LOGGER.debug(
+                    "[Smeltery] detect FAIL: walls too short (height={}, needed={})", height, 1 + masterY - center.getY());
             return null;
         }
 
@@ -129,6 +137,8 @@ public abstract class MultiblockCuboid extends MultiblockDetection {
         BlockPos to = center.offset(edges[3], 0, edges[0]);
 
         if (!MultiblockDetection.isAreaLoaded(world, from, to)) {
+            com.lvdriver.tconstruct_nirvana.TConstructNirvana.LOGGER.debug(
+                    "[Smeltery] detect: plane not loaded at y={}", center.getY());
             return false;
         }
 
@@ -161,10 +171,14 @@ public abstract class MultiblockCuboid extends MultiblockDetection {
                 BlockPos pos = new BlockPos(x, from.getY(), z);
                 if (ceiling) {
                     if (!isCeilingBlock(world, pos)) {
+                        com.lvdriver.tconstruct_nirvana.TConstructNirvana.LOGGER.debug(
+                                "[Smeltery] detect: ceiling block invalid at {}", pos);
                         return false;
                     }
                 } else {
                     if (!isFloorBlock(world, pos)) {
+                        com.lvdriver.tconstruct_nirvana.TConstructNirvana.LOGGER.debug(
+                                "[Smeltery] detect: floor block invalid at {} ({})", pos, world.getBlockState(pos));
                         return false;
                     }
                 }
@@ -180,6 +194,8 @@ public abstract class MultiblockCuboid extends MultiblockDetection {
         BlockPos from = center.offset(edges[1], 0, edges[2]);
         BlockPos to = center.offset(edges[3], 0, edges[0]);
         if (!MultiblockDetection.isAreaLoaded(world, from, to)) {
+            com.lvdriver.tconstruct_nirvana.TConstructNirvana.LOGGER.debug(
+                    "[Smeltery] detect: layer not loaded at y={}", center.getY());
             return false;
         }
         List<BlockPos> candidates = new ArrayList<>();
@@ -208,6 +224,8 @@ public abstract class MultiblockCuboid extends MultiblockDetection {
         }
         for (BlockPos pos : blocks) {
             if (!isInnerBlock(world, pos)) {
+                com.lvdriver.tconstruct_nirvana.TConstructNirvana.LOGGER.debug(
+                        "[Smeltery] detect: layer y={} inner not air at {} ({})", center.getY(), pos, world.getBlockState(pos));
                 return false;
             }
         }
@@ -224,6 +242,8 @@ public abstract class MultiblockCuboid extends MultiblockDetection {
         }
         for (BlockPos pos : blocks) {
             if (!isWallBlock(world, pos)) {
+                com.lvdriver.tconstruct_nirvana.TConstructNirvana.LOGGER.debug(
+                        "[Smeltery] detect: layer y={} wall invalid at {} ({})", center.getY(), pos, world.getBlockState(pos));
                 return false;
             }
             candidates.add(pos);

@@ -1,0 +1,6 @@
+{
+    "parent": "tconstruct_nirvana:block/channel/side_in",
+    "textures": {
+        "top": "tconstruct_nirvana:block/smeltery/channel_out"
+    }
+}

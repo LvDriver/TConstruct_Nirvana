@@ -1,12 +1,17 @@
 package com.lvdriver.tconstruct_nirvana.client;
 
 import com.lvdriver.tconstruct_nirvana.TConstructNirvana;
+import com.lvdriver.tconstruct_nirvana.block.ModBlockEntities;
 import com.lvdriver.tconstruct_nirvana.client.gui.TinkerStationScreen;
+import com.lvdriver.tconstruct_nirvana.client.renderer.TileCastingRenderer;
+import com.lvdriver.tconstruct_nirvana.client.renderer.TileChannelRenderer;
+import com.lvdriver.tconstruct_nirvana.client.renderer.TileFaucetRenderer;
 import com.lvdriver.tconstruct_nirvana.client.renderer.TinkerProjectileRenderer;
 import com.lvdriver.tconstruct_nirvana.entity.ModEntities;
 import com.lvdriver.tconstruct_nirvana.fluid.ModFluids;
 import com.lvdriver.tconstruct_nirvana.gui.ModMenuTypes;
 import net.minecraft.client.gui.screens.MenuScreens;
+import net.minecraft.client.renderer.blockentity.BlockEntityRenderers;
 import net.minecraft.client.renderer.entity.EntityRenderers;
 import net.neoforged.api.distmarker.Dist;
 import net.neoforged.bus.api.SubscribeEvent;
@@ -31,6 +36,11 @@ public final class ModClientEvents {
             EntityRenderers.register(ModEntities.TINKER_ARROW.get(), TinkerProjectileRenderer::new);
             EntityRenderers.register(ModEntities.TINKER_BOLT.get(), TinkerProjectileRenderer::new);
             EntityRenderers.register(ModEntities.TINKER_SHURIKEN.get(), TinkerProjectileRenderer::new);
+            // 浇铸系统（会话8）：浇铸台/盆/龙头/沟槽渲染器
+            BlockEntityRenderers.register(ModBlockEntities.CASTING_TABLE.get(), TileCastingRenderer::new);
+            BlockEntityRenderers.register(ModBlockEntities.CASTING_BASIN.get(), TileCastingRenderer::new);
+            BlockEntityRenderers.register(ModBlockEntities.FAUCET.get(), TileFaucetRenderer::new);
+            BlockEntityRenderers.register(ModBlockEntities.CHANNEL.get(), TileChannelRenderer::new);
         });
     }
 

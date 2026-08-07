@@ -32,6 +32,10 @@ import java.util.Optional;
  * </ul>
  * 模具形状 = {@code ResourceLocation}（部件注册名或铸造形状 ingot/nugget/gem/plate/gear），
  * {@code null} 表示无模具（铸造盆浇铸块）。</p>
+ *
+ * <p>台/盆区分：旧版 table 与 basin 是两个独立配方注册表（{@code registerTableCasting /
+ * registerBasinCasting}）；1.21.1 合并为单表，用 {@code basin} 布尔标记区分
+ * （1:1：无模具铸块与 tag 模具配方（染色陶瓦/沙 → 盆）为 basin，形状模具配方为 table）。</p>
  */
 public class CastingRecipe implements Recipe<CastingRecipeInput> {
 
@@ -42,16 +46,25 @@ public class CastingRecipe implements Recipe<CastingRecipeInput> {
     private final int time;
     private final boolean consumesCast;
     private final boolean switchOutputs;
+    /** 铸造盆配方（true）/浇铸台配方（false），1:1 旧版 registerBasinCasting / registerTableCasting。 */
+    private final boolean basin;
 
     public CastingRecipe(Either<ResourceLocation, TagKey<Item>> cast, FluidStack fluid,
                          Either<ItemStack, TagKey<Item>> output, int time,
                          boolean consumesCast, boolean switchOutputs) {
+        this(cast, fluid, output, time, consumesCast, switchOutputs, false);
+    }
+
+    public CastingRecipe(Either<ResourceLocation, TagKey<Item>> cast, FluidStack fluid,
+                         Either<ItemStack, TagKey<Item>> output, int time,
+                         boolean consumesCast, boolean switchOutputs, boolean basin) {
         this.cast = cast;
         this.fluid = fluid;
         this.output = output;
         this.time = time;
         this.consumesCast = consumesCast;
         this.switchOutputs = switchOutputs;
+        this.basin = basin;
     }
 
     /** 形状模具构造（旧版 CastingRecipe）。 */
@@ -113,6 +126,16 @@ public class CastingRecipe implements Recipe<CastingRecipeInput> {
 
     public boolean switchOutputs() {
         return switchOutputs;
+    }
+
+    /** 铸造盆配方（true）/浇铸台配方（false）。 */
+    public boolean isBasin() {
+        return basin;
+    }
+
+    /** 覆盖台/盆标记（DataGen 用，1:1 旧版 registerBasinCasting 的 tag 模具配方显式标记）。 */
+    public CastingRecipe withBasin(boolean basin) {
+        return new CastingRecipe(cast, fluid, output, time, consumesCast, switchOutputs, basin);
     }
 
     public int getFluidAmount() {

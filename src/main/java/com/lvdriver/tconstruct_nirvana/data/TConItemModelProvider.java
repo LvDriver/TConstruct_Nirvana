@@ -1,5 +1,6 @@
 package com.lvdriver.tconstruct_nirvana.data;
 
+import com.lvdriver.tconstruct_nirvana.block.ModBlocks;
 import com.lvdriver.tconstruct_nirvana.fluid.ModFluids;
 import com.lvdriver.tconstruct_nirvana.item.ModItems;
 import com.lvdriver.tconstruct_nirvana.item.part.ModToolParts;
@@ -88,6 +89,14 @@ public class TConItemModelProvider extends ItemModelProvider {
             builder.customLoader(DynamicFluidContainerModelBuilder::begin)
                     .fluid(entry.still().get())
                     .end();
+        }
+
+        // seared 楼梯/台阶物品模型（parent = 对应方块模型；BlockStateProvider 只生成 blockstate）
+        for (ModBlocks.SearedStairsEntry stairs : ModBlocks.SEARED_STAIRS) {
+            withExistingParent(stairs.block().getId().getPath(), modLoc("block/seared_stairs_" + stairs.name()));
+        }
+        for (ModBlocks.SearedSlabEntry slab : ModBlocks.SEARED_SLABS) {
+            withExistingParent(slab.block().getId().getPath(), modLoc("block/seared_slab_" + slab.name()));
         }
     }
 }
