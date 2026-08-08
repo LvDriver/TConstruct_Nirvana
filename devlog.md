@@ -4,7 +4,7 @@
 > 目的：把"需要记住的事"从对话上下文搬到文件里，AI 按需读取，省 token、防遗忘。
 
 ## 项目状态
-- 当前阶段：会话11 完成（兼容性完善与资源收尾：Tag 校验补漏 + Curios 结论 + smeltery 配置 + 遗留接线 + lang 全量补齐 + 修复会话10 藤蔓 worldgen NPE）
+- 当前阶段：人工审查 T0 会话（P0-1 工具台/冶炼炉 GUI 9 个问题已修复，待用户验证；审查约定与问题追踪见 AGENTS_T.md / debuglog_T.md）
 - 最后更新：2026-08-08
 - 环境注意：公司加密软件会破坏 java 源文件（read_file 报 NUL 字节 / git 显示 ` D` 工作区删除）——恢复流程：让用户粘贴代码重建 + `git diff` 校验（重建后 diff 为空 = 字节级一致）；已用此流程恢复 BlockMultiblockController.java
 - 旧源码路径：`./TinkersAntique-1.12/`（已解压，匠魂怀古 1.12.2 源码）

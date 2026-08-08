@@ -158,9 +158,40 @@ public class TileSmeltery extends TileHeatingStructureFuelTank
         setHeatRequiredForSlot(index, 0);
     }
 
+    /* GUI 加热状态（1:1 旧版 getHeatingProgress 语义，供侧栏进度条渲染） */
+
+    /**
+     * 槽位加热状态编码（每 tick 由 Menu DataSlot 同步，避免客户端遍历配方）：
+     * -3 = 空槽；-2 = 无配方（noMelt 灰）；-1 = 无燃料或温度不够（unprogress 蓝）；
+     * 0~100 = 融化进度（progress 橙）；101 = 液体已满（uber 黄）。
+     */
+    public int getProgressStatus(int index) {
+        if (index < 0 || index >= getSizeInventory()) {
+            return -3;
+        }
+        ItemStack stack = getStackInSlot(index);
+        if (stack.isEmpty()) {
+            return -3;
+        }
+        // 无配方：updateHeatRequired 未设置目标温度
+        if (getTempRequired(index) == 0) {
+            return -2;
+        }
+        if (!hasFuel()) {
+            return -1;
+        }
+        if (!canHeat(index)) {
+            return -1;
+        }
+        if (liquids.getFluidAmount() >= liquids.getCapacity()) {
+            return 101;
+        }
+        float progress = getProgress(index);
+        return Math.max(1, Math.min(100, (int) Math.round(progress * 100)));
+    }
+
     /** 查询熔炼配方（物品 tag 匹配 + 部件按材料组件匹配）。 */
-    private MeltingRecipe findMeltingRecipe(ItemStack stack) {
-        // 部件：按材料组件熔回对应金属（1:1 旧版仅 stone 部件注册，本版扩展为
+    private MeltingRecipe findMeltingRecipe(ItemStack stack) {        // 部件：按材料组件熔回对应金属（1:1 旧版仅 stone 部件注册，本版扩展为
         // 全部带流体关联的材料，devlog 记录差异）
         if (stack.is(TConTags.TOOL_PARTS) && stack.getItem() instanceof ToolPart part) {
             Material material = part.getMaterial(stack);

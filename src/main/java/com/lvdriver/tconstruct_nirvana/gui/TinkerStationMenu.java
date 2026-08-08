@@ -1,6 +1,7 @@
 package com.lvdriver.tconstruct_nirvana.gui;
 
 import com.lvdriver.tconstruct_nirvana.data.ModDataComponents;
+import com.lvdriver.tconstruct_nirvana.item.tool.ModTools;
 import com.lvdriver.tconstruct_nirvana.item.tool.TinkerToolItem;
 import com.lvdriver.tconstruct_nirvana.material.Material;
 import com.lvdriver.tconstruct_nirvana.util.ToolHelper;
@@ -19,13 +20,13 @@ import java.util.ArrayList;
 import java.util.List;
 
 /**
- * 工具站/锻造厂菜单（1:1 移植自 Tinkers' Antique {@code ContainerToolStation}，完整版）。
+ * 工具站/锻造厂菜单（1:1 移植自 Tinkers' Antique {@code ContainerToolStation} 完整版）。
  *
- * <p>输入槽：槽 0 = 工具槽（放入已有工具进行修复/部件替换），槽 1-5 = 材料槽
- * （部件/磨刀石）；结果槽实时预览。合成链（1:1 旧版 onCraftMatrixChanged 顺序）：
- * 修复 → 部件替换 → 组装；结果槽可放入未损坏工具进入拆解模式（1:1 旧版
- * SlotToolStationOut 的 isToolForDeconstruction），取走即拆解为部件。
- * 客户端与服务端运行同一确定性逻辑，无需网络包（重命名文本框留待后续会话）。</p>
+ * <p>输入槽：槽 0 = 工具槽/首个部件槽（双角色，1:1 旧版），槽 1-5 = 材料槽；
+ * 激活槽数随左侧工具选择变化（默认修复模式 6 槽，选中工具后 = 该工具部件数，
+ * 停用槽不可放物品且隐藏）。合成链（1:1 旧版 onCraftMatrixChanged 顺序）：
+ * 修复 → 部件替换 → 组装；结果槽可放入未损坏工具进入拆解模式，取走即拆解
+ * 为部件。客户端与服务端运行同一确定性逻辑（工具选择经 clickMenuButton 同步）。</p>
  */
 public class TinkerStationMenu extends AbstractContainerMenu {
 
@@ -37,6 +38,11 @@ public class TinkerStationMenu extends AbstractContainerMenu {
     public static final int INPUT_SLOTS = TOOL_SLOT + PART_SLOTS + 1;
     /** 结果槽索引。 */
     public static final int RESULT_SLOT = INPUT_SLOTS;
+    /** 主 GUI 左侧偏移（按钮列宽，Screen 渲染用）。 */
+    public static final int MAIN_X = 20;
+    /** 结果槽位置（相对主 GUI，1:1 旧版 (124,38)）。 */
+    public static final int RESULT_X = 124;
+    public static final int RESULT_Y = 38;
 
     private final SimpleContainer parts;
     private final ResultContainer result = new ResultContainer();
@@ -46,6 +52,10 @@ public class TinkerStationMenu extends AbstractContainerMenu {
     private boolean deconstructMode;
     /** Shift 取走标志：quickMoveStack 调用 onTake 前置位（区分点击路径——点击时物品已在光标）。 */
     private boolean shiftTake;
+    /** 当前选中的工具（null = 修复模式，1:1 旧版 selectedTool）。 */
+    private TinkerToolItem selectedTool;
+    /** 激活输入槽数（1:1 旧版 activeSlots，停用槽不可放物品）。 */
+    private int activeSlots = INPUT_SLOTS;
 
     /** 服务端构造：直接持有方块实体容器。 */
     public TinkerStationMenu(int id, Inventory playerInventory, SimpleContainer parts, ContainerLevelAccess access, BlockEntity blockEntity) {
@@ -61,13 +71,19 @@ public class TinkerStationMenu extends AbstractContainerMenu {
         };
         parts.addListener(this.partListener);
 
-        // 工具槽 + 5 材料槽（横排）
-        addSlot(new Slot(parts, TOOL_SLOT, 26, 34));
-        for (int i = 0; i < PART_SLOTS; i++) {
-            addSlot(new Slot(parts, TOOL_SLOT + 1 + i, 44 + i * 18, 34));
+        // 工具槽 + 5 材料槽（位置由 Screen 按当前布局驱动，1:1 旧版 SlotToolStationIn）
+        for (int i = 0; i < INPUT_SLOTS; i++) {
+            final int index = i;
+            addSlot(new Slot(parts, i, 0, 0) {
+                @Override
+                public boolean mayPlace(ItemStack stack) {
+                    // 停用槽不可放物品（1:1 旧版 SlotToolStationIn.deactivate）
+                    return index < activeSlots;
+                }
+            });
         }
         // 结果槽：可放入未损坏工具（拆解模式，1:1 旧版 SlotToolStationOut.isItemValid），取走按合成类型消耗
-        addSlot(new Slot(result, 0, 134, 34) {
+        addSlot(new Slot(result, 0, RESULT_X + MAIN_X, RESULT_Y) {
             @Override
             public boolean mayPlace(ItemStack stack) {
                 if (canDeconstruct(stack)) {
@@ -87,20 +103,62 @@ public class TinkerStationMenu extends AbstractContainerMenu {
             }
         });
 
-        // 玩家背包（3×9）+ 快捷栏
+        // 玩家背包（3×9）+ 快捷栏（相对主 GUI，1:1 旧版 addPlayerInventory(8, 92)）
         for (int row = 0; row < 3; row++) {
             for (int col = 0; col < 9; col++) {
-                addSlot(new Slot(playerInventory, col + row * 9 + 9, 8 + col * 18, 92 + row * 18));
+                addSlot(new Slot(playerInventory, col + row * 9 + 9, MAIN_X + 8 + col * 18, 92 + row * 18));
             }
         }
         for (int col = 0; col < 9; col++) {
-            addSlot(new Slot(playerInventory, col, 8 + col * 18, 150));
+            addSlot(new Slot(playerInventory, col, MAIN_X + 8 + col * 18, 150));
         }
     }
 
     /** 客户端构造（MenuType 工厂）：空容器占位，槽内容由服务端同步。 */
     public TinkerStationMenu(int id, Inventory playerInventory) {
         this(id, playerInventory, new SimpleContainer(INPUT_SLOTS), ContainerLevelAccess.NULL, null);
+    }
+
+    /* ---------- 工具选择（1:1 旧版 onToolSelection / setToolSelection） ---------- */
+
+    /** 选中工具或修复模式：更新激活槽数 + 重算结果（槽位位置由 Screen 布局）。 */
+    public void setSelection(TinkerToolItem tool) {
+        this.selectedTool = tool;
+        this.activeSlots = tool == null ? INPUT_SLOTS : Math.min(tool.getRequiredComponents().size(), INPUT_SLOTS);
+        slotsChanged(parts);
+    }
+
+    /** 当前布局（选中工具或修复模式）。 */
+    public ToolBuildGuiInfo currentInfo() {
+        if (selectedTool == null) {
+            return ToolStationLayouts.REPAIR;
+        }
+        for (ToolBuildGuiInfo info : ToolStationLayouts.all()) {
+            if (info.tool == selectedTool) {
+                return info;
+            }
+        }
+        return ToolStationLayouts.REPAIR;
+    }
+
+    public TinkerToolItem getSelectedTool() {
+        return selectedTool;
+    }
+
+    /** 客户端/服务端按钮：0 = 修复，1+ = 工具索引（ModTools 顺序）。 */
+    @Override
+    public boolean clickMenuButton(Player player, int id) {
+        if (id == 0) {
+            setSelection(null);
+            return true;
+        }
+        List<TinkerToolItem> tools = ModTools.getAllTools();
+        int index = id - 1;
+        if (index >= 0 && index < tools.size()) {
+            setSelection(tools.get(index));
+            return true;
+        }
+        return false;
     }
 
     /* ---------- 合成链（1:1 旧版 onCraftMatrixChanged） ---------- */
@@ -185,22 +243,30 @@ public class TinkerStationMenu extends AbstractContainerMenu {
         return result;
     }
 
-    /** 组装预览（1:1 旧版 buildTool：材料槽连续非空部件 → 工具）。 */
+    /**
+     * 组装预览（1:1 旧版 buildTool）：激活槽内的连续部件 → 工具。
+     * 每个槽位必须恰好 1 个部件（修复：同槽多部件不得产出多个工具），
+     * 槽 0 为部件时同样参与组装（1:1 旧版槽 0 双角色）。
+     */
     private ItemStack buildTool() {
-        if (!parts.getItem(TOOL_SLOT).isEmpty()) {
-            return ItemStack.EMPTY;
-        }
         List<ItemStack> stacks = new ArrayList<>();
-        for (int i = 0; i < PART_SLOTS; i++) {
-            ItemStack stack = parts.getItem(TOOL_SLOT + 1 + i);
+        for (int i = 0; i < activeSlots; i++) {
+            ItemStack stack = parts.getItem(i);
             if (!stack.isEmpty()) {
+                // 数量校验：每槽恰好 1 个（防同槽 2 个部件产出多工具/吞部件）
+                if (stack.getCount() != 1) {
+                    return ItemStack.EMPTY;
+                }
+                if (stack.getItem() instanceof TinkerToolItem) {
+                    return ItemStack.EMPTY;
+                }
                 stacks.add(stack);
             }
         }
         if (stacks.size() < 2) {
             return ItemStack.EMPTY;
         }
-        for (TinkerToolItem tool : com.lvdriver.tconstruct_nirvana.item.tool.ModTools.getAllTools()) {
+        for (TinkerToolItem tool : ModTools.getAllTools()) {
             ItemStack output = tool.buildItemFromStacks(stacks);
             if (!output.isEmpty()) {
                 return output;
@@ -251,12 +317,12 @@ public class TinkerStationMenu extends AbstractContainerMenu {
             // 无有效合成：保留槽位内容，不吞工具
             return;
         }
-        // 组装取走：消耗全部材料槽，工具进玩家背包
+        // 组装取走：消耗全部激活槽部件，工具进玩家背包
         ItemStack built = buildTool();
         if (built.isEmpty()) {
             return;
         }
-        for (int i = 0; i < INPUT_SLOTS; i++) {
+        for (int i = 0; i < activeSlots; i++) {
             parts.setItem(i, ItemStack.EMPTY);
         }
         result.clearContent();
@@ -271,16 +337,19 @@ public class TinkerStationMenu extends AbstractContainerMenu {
 
     /* ---------- 拆解（1:1 旧版 SlotToolStationOut / deconstructTool / getDeconstructedParts） ---------- */
 
-    /** 拆解资格：未损坏工具 + 材料槽全空（1:1 旧版 isItemValid 简化，无 XP/配置门槛）。 */
+    /** 拆解资格：未损坏工具 + 修复模式（未选工具）+ 材料槽全空（1:1 旧版 deconstructTool）。 */
     private boolean canDeconstruct(ItemStack stack) {
         if (stack.isEmpty() || !(stack.getItem() instanceof TinkerToolItem)) {
+            return false;
+        }
+        if (selectedTool != null) {
             return false;
         }
         if (stack.isDamaged() || ToolHelper.isBroken(stack)) {
             return false;
         }
-        for (int i = 0; i < PART_SLOTS; i++) {
-            if (!parts.getItem(TOOL_SLOT + 1 + i).isEmpty()) {
+        for (int i = 1; i < activeSlots; i++) {
+            if (!parts.getItem(i).isEmpty()) {
                 return false;
             }
         }
@@ -335,7 +404,7 @@ public class TinkerStationMenu extends AbstractContainerMenu {
                     return ItemStack.EMPTY;
                 }
             } else {
-                // 背包 → 输入槽（工具进工具槽；可拆解工具进结果槽；其余进第一个空材料槽）
+                // 背包 → 输入槽（工具进工具槽；可拆解工具进结果槽；其余进激活材料槽）
                 if (canDeconstruct(stack)) {
                     if (!this.moveItemStackTo(stack, RESULT_SLOT, RESULT_SLOT + 1, false)) {
                         return ItemStack.EMPTY;
@@ -345,7 +414,7 @@ public class TinkerStationMenu extends AbstractContainerMenu {
                         return ItemStack.EMPTY;
                     }
                 } else {
-                    if (!this.moveItemStackTo(stack, TOOL_SLOT + 1, INPUT_SLOTS, false)) {
+                    if (!this.moveItemStackTo(stack, TOOL_SLOT + 1, activeSlots, false)) {
                         return ItemStack.EMPTY;
                     }
                 }
@@ -367,8 +436,8 @@ public class TinkerStationMenu extends AbstractContainerMenu {
 
     private List<ItemStack> materialSlotContents() {
         List<ItemStack> list = new ArrayList<>();
-        for (int i = 0; i < PART_SLOTS; i++) {
-            ItemStack stack = parts.getItem(TOOL_SLOT + 1 + i);
+        for (int i = 1; i < activeSlots; i++) {
+            ItemStack stack = parts.getItem(i);
             if (!stack.isEmpty()) {
                 list.add(stack);
             }
@@ -377,8 +446,8 @@ public class TinkerStationMenu extends AbstractContainerMenu {
     }
 
     private boolean materialSlotsEmpty() {
-        for (int i = 0; i < PART_SLOTS; i++) {
-            if (!parts.getItem(TOOL_SLOT + 1 + i).isEmpty()) {
+        for (int i = 1; i < activeSlots; i++) {
+            if (!parts.getItem(i).isEmpty()) {
                 return false;
             }
         }
@@ -386,9 +455,24 @@ public class TinkerStationMenu extends AbstractContainerMenu {
     }
 
     private void clearInputSlots() {
-        for (int i = 0; i < INPUT_SLOTS; i++) {
+        for (int i = 0; i < activeSlots; i++) {
             parts.setItem(i, ItemStack.EMPTY);
         }
+    }
+
+    /** 结果槽当前预览（信息面板用）。 */
+    public ItemStack getResult() {
+        return result.getItem(0);
+    }
+
+    /** 工具槽内容（槽 0，信息面板用）。 */
+    public ItemStack getToolSlot() {
+        return parts.getItem(TOOL_SLOT);
+    }
+
+    /** 激活槽数（信息面板/渲染用）。 */
+    public int getActiveSlots() {
+        return activeSlots;
     }
 
     @Override

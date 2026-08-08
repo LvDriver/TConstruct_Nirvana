@@ -305,6 +305,24 @@ public class TConLanguageProvider extends LanguageProvider {
         addBlock(ModBlocks.SMELTERY_CONTROLLER, chinese ? "冶炼炉控制器" : "Smeltery Controller");
         add("gui.smeltery.name", chinese ? "冶炼炉" : "Smeltery");
         add("gui.tconstruct_nirvana.smeltery.empty", chinese ? "空" : "Empty");
+        // 冶炼炉侧栏进度条 tooltip（1:1 旧版 gui.smeltery.progress.*）
+        add("gui.tconstruct_nirvana.smeltery.progress.no_recipe", chinese ? "无法熔化" : "Cannot melt this");
+        add("gui.tconstruct_nirvana.smeltery.progress.no_fuel", chinese ? "没有燃料或温度不足" : "No fuel or temperature too low");
+        add("gui.tconstruct_nirvana.smeltery.progress.no_space", chinese ? "液体已满" : "No space for liquid");
+
+        // 工具站信息面板（1:1 旧版 gui.toolstation.*）
+        add("gui.tconstruct_nirvana.toolstation.repair", chinese ? "修复" : "Repair");
+        add("gui.tconstruct_nirvana.toolstation.info", chinese ? "放入工具或部件开始工作" : "Place a tool or parts to get started");
+        add("gui.tconstruct_nirvana.toolstation.deconstruct", chinese ? "拆解" : "Deconstruct");
+        add("gui.tconstruct_nirvana.toolstation.deconstruct.info", chinese ? "将未损坏的工具放入结果槽，Shift 点击取走可拆解为部件" : "Place an undamaged tool in the output slot and Shift-click to break it into parts");
+        add("gui.tconstruct_nirvana.toolstation.components", chinese ? "部件" : "Components");
+        add("gui.tconstruct_nirvana.toolstation.traits", chinese ? "特性" : "Traits");
+        add("gui.tconstruct_nirvana.toolstation.noTraits", chinese ? "无特性" : "No traits");
+        add("gui.tconstruct_nirvana.toolstation.durability", chinese ? "耐久: %s" : "Durability: %s");
+        add("gui.tconstruct_nirvana.toolstation.attack", chinese ? "攻击: %s" : "Attack: %s");
+        add("gui.tconstruct_nirvana.toolstation.miningspeed", chinese ? "挖掘速度: %s" : "Mining Speed: %s");
+        add("gui.tconstruct_nirvana.toolstation.harvestlevel", chinese ? "采掘等级: %s" : "Harvest Level: %s");
+        add("gui.tconstruct_nirvana.toolstation.modifiers", chinese ? "修饰槽: %s" : "Modifiers: %s");
 
         // 浇铸系统（会话8）：浇铸台/盆/龙头/沟槽/排液口 + seared 楼梯/台阶
         addBlock(ModBlocks.CASTING_TABLE, chinese ? "浇铸台" : "Casting Table");
