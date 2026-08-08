@@ -17,6 +17,9 @@ public class ModBlasting extends Modifier {
         aspects.add(new ModifierAspect.LevelAspect(identifier, 3));
         aspects.add(new ModifierAspect.DataAspect(identifier, 0xffaa23));
         aspects.add(new ModifierAspect.FreeFirstModifierAspect(identifier, 1));
+        // 1:1 旧版 ModBlasting.canApplyTogether：拒 luck、silktouch、squeaky、trait autosmelt
+        // （mod_autosmelt 为同效果的修饰符版，一并互斥，review 会话11 补充）
+        aspects.add(new ModifierAspect.ExclusiveAspect("luck", "silktouch", "squeaky", "autosmelt", "mod_autosmelt"));
     }
 
     @Override

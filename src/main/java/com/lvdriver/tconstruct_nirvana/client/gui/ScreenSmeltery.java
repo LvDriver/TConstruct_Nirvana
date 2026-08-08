@@ -80,15 +80,32 @@ public class ScreenSmeltery extends AbstractContainerScreen<ContainerSmeltery> {
                 if (h <= 0) {
                     continue;
                 }
-                int color = IClientFluidTypeExtensions.of(fluid.getFluid().getFluidType()).getTintColor(fluid);
-                graphics.fill(leftPos + TANK_X, topPos + y, leftPos + TANK_X + TANK_W, topPos + y + h, color);
+                // 流体贴图渲染（1:1 旧版 GuiUtil.drawGuiTank：still 贴图拉伸 + 染色）
+                int tint = IClientFluidTypeExtensions.of(fluid.getFluid().getFluidType()).getTintColor(fluid);
+                float r = (tint >> 16 & 255) / 255f;
+                float g = (tint >> 8 & 255) / 255f;
+                float b = (tint & 255) / 255f;
+                float a = (tint >> 24 & 255) / 255f;
+                ResourceLocation still = IClientFluidTypeExtensions.of(fluid.getFluid().getFluidType()).getStillTexture(fluid);
+                if (still != null) {
+                    var sprite = this.minecraft.getTextureAtlas(net.minecraft.client.renderer.texture.TextureAtlas.LOCATION_BLOCKS).apply(still);
+                    graphics.blit(leftPos + TANK_X, topPos + y, 0, TANK_W, h, sprite, r, g, b, a);
+                }
                 y += h;
             }
         }
 
-        // 燃料指示（右上）
-        if (menu.syncData.get(ContainerSmeltery.DATA_FUEL).get() > 0) {
-            graphics.fill(leftPos + 71, topPos + 16, leftPos + 83, topPos + 68, 0xFFFF6600);
+        // 燃料条（右上，1:1 旧版 drawFuel(71, 16, 12, 52)：按剩余燃料比例绘制）
+        int fuel = menu.syncData.get(ContainerSmeltery.DATA_FUEL).get();
+        if (fuel > 0) {
+            int h = Math.max(1, (int) (52 * Math.min(1f, fuel / 1000f)));
+            graphics.fill(leftPos + 71, topPos + 68 - h, leftPos + 83, topPos + 68, 0xFFFF6600);
+        }
+        // 温度显示（燃料条上方，旧版 heat = temperature + 300）
+        int heat = menu.syncData.get(ContainerSmeltery.DATA_TEMPERATURE).get();
+        if (heat > 0) {
+            graphics.drawString(this.font, String.valueOf(heat),
+                    leftPos + 71, topPos + 70, 0xFFFFFFFF);
         }
     }
 
@@ -149,18 +166,32 @@ public class ScreenSmeltery extends AbstractContainerScreen<ContainerSmeltery> {
         return fluids.get(index);
     }
 
-    /** 由 y 坐标反推液体层（自下而上，底层=0）。 */
+    /** 由 y 坐标反推液体层（自下而上，底层=0；与 renderBg 高度计算完全一致）。 */
     private int getFluidIndexAt(int x, int y) {
         List<FluidStack> fluids = fluids();
         if (x < TANK_X || x >= TANK_X + TANK_W || y < TANK_Y || y >= TANK_Y + TANK_H || fluids.isEmpty()) {
             return -1;
         }
         int cap = Math.max(1, capacity());
-        // 自底向上累计高度
+        // 与 renderBg 同规则计算各层渲染高度（自顶向下：末层补满到罐底）
+        int[] heights = new int[fluids.size()];
+        int yOff = TANK_Y;
+        for (int i = 0; i < fluids.size(); i++) {
+            int h = Math.max(1, TANK_H * fluids.get(i).getAmount() / cap);
+            if (i == fluids.size() - 1) {
+                h = TANK_Y + TANK_H - yOff; // 末层补满
+            }
+            if (h <= 0) {
+                h = 0;
+            }
+            heights[i] = h;
+            yOff += h;
+        }
+        // 自底向上累计命中
         int fromBottom = TANK_Y + TANK_H - y;
         int accumulated = 0;
         for (int i = fluids.size() - 1; i >= 0; i--) {
-            accumulated += Math.max(1, TANK_H * fluids.get(i).getAmount() / cap);
+            accumulated += heights[i];
             if (fromBottom <= accumulated) {
                 return i;
             }

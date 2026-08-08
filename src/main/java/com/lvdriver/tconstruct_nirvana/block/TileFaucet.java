@@ -26,7 +26,7 @@ import org.jetbrains.annotations.NotNull;
  */
 public class TileFaucet extends BlockEntity {
 
-    /** 每 tick 最大传输量（1:1 旧版 Config.liquidTransferRate = 6）。 */
+    /** 每 tick 最大传输量 mb（1:1 旧版 Config.liquidTransferRate = 6，运行时读配置）。 */
     public static final int LIQUID_TRANSFER = 6;
     /** 单次交易量：一锭（1:1 旧版 Material.VALUE_Ingot = 144）。 */
     public static final int TRANSACTION_AMOUNT = Material.VALUE_Ingot;
@@ -84,21 +84,19 @@ public class TileFaucet extends BlockEntity {
         }
 
         if (!faucet.drained.isEmpty()) {
-            // 缓冲排空 → 未停止则续抽，否则停止
-            if (faucet.drained.getAmount() <= 0) {
-                faucet.drained = FluidStack.EMPTY;
-                if (!faucet.stopPouring) {
-                    faucet.doTransfer();
-                } else {
-                    faucet.reset();
-                }
-                if (!faucet.isPouring) {
-                    level.playSound(null, pos, SoundEvents.LAVA_POP, SoundSource.BLOCKS,
-                            0.2F, 0.8F + 0.4F * level.random.nextFloat());
-                }
+            // 缓冲未空：浇注一步
+            faucet.pour();
+        } else {
+            // 缓冲排空（pour 按 copyWithAmount(0) 递减，空栈 isEmpty()==true 走这里）
+            // → 未停止则续抽下一锭量，否则停止
+            if (!faucet.stopPouring) {
+                faucet.doTransfer();
             } else {
-                // 浇注一步
-                faucet.pour();
+                faucet.reset();
+            }
+            if (!faucet.isPouring) {
+                level.playSound(null, pos, SoundEvents.LAVA_POP, SoundSource.BLOCKS,
+                        0.2F, 0.8F + 0.4F * level.random.nextFloat());
             }
         }
     }
@@ -126,8 +124,10 @@ public class TileFaucet extends BlockEntity {
                         "[Faucet] doTransfer: source has no drainable fluid ({}mb total)",
                         toDrain.getFluidInTank(0).getAmount());
             }
-            // 气体过滤（1:1 旧版 Config.drainGaseousFluids=false 默认；1.21.1 无 isGaseous，按负密度判定）
-            if (!drained.isEmpty() && drained.getFluid().getFluidType().getDensity() >= 0) {
+            // 气体过滤（1:1 旧版 Config.drainGaseousFluids=true 默认允许；
+            // 配置为 false 时按负密度禁止抽取气体，1.21.1 无 isGaseous 按密度判定）
+            if (!drained.isEmpty() && (com.lvdriver.tconstruct_nirvana.config.TConConfig.DRAIN_GASEOUS_FLUIDS.get()
+                    || drained.getFluid().getFluidType().getDensity() >= 0)) {
                 // 能否注入
                 int filled = toFill.fill(drained, IFluidHandler.FluidAction.SIMULATE);
                 if (filled == 0) {
@@ -155,7 +155,8 @@ public class TileFaucet extends BlockEntity {
         }
         IFluidHandler toFill = getFluidHandler(worldPosition.below(), Direction.UP);
         if (toFill != null) {
-            FluidStack fillStack = drained.copyWithAmount(Math.min(drained.getAmount(), LIQUID_TRANSFER));
+            FluidStack fillStack = drained.copyWithAmount(Math.min(drained.getAmount(),
+                    com.lvdriver.tconstruct_nirvana.config.TConConfig.LIQUID_TRANSFER_RATE.get()));
             int filled = toFill.fill(fillStack, IFluidHandler.FluidAction.SIMULATE);
             if (filled == 0) {
                 com.lvdriver.tconstruct_nirvana.TConstructNirvana.LOGGER.debug(
@@ -185,6 +186,18 @@ public class TileFaucet extends BlockEntity {
     private void sync() {
         if (level != null && !level.isClientSide) {
             level.sendBlockUpdated(worldPosition, getBlockState(), getBlockState(), 2);
+            // sendBlockUpdated flag 2 只刷新渲染、不携带 BE 数据 → 客户端
+            // TileFaucetRenderer 读 be.drained/isPouring 恒为默认空值（无滴液动画）。
+            // 须显式发 ClientboundBlockEntityDataPacket（与 CastingBlockEntity 同套路）。
+            if (level instanceof net.minecraft.server.level.ServerLevel serverLevel) {
+                var packet = getUpdatePacket();
+                if (packet != null) {
+                    serverLevel.getChunkSource().chunkMap
+                            .getPlayers(new net.minecraft.world.level.ChunkPos(
+                                    worldPosition.getX() >> 4, worldPosition.getZ() >> 4), false)
+                            .forEach(p -> p.connection.send(packet));
+                }
+            }
         }
     }
 
@@ -224,5 +237,10 @@ public class TileFaucet extends BlockEntity {
     @Override
     public @NotNull CompoundTag getUpdateTag(HolderLookup.Provider registries) {
         return saveWithFullMetadata(registries);
+    }
+
+    @Override
+    public net.minecraft.network.protocol.game.ClientboundBlockEntityDataPacket getUpdatePacket() {
+        return net.minecraft.network.protocol.game.ClientboundBlockEntityDataPacket.create(this);
     }
 }

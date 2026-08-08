@@ -49,9 +49,6 @@ public class TileSmeltery extends TileHeatingStructureFuelTank
     /** 每 tick 最多合成的合金量（mb，1:1 旧版 ALLOYING_PER_TICK=10）。 */
     protected static final int ALLOYING_PER_TICK = 10;
 
-    /** 加热 tick 间隔（1:1 旧版 Config.heatItemsTickrateSmeltery=4）。 */
-    protected static final int HEAT_TICKRATE = 4;
-
     // NBT tags
     public static final String TAG_INSIDEPOS = "insidePos";
 
@@ -87,7 +84,7 @@ public class TileSmeltery extends TileHeatingStructureFuelTank
             if (tick == 0) {
                 interactWithEntitiesInside();
             }
-            if (tick % HEAT_TICKRATE == 0) {
+            if (tick % com.lvdriver.tconstruct_nirvana.config.TConConfig.HEAT_ITEMS_TICKRATE_SMELTERY.get() == 0) {
                 heatItems();
                 alloyAlloys();
             }

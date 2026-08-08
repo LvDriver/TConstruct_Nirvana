@@ -7,6 +7,7 @@ import net.minecraft.nbt.CompoundTag;
 import net.minecraft.world.level.block.entity.BlockEntity;
 import net.minecraft.world.level.block.entity.BlockEntityType;
 import net.minecraft.world.level.block.state.BlockState;
+import org.jetbrains.annotations.Nullable;
 
 /**
  * 冶炼炉附属方块实体基类（1:1 移植自 Tinkers' Antique
@@ -39,12 +40,34 @@ public class TileSmelteryComponent extends BlockEntity implements IServantLogic 
     public void overrideMaster(BlockPos pos) {
         this.master = pos;
         setChanged();
+        syncToClient();
     }
 
     @Override
     public void removeMaster() {
         this.master = null;
         setChanged();
+        syncToClient();
+    }
+
+    /** 同步 master（BE 数据）到客户端：sendBlockUpdated 只带 blockstate 不带 BE
+     *  数据，客户端 TileDrain.getSmeltery() 因 hasValidMaster()=false 恒返回 null，
+     *  fluid capability 缺失 → 客户端行为与服务端不一致。 */
+    public void syncToClient() {
+        if (level != null && !level.isClientSide && level instanceof net.minecraft.server.level.ServerLevel serverLevel) {
+            var packet = getUpdatePacket();
+            if (packet != null) {
+                serverLevel.getChunkSource().chunkMap
+                        .getPlayers(new net.minecraft.world.level.ChunkPos(
+                                worldPosition.getX() >> 4, worldPosition.getZ() >> 4), false)
+                        .forEach(p -> p.connection.send(packet));
+            }
+        }
+    }
+
+    @Override
+    public @Nullable net.minecraft.network.protocol.game.ClientboundBlockEntityDataPacket getUpdatePacket() {
+        return net.minecraft.network.protocol.game.ClientboundBlockEntityDataPacket.create(this);
     }
 
     @Override

@@ -80,5 +80,15 @@ public class TConBlockTagsProvider extends BlockTagsProvider {
         // 矿物词典等价：金属块（旧版 blockCobalt / blockArdite）
         tag(TConTags.STORAGE_BLOCKS_COBALT).add(ModBlocks.COBALT_BLOCK.get());
         tag(TConTags.STORAGE_BLOCKS_ARDITE).add(ModBlocks.ARDITE_BLOCK.get());
+
+        // 焦黑石系列（1:1 旧版 oredict "blockSeared"，12 主变体，不含楼梯/台阶）
+        for (ModBlocks.SearedVariant variant : ModBlocks.SEARED_VARIANTS) {
+            tag(TConTags.SEARED_BLOCKS).add(variant.block().get());
+        }
+
+        // 史莱姆方块集合（1:1 旧版 blockSlimeDirt / blockSlimeGrass / blockSlimeCongealed）
+        tag(TConTags.SLIME_BLOCKS_DIRT).add(ModBlocks.SLIME_DIRT.get());
+        tag(TConTags.SLIME_BLOCKS_GRASS).add(ModBlocks.SLIME_GRASS.get());
+        tag(TConTags.SLIME_BLOCKS_CONGEALED).add(ModBlocks.SLIME_CONGEALED.get());
     }
 }

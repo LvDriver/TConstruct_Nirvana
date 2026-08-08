@@ -21,6 +21,9 @@ public class ModAutosmelt extends Modifier {
         aspects.add(new ModifierAspect.SingleAspect(identifier));
         aspects.add(new ModifierAspect.DataAspect(identifier, 0xff5500));
         aspects.add(new ModifierAspect.FreeModifierAspect(1));
+        // 1:1 旧版 ModAutosmelt.canApplyTogether：拒 trait autosmelt、silktouch
+        // （blasting 为掉落转化修饰符，双向互斥，review 会话11 补充）
+        aspects.add(new ModifierAspect.ExclusiveAspect("autosmelt", "silktouch", "blasting"));
     }
 
     @Override

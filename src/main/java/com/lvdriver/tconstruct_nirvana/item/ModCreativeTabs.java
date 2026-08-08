@@ -50,6 +50,8 @@ public final class ModCreativeTabs {
                 // 粒
                 output.accept(ModItems.COBALT_NUGGET.get());
                 output.accept(ModItems.ARDITE_NUGGET.get());
+                // 坏死骨（凋灵骷髅掉落，血骨材料来源）
+                output.accept(ModItems.NECROTIC_BONE.get());
 
                 // 工具站/锻造厂（会话4.5b GUI）
                 output.accept(ModBlocks.TOOL_STATION.get());
@@ -123,12 +125,66 @@ public final class ModCreativeTabs {
                         }
                     }
                 }
+
+                // 史莱姆生态（会话10）：变体由 BLOCK_STATE 组件表达（1:1 旧版 getSubBlocks 全变体）
+                for (com.lvdriver.tconstruct_nirvana.block.slime.SlimeTypes.DirtType type
+                        : com.lvdriver.tconstruct_nirvana.block.slime.SlimeTypes.DirtType.values()) {
+                    output.accept(withState(ModBlocks.SLIME_DIRT.get(),
+                            ModBlocks.SLIME_DIRT.get().defaultBlockState()
+                                    .setValue(com.lvdriver.tconstruct_nirvana.block.slime.SlimeTypes.DIRT_TYPE, type)));
+                }
+                for (com.lvdriver.tconstruct_nirvana.block.slime.SlimeTypes.DirtType type
+                        : com.lvdriver.tconstruct_nirvana.block.slime.SlimeTypes.DirtType.values()) {
+                    for (com.lvdriver.tconstruct_nirvana.block.slime.SlimeTypes.FoliageType foliage
+                            : com.lvdriver.tconstruct_nirvana.block.slime.SlimeTypes.FoliageType.values()) {
+                        output.accept(withState(ModBlocks.SLIME_GRASS.get(),
+                                ModBlocks.SLIME_GRASS.get().defaultBlockState()
+                                        .setValue(com.lvdriver.tconstruct_nirvana.block.slime.SlimeTypes.DIRT_TYPE, type)
+                                        .setValue(com.lvdriver.tconstruct_nirvana.block.slime.SlimeTypes.FOLIAGE_TYPE, foliage)));
+                    }
+                }
+                for (com.lvdriver.tconstruct_nirvana.block.slime.SlimeTypes.FoliageType foliage
+                        : com.lvdriver.tconstruct_nirvana.block.slime.SlimeTypes.FoliageType.values()) {
+                    output.accept(withState(ModBlocks.SLIME_LEAVES.get(),
+                            ModBlocks.SLIME_LEAVES.get().defaultBlockState()
+                                    .setValue(com.lvdriver.tconstruct_nirvana.block.slime.SlimeTypes.FOLIAGE_TYPE, foliage)));
+                    output.accept(withState(ModBlocks.SLIME_GRASS_TALL.get(),
+                            ModBlocks.SLIME_GRASS_TALL.get().defaultBlockState()
+                                    .setValue(com.lvdriver.tconstruct_nirvana.block.slime.SlimeTypes.FOLIAGE_TYPE, foliage)));
+                    output.accept(withState(ModBlocks.SLIME_SAPLING.get(),
+                            ModBlocks.SLIME_SAPLING.get().defaultBlockState()
+                                    .setValue(com.lvdriver.tconstruct_nirvana.block.slime.SlimeTypes.FOLIAGE_TYPE, foliage)));
+                }
+                output.accept(ModBlocks.SLIME_VINE_BLUE.get());
+                output.accept(ModBlocks.SLIME_VINE_BLUE_MID.get());
+                output.accept(ModBlocks.SLIME_VINE_BLUE_END.get());
+                output.accept(ModBlocks.SLIME_VINE_PURPLE.get());
+                output.accept(ModBlocks.SLIME_VINE_PURPLE_MID.get());
+                output.accept(ModBlocks.SLIME_VINE_PURPLE_END.get());
+                for (com.lvdriver.tconstruct_nirvana.block.slime.SlimeTypes.SlimeType type
+                        : com.lvdriver.tconstruct_nirvana.block.slime.SlimeTypes.SlimeType.values()) {
+                    output.accept(withState(ModBlocks.SLIME_CONGEALED.get(),
+                            ModBlocks.SLIME_CONGEALED.get().defaultBlockState()
+                                    .setValue(com.lvdriver.tconstruct_nirvana.block.slime.SlimeTypes.SLIME_TYPE, type)));
+                }
             })
             .build());
 
     /** 部件注册名即模具形状 ID。 */
     private static ResourceLocation shapeId(DeferredItem<? extends ToolPart> part) {
         return ResourceLocation.fromNamespaceAndPath(TConstructNirvana.MODID, part.getId().getPath());
+    }
+
+    /** 变体方块物品（BLOCK_STATE 组件表达变体，1:1 旧版 ItemBlockMeta 行为）。 */
+    private static ItemStack withState(net.minecraft.world.level.block.Block block, net.minecraft.world.level.block.state.BlockState state) {
+        ItemStack stack = new ItemStack(block);
+        net.minecraft.world.item.component.BlockItemStateProperties props =
+                net.minecraft.world.item.component.BlockItemStateProperties.EMPTY;
+        for (net.minecraft.world.level.block.state.properties.Property<?> property : state.getProperties()) {
+            props = props.with(property, state);
+        }
+        stack.set(net.minecraft.core.component.DataComponents.BLOCK_STATE, props);
+        return stack;
     }
 
     private ModCreativeTabs() {

@@ -22,12 +22,9 @@ import java.util.List;
  */
 public final class TConTags {
 
-    /** 需要钴级工具才能挖掘（旧版采掘等级 4 = COBALT，无对应原版 tag，自定义）。 */
+    /** 需要钴级工具才能挖掘（旧版采掘等级 4 = COBALT，无对应原版 tag，自定义）。
+     * 采掘判定走 HarvestCheck 事件（{@code ToolHelper.requiredHarvestLevel} 映射），无物品侧 tag。 */
     public static final TagKey<Block> NEEDS_COBALT_TOOL = BlockTags.create(
-            ResourceLocation.fromNamespaceAndPath(TConstructNirvana.MODID, "needs_cobalt_tool"));
-
-    /** 携带该 tag 的工具可采掘 {@link #NEEDS_COBALT_TOOL} 方块（物品侧，工具会话接线）。 */
-    public static final TagKey<Item> NEEDS_COBALT_TOOL_ITEMS = ItemTags.create(
             ResourceLocation.fromNamespaceAndPath(TConstructNirvana.MODID, "needs_cobalt_tool"));
 
     // 矿石（common tag，对应旧版 oredict：oreCobalt / oreArdite）
@@ -52,6 +49,30 @@ public final class TConTags {
 
     /** 全部工具部件（部件-模具关联的部件侧集合，供配方/附属 mod 使用）。 */
     public static final TagKey<Item> TOOL_PARTS = itemTag(TConstructNirvana.MODID, "tool_parts");
+
+    /** 血骨材料来源（旧版 oredict "boneBloodied"：坏死骨；凋灵骷髅掉落）。 */
+    public static final TagKey<Item> BONE_BLOODIED = itemTag(TConstructNirvana.MODID, "bone_bloodied");
+    /** 凋灵之骨（1:1 旧版 oredict "boneWithered" → NeoForge 标准位 c:bones/wither）。 */
+    public static final TagKey<Item> BONES_WITHER = itemTag("c", "bones/wither");
+
+    /** 全部模具（1:1 旧版 oredict "pattern"）。 */
+    public static final TagKey<Item> PATTERNS = itemTag(TConstructNirvana.MODID, "patterns");
+    /** 全部浇铸模具（1:1 旧版 oredict "cast"）。 */
+    public static final TagKey<Item> CASTS = itemTag(TConstructNirvana.MODID, "casts");
+    /** 工作站（1:1 旧版 oredict "workbench"：工具站/锻造厂）。 */
+    public static final TagKey<Item> WORKBENCHES = itemTag(TConstructNirvana.MODID, "workbenches");
+
+    /** 焦黑石系列（1:1 旧版 oredict "blockSeared"，12 主变体，不含楼梯/台阶）。 */
+    public static final TagKey<Block> SEARED_BLOCKS = blockTag(TConstructNirvana.MODID, "seared_blocks");
+    public static final TagKey<Item> SEARED_BLOCKS_ITEMS = itemTag(TConstructNirvana.MODID, "seared_blocks");
+
+    // 史莱姆方块集合（1:1 旧版 oredict blockSlimeDirt / blockSlimeGrass / blockSlimeCongealed）
+    public static final TagKey<Block> SLIME_BLOCKS_DIRT = blockTag(TConstructNirvana.MODID, "slime_blocks/dirt");
+    public static final TagKey<Item> SLIME_BLOCKS_DIRT_ITEMS = itemTag(TConstructNirvana.MODID, "slime_blocks/dirt");
+    public static final TagKey<Block> SLIME_BLOCKS_GRASS = blockTag(TConstructNirvana.MODID, "slime_blocks/grass");
+    public static final TagKey<Item> SLIME_BLOCKS_GRASS_ITEMS = itemTag(TConstructNirvana.MODID, "slime_blocks/grass");
+    public static final TagKey<Block> SLIME_BLOCKS_CONGEALED = blockTag(TConstructNirvana.MODID, "slime_blocks/congealed");
+    public static final TagKey<Item> SLIME_BLOCKS_CONGEALED_ITEMS = itemTag(TConstructNirvana.MODID, "slime_blocks/congealed");
 
     /**
      * 流体 common tag（500mod 兼容，NeoForge 1.21.1 标准：与 {@code Tags.Fluids}

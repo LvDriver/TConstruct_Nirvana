@@ -3,6 +3,7 @@ package com.lvdriver.tconstruct_nirvana;
 import com.lvdriver.tconstruct_nirvana.block.ModBlockEntities;
 import com.lvdriver.tconstruct_nirvana.block.ModBlocks;
 import com.lvdriver.tconstruct_nirvana.config.TConConfig;
+import com.lvdriver.tconstruct_nirvana.config.ModConditions;
 import com.lvdriver.tconstruct_nirvana.data.ModDataComponents;
 import com.lvdriver.tconstruct_nirvana.entity.ModEntities;
 import com.lvdriver.tconstruct_nirvana.event.TinkerToolEvents;
@@ -17,6 +18,7 @@ import com.lvdriver.tconstruct_nirvana.material.ModMaterials;
 import com.lvdriver.tconstruct_nirvana.modifier.ModModifiers;
 import com.lvdriver.tconstruct_nirvana.recipe.ModRecipeTypes;
 import com.lvdriver.tconstruct_nirvana.trait.ModTraits;
+import com.lvdriver.tconstruct_nirvana.world.ModFeatures;
 import net.neoforged.bus.api.IEventBus;
 import net.neoforged.fml.ModContainer;
 import net.neoforged.fml.common.Mod;
@@ -47,6 +49,8 @@ public class TConstructNirvana {
         ModEntities.register(modEventBus);
         ModMenuTypes.register(modEventBus);
         ModCreativeTabs.register(modEventBus);
+        ModFeatures.register(modEventBus);
+        ModConditions.register(modEventBus);
 
         // 部件/模具注册条目在类加载时登记到 ModItems.ITEMS，此处确保类加载
         // （DeferredRegister 条目必须先于 register() 登记，否则不会被注册；

@@ -23,6 +23,11 @@ public class TileDrain extends TileSmelteryComponent {
 
     public TileDrain(BlockEntityType<?> type, BlockPos pos, BlockState state) {
         super(type, pos, state);
+        // 调试：输出排液口实际位置（重测时与龙头 [Faucet] no fluid source 的源位置对照）
+        if (pos != null) {
+            com.lvdriver.tconstruct_nirvana.TConstructNirvana.LOGGER.debug(
+                    "[Drain] created at {} (state={})", pos, state);
+        }
     }
 
     /** 所属冶炼炉主机（无主机/失效返回 null）。 */

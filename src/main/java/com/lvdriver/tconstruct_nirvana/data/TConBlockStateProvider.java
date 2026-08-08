@@ -5,10 +5,15 @@ import com.lvdriver.tconstruct_nirvana.block.BlockDrain;
 import com.lvdriver.tconstruct_nirvana.block.BlockFaucet;
 import com.lvdriver.tconstruct_nirvana.block.BlockSmelteryController;
 import com.lvdriver.tconstruct_nirvana.block.ModBlocks;
+import com.lvdriver.tconstruct_nirvana.block.slime.BlockSlimeVine;
+import com.lvdriver.tconstruct_nirvana.block.slime.SlimeTypes;
 import com.lvdriver.tconstruct_nirvana.fluid.ModFluids;
 import net.minecraft.core.Direction;
 import net.minecraft.data.PackOutput;
+import net.minecraft.world.level.block.Block;
+import net.minecraft.world.level.block.state.BlockState;
 import net.neoforged.neoforge.client.model.generators.BlockStateProvider;
+import net.neoforged.neoforge.client.model.generators.ConfiguredModel;
 import net.neoforged.neoforge.client.model.generators.ModelFile;
 import net.neoforged.neoforge.client.model.generators.MultiPartBlockStateBuilder;
 import net.neoforged.neoforge.common.data.ExistingFileHelper;
@@ -97,6 +102,9 @@ public class TConBlockStateProvider extends BlockStateProvider {
 
         // 浇铸系统（会话8）：浇铸台/盆/龙头/沟槽/排液口 + seared 楼梯/台阶
         castingSystem();
+
+        // 史莱姆生态（会话10）：泥土/草皮/树叶/高草/树苗/藤蔓/凝结石块
+        slimeSystem();
     }
 
     /** 浇铸系统方块状态与模型（会话8）。 */
@@ -161,5 +169,96 @@ public class TConBlockStateProvider extends BlockStateProvider {
                     modLoc("block/seared_" + slab.name()),
                     modLoc("block/smeltery/seared_" + slab.name()));
         }
+    }
+
+    /** 史莱姆生态方块状态与模型（会话10）。 */
+    private void slimeSystem() {
+        // slime_dirt：4 变体 cube_all（旧版 slimedirt_* 贴图）
+        for (SlimeTypes.DirtType type : SlimeTypes.DirtType.values()) {
+            ModelFile model = models().cubeAll("slime_dirt_" + type,
+                    modLoc("block/slime/slimedirt_" + type));
+            ConfiguredModel[] models = ConfiguredModel.builder().modelFile(model).build();
+            getVariantBuilder(ModBlocks.SLIME_DIRT.get())
+                    .partialState().with(SlimeTypes.DIRT_TYPE, type).setModels(models);
+        }
+        simpleBlockItem(ModBlocks.SLIME_DIRT.get(), models().getExistingFile(modLoc("block/slime_dirt_green")));
+
+        // slime_grass：type × foliage 12 组合，复用原版 grass_block 模型（overlay tintindex）
+        for (SlimeTypes.DirtType type : SlimeTypes.DirtType.values()) {
+            for (SlimeTypes.FoliageType foliage : SlimeTypes.FoliageType.values()) {
+                ModelFile model = models().withExistingParent("slime_grass_" + type + "_" + foliage,
+                                mcLoc("block/grass_block"))
+                        .texture("bottom", modLoc("block/slime/slimedirt_" + type))
+                        .texture("top", modLoc("block/slime/slimegrass_top"))
+                        .texture("side", modLoc("block/slime/slimedirt_" + type))
+                        .texture("overlay", modLoc("block/slime/slimegrass_overlay"))
+                        .texture("particle", modLoc("block/slime/slimedirt_" + type));
+                ConfiguredModel[] models = ConfiguredModel.builder().modelFile(model).build();
+                getVariantBuilder(ModBlocks.SLIME_GRASS.get())
+                        .partialState().with(SlimeTypes.DIRT_TYPE, type)
+                        .with(SlimeTypes.FOLIAGE_TYPE, foliage).setModels(models);
+            }
+        }
+        simpleBlockItem(ModBlocks.SLIME_GRASS.get(), models().getExistingFile(modLoc("block/slime_grass_green_blue")));
+
+        // slime_leaves：3 变体，复用原版 leaves 模型（tintindex，foliage 染色）
+        for (SlimeTypes.FoliageType foliage : SlimeTypes.FoliageType.values()) {
+            ModelFile model = models().withExistingParent("slime_leaves_" + foliage, mcLoc("block/leaves"))
+                    .texture("all", modLoc("block/slime/slimeleaves"));
+            ConfiguredModel[] models = ConfiguredModel.builder().modelFile(model).build();
+            getVariantBuilder(ModBlocks.SLIME_LEAVES.get())
+                    .partialState().with(SlimeTypes.FOLIAGE_TYPE, foliage).setModels(models);
+        }
+        simpleBlockItem(ModBlocks.SLIME_LEAVES.get(), models().getExistingFile(modLoc("block/slime_leaves_blue")));
+
+        // slime_grass_tall：3 变体 cross（旧版 slimegrass_tall 贴图）
+        for (SlimeTypes.FoliageType foliage : SlimeTypes.FoliageType.values()) {
+            ModelFile model = models().cross("slime_grass_tall_" + foliage,
+                    modLoc("block/slime/slimegrass_tall"));
+            ConfiguredModel[] models = ConfiguredModel.builder().modelFile(model).build();
+            getVariantBuilder(ModBlocks.SLIME_GRASS_TALL.get())
+                    .partialState().with(SlimeTypes.FOLIAGE_TYPE, foliage).setModels(models);
+        }
+        simpleBlockItem(ModBlocks.SLIME_GRASS_TALL.get(), models().getExistingFile(modLoc("block/slime_grass_tall_blue")));
+
+        // slime_sapling：3 变体 cross（旧版 slimesapling_* 贴图）
+        for (SlimeTypes.FoliageType foliage : SlimeTypes.FoliageType.values()) {
+            ModelFile model = models().cross("slime_sapling_" + foliage,
+                    modLoc("block/slime/slimesapling_" + foliage));
+            ConfiguredModel[] models = ConfiguredModel.builder().modelFile(model).build();
+            getVariantBuilder(ModBlocks.SLIME_SAPLING.get())
+                    .partialState().with(SlimeTypes.FOLIAGE_TYPE, foliage).setModels(models);
+        }
+        simpleBlockItem(ModBlocks.SLIME_SAPLING.get(), models().getExistingFile(modLoc("block/slime_sapling_blue")));
+
+        // slime_vine：6 个方块 multipart（4 方向，1:1 原版 vine 布局；贴图按段）
+        vineMultipart(ModBlocks.SLIME_VINE_BLUE.get(), "slime_vine_blue", "slimevine");
+        vineMultipart(ModBlocks.SLIME_VINE_BLUE_MID.get(), "slime_vine_blue_mid", "slimevine_mid");
+        vineMultipart(ModBlocks.SLIME_VINE_BLUE_END.get(), "slime_vine_blue_end", "slimevine_end");
+        vineMultipart(ModBlocks.SLIME_VINE_PURPLE.get(), "slime_vine_purple", "slimevine");
+        vineMultipart(ModBlocks.SLIME_VINE_PURPLE_MID.get(), "slime_vine_purple_mid", "slimevine_mid");
+        vineMultipart(ModBlocks.SLIME_VINE_PURPLE_END.get(), "slime_vine_purple_end", "slimevine_end");
+        simpleBlockItem(ModBlocks.SLIME_VINE_BLUE.get(), models().getExistingFile(mcLoc("block/vine")));
+
+        // slime_congealed：5 变体 cube_all（旧版 slimeblock_* 贴图）
+        for (SlimeTypes.SlimeType type : SlimeTypes.SlimeType.values()) {
+            ModelFile model = models().cubeAll("slime_congealed_" + type,
+                    modLoc("block/slime/slimeblock_" + type));
+            ConfiguredModel[] models = ConfiguredModel.builder().modelFile(model).build();
+            getVariantBuilder(ModBlocks.SLIME_CONGEALED.get())
+                    .partialState().with(SlimeTypes.SLIME_TYPE, type).setModels(models);
+        }
+        simpleBlockItem(ModBlocks.SLIME_CONGEALED.get(), models().getExistingFile(modLoc("block/slime_congealed_green")));
+    }
+
+    /** 藤蔓 multipart：4 方向 when → 原版 vine_1 单面模型 + 段贴图。 */
+    private void vineMultipart(Block vine, String modelName, String texture) {
+        ModelFile model = models().withExistingParent(modelName, mcLoc("block/vine"))
+                .texture("vine", modLoc("block/slime/" + texture));
+        MultiPartBlockStateBuilder builder = getMultipartBuilder(vine);
+        builder.part().modelFile(model).addModel().condition(net.minecraft.world.level.block.VineBlock.NORTH, true).end();
+        builder.part().modelFile(model).rotationY(90).addModel().condition(net.minecraft.world.level.block.VineBlock.EAST, true).end();
+        builder.part().modelFile(model).rotationY(180).addModel().condition(net.minecraft.world.level.block.VineBlock.SOUTH, true).end();
+        builder.part().modelFile(model).rotationY(270).addModel().condition(net.minecraft.world.level.block.VineBlock.WEST, true).end();
     }
 }

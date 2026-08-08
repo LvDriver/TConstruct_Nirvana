@@ -169,4 +169,26 @@ public abstract class ModifierAspect {
             return data.withLevel(Math.min(maxLevel, data.level() + 1)).withColor(color);
         }
     }
+
+    /**
+     * 互斥（1:1 旧版 canApplyTogether 拒绝规则）：工具上已存在任一互斥修饰符/特质时拒绝应用。
+     * 旧版为单向声明 + 双向检查（A 拒 B 或 B 拒 A 均拒绝），挂载时按旧版声明成对配置即可等效。
+     */
+    public static class ExclusiveAspect extends ModifierAspect {
+        private final java.util.List<String> exclusiveWith;
+
+        public ExclusiveAspect(String... exclusiveWith) {
+            this.exclusiveWith = java.util.List.of(exclusiveWith);
+        }
+
+        @Override
+        public boolean canApply(ItemStack stack, ItemStack original) {
+            for (com.lvdriver.tconstruct_nirvana.modifier.Modifier modifier : ToolHelper.getActiveModifiers(stack)) {
+                if (exclusiveWith.contains(modifier.getIdentifier())) {
+                    return false;
+                }
+            }
+            return true;
+        }
+    }
 }

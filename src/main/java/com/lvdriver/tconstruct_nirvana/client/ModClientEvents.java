@@ -2,6 +2,8 @@ package com.lvdriver.tconstruct_nirvana.client;
 
 import com.lvdriver.tconstruct_nirvana.TConstructNirvana;
 import com.lvdriver.tconstruct_nirvana.block.ModBlockEntities;
+import com.lvdriver.tconstruct_nirvana.block.ModBlocks;
+import com.lvdriver.tconstruct_nirvana.block.slime.SlimeTypes;
 import com.lvdriver.tconstruct_nirvana.client.gui.TinkerStationScreen;
 import com.lvdriver.tconstruct_nirvana.client.renderer.TileCastingRenderer;
 import com.lvdriver.tconstruct_nirvana.client.renderer.TileChannelRenderer;
@@ -59,6 +61,19 @@ public final class ModClientEvents {
                     new TConFluidRenderProperties(entry.stillTexture(), entry.flowingTexture(), entry.tintColor()),
                     entry.type().get());
         }
+    }
+
+    /** 史莱姆 foliage 染色（1:1 旧版 SlimeColorizer.getColorStatic：BLUE=0x2aec81、PURPLE=0xa92dff、ORANGE=0xd09800）。 */
+    @SubscribeEvent
+    public static void onRegisterBlockColors(net.neoforged.neoforge.client.event.RegisterColorHandlersEvent.Block event) {
+        event.getBlockColors().register((state, level, pos, tintIndex) -> {
+            SlimeTypes.FoliageType foliage = state.getValue(SlimeTypes.FOLIAGE_TYPE);
+            return switch (foliage) {
+                case PURPLE -> 0xa92dff;
+                case ORANGE -> 0xd09800;
+                default -> 0x2aec81;
+            };
+        }, ModBlocks.SLIME_GRASS.get(), ModBlocks.SLIME_LEAVES.get());
     }
 
     private ModClientEvents() {

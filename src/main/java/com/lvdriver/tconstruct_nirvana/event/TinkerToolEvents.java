@@ -67,6 +67,11 @@ public final class TinkerToolEvents {
                 int level = toolHarvestLevel(tool, stack, state);
                 if (level >= required) {
                     event.setCanHarvest(true);
+                } else {
+                    // 显式拦截：工具已加入 minecraft:pickaxes 等原版工具 tag 后，
+                    // 原版 isCorrectToolForDrops 默认可能放行（如石镐挖钻石矿），
+                    // 必须显式拒绝等级不足，保证 mod 采掘等级体系不被绕过
+                    event.setCanHarvest(false);
                 }
             }
         }

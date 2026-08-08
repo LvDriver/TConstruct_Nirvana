@@ -4,8 +4,8 @@
 > 目的：把"需要记住的事"从对话上下文搬到文件里，AI 按需读取，省 token、防遗忘。
 
 ## 项目状态
-- 当前阶段：会话8 完成（浇铸系统：浇铸台/盆 + 龙头/沟槽/排液口 + CastingEvent 触发点 + seared 楼梯/台阶）
-- 最后更新：2026-08-07
+- 当前阶段：会话11 完成（兼容性完善与资源收尾：Tag 校验补漏 + Curios 结论 + smeltery 配置 + 遗留接线 + lang 全量补齐 + 修复会话10 藤蔓 worldgen NPE）
+- 最后更新：2026-08-08
 - 环境注意：公司加密软件会破坏 java 源文件（read_file 报 NUL 字节 / git 显示 ` D` 工作区删除）——恢复流程：让用户粘贴代码重建 + `git diff` 校验（重建后 diff 为空 = 字节级一致）；已用此流程恢复 BlockMultiblockController.java
 - 旧源码路径：`./TinkersAntique-1.12/`（已解压，匠魂怀古 1.12.2 源码）
 
@@ -20,15 +20,22 @@
 - [x] 会话4：工具组装系统（21 工具注册 + ToolData 公式 + 组装配方）+ 修饰符系统（26 修饰符）+ Trait 系统（53 特质）
 - [x] 会话4.5b：ranged 完整化（自定义弹射物实体/弩装填/拉弓动画）+ 完整修复机制（材料修复配方 + 磨刀石）+ 工具站/锻造厂 GUI（简化版，随工具组装）
 - [ ] 箭袋：旧版匠魂怀古无此物（全库 grep 确认），1:1 原则跳过；如后续用户要求可自创
-- [ ] 工具站 GUI 增强：Shift 快速移动/拆解/修饰符按钮/修复按钮（当前最小版：5 部件槽+结果槽）
+- [x] 会话9：工具多层贴图渲染（22 工具 × 部件层组合 + 材料着色）+ 工具站 GUI 完整版（修复/替换/组装/拆解/Shift）+ 冶炼炉 GUI 增强（燃料条/温度/液体贴图/Shift）+ 战斗牌格挡验证
+- [x] 会话10：宝箱战利品（凋灵骷髅掉坏死骨）+ 史莱姆岛生态（方块 + 岛/树/池生成）+ TConConfig 矿石开关接线（ConfigEnabledCondition）
+- [ ] 匠魂小屋/村庄建筑（旧版 ComponentToolWorkshop/ComponentSmeltery 代码结构组件，jigsaw 重写成本过高，1:1 不可行——暂缓，devlog 会话10 已记录）
+- [ ] 工具站 GUI 遗留：重命名文本框（需网络 payload 同步）、修饰（无修饰符物品，需先注册）、信息面板/工具选择按钮（旧版 GuiInfoPanel/GuiButtonsToolStation）
+- [ ] 工具站修饰符应用入口：接入时须给 ModCreative 加创造/命令限定（会话11 确认其不可达）
+- [ ] 冶炼炉 GUI 遗留：每槽熔炼进度 tooltip（需逐槽 DataSlot 同步）、燃料条上限数据化（当前 1000 tick 常数）
+- [ ] 弹射物 3D 模型（可选，会话9 未做）
 - [x] 会话5：金属流体系统（26 流体注册 + 温度系统 + 合金配方 + c: tag）——熔炼/浇铸配方类型与冶炼炉事件触发点待冶炼炉会话
 - [x] 会话6：全部自定义配方类型——熔炼/浇铸/桶浇铸/部件制作（Recipe+Serializer+注册+DataGen 561 条）+ 8 流体补注册 + 铸造形状 5 个 + JEI 4 分类（compileOnly 软依赖）
 - [x] 熔炼/浇铸配方类型（MeltingRecipe/CastingRecipe 数据驱动版，冶炼炉会话接入触发点）✓ 类型已完成；MeltingEvent 触发点已接入（会话7），CastingEvent 待浇铸台会话
 - [x] 冶炼炉多方块（会话7）：seared 方块 12 变体 + 玻璃/储罐/控制器 + 多块检测 + 炉体逻辑（熔炼/合金/部件熔炼/实体熔炼/燃料）+ MeltingEvent 触发点 + GUI 最小版
 - [x] 浇铸系统（会话8）：浇铸台/盆（BlockCasting + CastingBlockEntity + CastingEvent 触发点）+ 龙头/沟槽/排液口（faucet/channel/drain）+ seared 楼梯/台阶
-- [ ] 冶炼炉 GUI 增强：温度/进度条显示、燃料液体贴图渲染（当前 tint 色块占位）、Shift 快速移动
-- [ ] needs_cobalt_tool 工具侧接线完善（数据驱动 level 判定已可用）+ sharpening_kit 部件注册
-- [ ] TConConfig 矿石生成开关接线（BiomeModifier 数据驱动限制）或移除
+- [x] 冶炼炉 GUI 增强（会话9）：燃料条 + 温度显示 + 液体 still 贴图渲染 + Shift 快速移动（每槽熔炼进度遗留）
+- [x] needs_cobalt_tool 工具侧接线完善（会话11：HarvestCheck 显式拦截 + 工具入原版 minecraft:pickaxes/axes/shovels + 删误标 items tag）——sharpening_kit 部件会话3 已注册（旧文案过时）
+- [x] silktouch/autosmelt/blasting 互斥 aspect（会话11：ExclusiveAspect，1:1 旧版 canApplyTogether）
+- [x] TConConfig 矿石生成开关接线（会话10：自定义 datapack condition `config_enabled`，BiomeModifier JSON 挂 neoforge:conditions，改 config 后 /reload 生效）
 - [ ] 确定 Mod 核心玩法（1:1 还原匠魂怀古，后续再调整/新增）
 - [ ] 定义注册清单：物品 / 方块 / 流体 / 实体 / 配方类型等
 
@@ -137,6 +144,10 @@
 - 材料与修饰符的 RecipeMatch 体系是全局地基（Material 和 Modifier 都继承它），优先重写
 
 ## 已知 Bug
+- ✅ 已修复（2026-08-07 调试会话）：龙头只浇 144mb 后卡死 + 无滴液动画 + 排液口放龙头瞬间消失
+  - 修复方式①（浇铸续抽）：`TileFaucet.tick` 的"缓冲排空→续抽/停止"分支原先挂在 `!drained.isEmpty()` 守卫**内部**（`getAmount()<=0` 是死代码）——1.21.1 `FluidStack` 经 `copyWithAmount(0)` 后即 `isEmpty()`，排空后永远进不了续抽分支（1.12 的 FluidStack amount=0 非 null 才走得到），龙头卡在 isPouring=true/drained=EMPTY，再点右键只置 stopPouring 无人处理 → 整块 1296mb 只能浇出 144mb。修复：空栈时直接走续抽/停止分支（doTransfer 自带空栈守卫）
+  - 修复方式②（无滴液动画）：`TileFaucet.sync()` 除 `sendBlockUpdated(2)` 外补发 `ClientboundBlockEntityDataPacket`（sendBlockUpdated flag2 不携带 BE 数据，客户端渲染器恒读 be.drained 默认空值）+ 覆写 `getUpdatePacket()`（与 CastingBlockEntity 同套路）
+  - 修复方式③（放龙头瞬间消失，待用户实证）：`TileSmelteryComponent` 覆写 `getUpdatePacket()`，`overrideMaster/removeMaster` 补 `syncToClient()` 发 BE 数据包——`assignMultiBlock` 原来只 `setChanged()`，客户端 TileDrain.master 永远收不到 → 客户端 `getSmeltery()` 恒 null、fluid capability 恒缺失，与服务端行为不一致（疑为消失/放置异常的 C/S 不同步根源，与 devlog 已踩坑第 6 条同类）
 - ✅ 已修复（2026-08-07 调试会话）：浇铸系统不可用 —— 冶炼炉熔炼金/铁/钴/阿迪特块后，排液口+龙头无法排出到浇铸台锭铸模/浇铸盆；创造物品栏滑动时悬停模具物品概率崩溃
   - 修复方式①（浇铸-排液口）：`ModBlocks.getValidSmelteryBlocks()` 补入 `DRAIN.get()`（排液口）。根因：1:1 旧版 `validSmelteryBlocks` 含 `smelteryIO`，新版移植漏掉排液口 → 玩家把墙换成排液口后结构检测失败 → 冶炼炉 active=false → `TileDrain.getSmeltery()` 返回 null → 龙头取不到液。修复后需重放控制器/排液口触发重检（或等服务端每秒重检自动恢复）
   - 修复方式②（浇铸-桶交互）：`BlockCasting` 覆写 `useItemOn` 经 capability + `FluidUtil.interactWithFluidHandler` 处理桶倒入/取出。根因：旧版 1.12 桶交互在物品侧（ItemBucket.onItemUse 自动检查方块 capability），1.21.1 移到方块侧，缺失导致手持熔融金属桶右键盆只把桶当物品放进槽内
@@ -145,7 +156,7 @@
   - 修复方式⑤（浇铸-客户端同步）：`CastingBlockEntity` 加 `syncToClient()`，在 `setItem/fill/drain/finishCasting/reset` 数据变化后向追踪玩家发 `ClientboundBlockEntityDataPacket`。根因：数据变化只 `sendBlockUpdated(flag 2)`（仅刷新渲染、不携带 BE 数据），客户端显示陈旧状态 → 冷却完成不渲染输出物品、交互后"铸模消失"（实为客户端一直显示初始空数据）。用户实证：旧炉子进存档时渲染正常（加载时 NBT 全量同步）、运行中冷却完成不渲染（无同步包），恰好印证
   - 操作说明（非 bug，1:1 旧版）：浇铸台/盆**输出槽有物品时拒绝注入**（龙头无声 reset）→ 熔一整块铁浇出第一锭后须先拿走锭再浇下一锭，否则"浇不出来"；浇铸盆要求两槽全空（模具槽残留物品会导致无模具配方不匹配）；冷却时间 = 1:1 旧版 `24 + (温度-300)×量/1600`（铁锭 66 tick、铁块 403 tick），浇注速率 6mb/tick 亦为旧版 Config 值
   - 调试埋点：`TileFaucet.doTransfer/pour` 加 debug 日志（`[Faucet]`：无源/无目标/源无液/目标拒收），下次龙头不流液可直接定位环节
-  - 操作说明（排液口+龙头搭法，1:1 旧版 TileFaucet.doTransfer 取液=朝向相邻格、输出=正下方）：龙头必须与排液口**同层相邻**（点击排液口侧面放置，FACING 朝排液口）或**排液口正下方**（点击排液口底面，FACING=UP）；龙头正下方放浇铸台/盆。实测日志：龙头源位置 getCapability null（`[Faucet] no fluid source`）均为搭法错位（龙头放排液口上方一层，源取到第二层墙）或炉子未成型（x=33 炉子 walls too short）；`[Drain]` 日志（getSmeltery null 时输出位置/master/loaded）可区分搭法错位 vs 未绑定
+  - 操作说明（排液口+龙头搭法，1:1 旧版 TileFaucet.doTransfer 取液=朝向相邻格、输出=正下方）：龙头与排液口**同层紧贴**（点击排液口侧面放置，FACING 朝排液口，四水平方向均可）或排液口正下方（点击排液口底面，FACING=UP）均可；龙头正下方放浇铸台/盆。实测日志：龙头源位置 getCapability null（`[Faucet] no fluid source`）= **源位置没有排液口**（非搭法方向问题，四方向代码均支持）；`[Drain] created at {}` 构造器日志会输出排液口实际位置，与龙头源位置对照即可定位；`[Drain] getSmeltery null` 日志区分未绑定（炉子未成型时 master 绑定失败）
 - ✅ 已修复并实证（2026-08-07 调试会话）：冶炼炉控制器无效 —— 多方块结构搭建正确但无火焰粒子特效、无法右键开 GUI；焦黑储罐也无法用岩浆桶右键倒入岩浆
   - **用户实证**：修复后储罐可用岩浆桶倒入 ✓；控制器拆除后重新放置 → GUI 正常打开、正常读取储罐内岩浆 ✓（首次放置打不开、拆放后正常；疑似首次放置时结构未完整或朝向问题，未复现，诊断日志已埋点）
   - 修复方式①：`TileMultiblock.checkMultiblockStructure` 状态变化时向追踪玩家发送 `ClientboundBlockEntityDataPacket`（`ServerLevel.getChunkSource().chunkMap.getPlayers(new ChunkPos(...), false)`），同步 BE.active 到客户端。根因：`setBlock(ACTIVE, 3)` 只同步 blockstate 不带 BE 数据，客户端 BE.active 恒 false → 无粒子 + `useWithoutItem` 返回 PASS（1.21.1 客户端 PASS 不发送 `ServerboundUseItemOnPacket`）→ 服务端 GUI 永远收不到右键（旧版 1.12 客户端自跑结构检测且总是发包，迁移时漏了 BE 数据同步）
@@ -344,3 +355,48 @@
 - 踩坑修复：ModToolParts 静态初始化顺序（PARTS 声明在 part() 调用后 → NPE；移到类顶部）；DeferredItem.get() 注册前抛异常（主类只触发类加载不取值）
 - 遗留：bolt_core/sharpening_kit 未注册（ranged/工具修饰会话）；材料↔物品关联 RecipeMatch→ItemTag 未做（部件已用 DataComponent 绕过）
 - 下一步：RecipeMatch→ItemTag 材料-物品关联体系（或直接进工具组装/模具 GUI 会话）
+
+### 2026-08-07 会话9：工具渲染与 GUI 增强（完成）
+- **工具多层贴图渲染**（最高优先，1:1 旧版 ToolModel/BakedToolModel，1.21.1 原生重写）：
+  - 7 个新类 `client/model/`：ToolPartLayer（层定义 record）/ ToolModelData（22 工具层表 + 材料渲染 suffix 表，1:1 提取自旧版 .tcon.json 与 materials/*.json）/ ToolModelLoader（IGeometryLoader，loader=`tconstruct_nirvana:tool`）/ ToolUnbakedGeometry（IUnbakedGeometry，bake 预取全部候选贴图）/ ToolBakedModel（BakedModel，getOverrides 返回 ToolItemOverrides）/ ToolItemOverrides（ItemOverrides.resolve 按 BASE_MATERIALS+BROKEN 组合 quads，guava 缓存；越界材料兜底最后一个——shuriken 单材料 4 层）/ ModModelLoaders（ModelEvent.RegisterGeometryLoaders 注册，MOD bus CLIENT）
+  - 渲染逻辑 1:1：层贴图 `<tool>/<part>`（旧版 layerN）+ broken 层（旧版 brokenN）；材料有 suffix 且存在 `<part>_<suffix>` 贴图（bone_base/contrast/feather 等）→ 用变体贴图原色，否则 base 贴图 + 材料色顶点着色（QuadTransformers.applyingColor）；损坏时替换 broken 层（hammer 换 broken_handle、arrow 换 shaft_broken、弓换 bowstring_broken）
+  - DataGen：TConItemModelProvider 工具部分改 customLoader 生成 `{"loader":"tconstruct_nirvana:tool","tool":"<name>"}`（ToolModelBuilder，data 包）；旧版 `textures/items/<tool>/` 354 张贴图复制到 `textures/item/<tool>/`（排除 mod_*、拉弓阶段 _1/_2/_3、ammo_firework/bolt_gui）
+  - **简化记录（1:1 近似）**：未移植 CustomTextureCreator 运行时贴图生成（金属/纯色材料统一顶点着色，无金属高光渐变）；无拉弓阶段动态贴图与 ammo 渲染；无旧版 display transforms（用默认物品变换）；无修饰符层贴图
+- **工具站/锻造厂 GUI 完整版**（1:1 旧版 ContainerToolStation）：
+  - 布局：槽 0=工具槽 + 槽 1-5=材料槽 + 结果槽（旧版 toolstation.png 背景 176×174 复制）；ToolTableBlockEntity 5→6 槽
+  - 合成链（slotsChanged 顺序 1:1 旧版）：修复（TinkerToolItem.repair 复用）→ 部件替换（replaceToolParts：新材料部件换对应槽位 + buildItem 重算 + 保留修饰符/耐久比例）→ 组装（材料槽连续部件）；结果槽可放入未损坏工具进入拆解模式（1:1 SlotToolStationOut），取走即拆解为部件填入材料槽
+  - 取走消耗（onTake）：按合成类型清空对应槽；无有效合成时保留槽内容防吞
+  - quickMoveStack 完整（Shift：背包→工具槽/材料槽/结果槽拆解；输入槽→背包；结果槽→onTake 分发）
+  - 客户端/服务端同一确定性逻辑，无网络包
+- **冶炼炉 GUI 增强**：DataSlot 增 DATA_TEMPERATURE（heat=temperature+300）+ DATA_FUEL 改 fuelQuality 数值（旧版 FuelInfo 简化）；液体罐 tint 色块 → still 贴图渲染（getStillTexture + graphics.blit 带色）；燃料条（右上 71,16,12,52 比例 1000 tick 上限）；温度数字显示；Shift 快速移动
+- **战斗牌格挡**：验证已实现（use→startUsingItem+UseAnim.BLOCK + LivingIncomingDamageEvent 减伤 50% + onBlock 钩子），无需改动
+- 弹射物 3D 模型：**未做**（可选任务，轮次预算不足，devlog 待办记录）
+- **验证**：`./gradlew compileJava`×2 修复（MissingTextureAtlasSprite.getLocation 替代 TextureAtlas.LOCATION_MISSING；lambda 捕获非 final；canMergeSlot 1.21.1 已移除删除；float→int 强转）；`./gradlew runData` BUILD SUCCESSFUL（pickaxe.json/battlesign.json 核对 `{"loader":"tconstruct_nirvana:tool","tool":"pickaxe"}`）；`./gradlew build` BUILD SUCCESSFUL；`./gradlew runClient` 冒烟（initialized → 资源重载无模型错误 → atlas 含全部工具变体贴图 → 0 ERROR/Exception）
+- 遗留：工具站重命名文本框/修饰（无修饰符物品）/信息面板；冶炼炉每槽进度；弹射物 3D；工具 display transforms；拉弓动态贴图；bow 弹药渲染
+### 2026-08-07 会话10：宝箱战利品 + 史莱姆岛生成 + 矿石开关接线（完成）
+- **调研结论**：旧版战利品注入仅两处——① 凋灵骷髅掉坏死骨（ToolEvents.onLootTableLoad：1 池、玩家击杀、7%+5%/级抢夺）② 村庄建筑专用表（VillageLoot.WORKSHOP_PARTS/PATTERNS，依赖村庄建筑）。**地牢/神殿/村庄宝箱无注入**（目标文本猜测的"宝箱战利品"实际不存在，1:1 还原 = 只做凋灵骷髅）；村庄建筑 jigsaw 重写成本过高暂缓
+- **坏死骨物品**：ModItems.NECROTIC_BONE（旧版 TinkerCommons.matNecroticBone）+ 贴图 items/materials/necrotic_bone.png 复制 + 血骨材料接线（bloodbone.addItemIngot(BONE_BLOODIED) + setRepresentativeItem(tag)——注意：ModMaterials.init 在注册前运行，不能 DeferredItem.get()，用 Tag 延迟解析）
+- **LootModifier（数据驱动）**：TConLootModifiersProvider 生成三件套——实体子表 `tconstruct_nirvana:entities/wither_skeleton`（killed_by_player + random_chance_with_looting 0.07/0.05）+ GLM `neoforge:add_table`（condition `neoforge:loot_table_id`=wither_skeleton）+ `data/neoforge/loot_modifiers/global_loot_modifiers.json` 启用列表（NeoForge 21.1 GLM 默认禁用必须登记）
+- **slime 方块系统（block/slime/ 包）**：SlimeTypes（DirtType/FoliageType/SlimeType 枚举 + SLIME_SOUND 自定义音效——1.21.1 无 SoundType.SLIME）+ 7 类方块：slime_dirt（4 变体）、slime_grass（type×foliage 12）、slime_leaves（3）、slime_grass_tall（3）、slime_sapling（3，BonemealableBlock 骨粉催熟）、slime_vine（蓝/紫×top/mid/end 6 个，继承 VineBlock 覆写 randomTick/canSurvive 还原旧版 3 段生长）、slime_congealed（5 变体）；贴图 19 张复制自旧版 blocks/slime/
+- **DataGen**：blockstate 复用原版模型 parent（grass_block overlay tint / leaves tint / vine / cross）；loot：grass→对应 dirt（CopyBlockState.copyState，1.21.1 类名无 Function 后缀）、leaves→silk touch 自身 + 1/25 树苗（copy foliage）、sapling/dirt/congealed 掉自身 copy 变体、tall grass 空表；lang 主 key（变体名简化合并）；创造页变体用 BLOCK_STATE 组件（BlockItemStateProperties.EMPTY.with(p,state)）；BlockColor 染色（grass/leaves foliage：BLUE=0x2aec81/PURPLE=0xa92dff/ORANGE=0xd09800，1:1 SlimeColorizer.getColorStatic，位置渐变省略）
+- **世界生成（world/feature/）**：自定义 Feature ×5——SlimeTreeFeature（5~8 高、凝结石块树干、菱形树冠、藤蔓可选，静态 placeTree 供岛/树苗复用）、SlimeIslandFeature（主世界浮岛：y=地表+61~110、椭圆+侵蚀+草皮+湖+植物+树×3+藤蔓×30、蓝/绿/紫岛 4:4:2）、MagmaSlimeIslandFeature（下界岩浆海 y=31+1、5 格岩浆检查、侵蚀镂空用岩浆、MAGMA 泥土+橙 foliage、湖=岩浆+magma/blood 凝结石）、SlimePoolFeature（地下 16×8 椭球池+绿史莱姆流体+2~6 只原版史莱姆）、MagmaSlimePoolFeature（下界岩浆池+岩浆史莱姆）；ModFeatures DeferredRegister（Registries.FEATURE）
+- **placed feature 频率 1:1**：岛 730、岩浆岛 100、池 30（旧版 slimeIslandsRate/magmaIslandsRate/slimePoolRate/magmaPoolRate）；岛 y 由 Feature 内重算（placement height 仅占位）；BiomeModifier：is_overworld（vegetal_decoration/underground_decoration）+ is_nether（top_layer_modification/underground_decoration）
+- **TConConfig 开关接线（任务3）**：自定义 ICondition `config_enabled`（ConfigEnabledCondition，注册到 NeoForgeRegistries.Keys.CONDITION_CODECS，key→TConConfig BooleanValue）；BiomeModifier JSON 挂 `neoforge:conditions`，改 config 后 /reload 生效；矿石 modifier 拆分为 ores_cobalt/ores_ardite 两个（旧版 genCobalt/genArdite 独立）；TConConfig 新增 generateSlimeIslands（默认 true，同时控制岛+岩浆岛，1:1 旧版 genSlimeIslands）与 generateSlimePools（默认 false，控制两池）
+- **1.21.1 API 踩坑（本会话）**：Block 抽象 codec() 必须实现（simpleCodec(类::new) 需 Properties 构造器）；NeoForge 21.1 canSustainPlant(...,BlockState) 返回 `net.neoforged.neoforge.common.util.TriState`（非 common.TriState）；骨粉接口是 `BonemealableBlock`（非 BonemealItem）；VineBlock 用 `getPropertyForFace`/`isAcceptableNeighbour`（无 canAttachTo/grow，randomTick 参数是 ServerLevel）；loot 复制方块状态是 `CopyBlockState.copyState(Block)`（无 Function 后缀）；BlockLootSubProvider 无 HAS_SILK_TOUCH 常量（用实例方法 hasSilkTouch()）；1.21.1 原版模型只有 block/vine（无 vine_1）；枚举 toString 覆写必须保留（DataGen 字符串拼接用）；枚举属性需 implements StringRepresentable；BlockItemStateProperties 构造是 Map<String,String>（用 EMPTY.with(property,state)）
+- **简化记录（devlog 备注）**：岛"3×3 chunk 预标记 + per-world 已生成记录"（SlimeIslandData，供怪物生成判定）无法在数据驱动 feature 1:1 → 省略，岛生成本身不受影响；slime_grass 去掉 DirtType.VANILLA 与蔓延逻辑；leaves 改普通方块（原版 LeavesBlock 会因无 log 而凋零）+ slimeball 彩色球掉落省略（项目无彩色球物品）；grass 位置渐变染色省略（用静态色）；tall grass 去 TYPE（fern）双形态；vine 掉落简化直接掉；village 建筑+其 loot 表暂缓；slimevine 各段 BlockItem 无对应"物品"差异（同主名）
+- **验证**：`./gradlew check` BUILD SUCCESSFUL（编译含全部新代码）；`./gradlew runData` BUILD SUCCESSFUL（+~60 文件：loot_modifiers×2/entities 表/6 个 biome_modifier 带 conditions/8 configured+placed feature/12 blockstate/24 模型/12 loot_table/19 贴图/tag/lang，JSON 内容逐项核对）；`./gradlew build` BUILD SUCCESSFUL；`./gradlew runClient` 冒烟到主菜单 0 ERROR/Exception（世界内岛/战利品生成需玩家进世界目验：/locate 无效——浮岛无结构，靠飞行寻找）
+- 遗留：村庄建筑（匠魂小屋）暂缓；slime 实体（蓝/紫史莱姆）未注册（岛生成不依赖）；tall grass 剪切交互；弹射物 3D；工具站/冶炼炉 GUI 遗留同前
+- **security-review 后续（2026-08-07 收尾）**：① SlimeTreeConfig 的 foliage codec 从 `xmap(valueOf)` 改为 `comapFlatMap`（非法 datapack 值返回 DataResult.error 而非裸 IllegalArgumentException）② 矿池实体生成（SlimePoolFeature/MagmaSlimePoolFeature 的 2~6 只史莱姆）在 1.21.1 worldgen 期间 context.level() 是 WorldGenRegion 而非 ServerLevel，`instanceof ServerLevel` 恒 false → 实体生成为死代码（安全上有利：避免并行 chunk 生成时向未完成 chunk 注入实体）；1:1 恢复需延迟生成机制（结构 post-process 或延迟 tick），devlog 记录为遗留
+
+### 2026-08-08 会话11：兼容性完善与资源收尾（完成）
+- **Tag 兼容校验（任务1）**：流体 tag 已确认 `c:<name>` 风格（`c:molten_iron`，非 c:fluid/，与 NeoForge Tags.Fluids 一致）无需改；**补漏 7 处**（DataGen，全部 1:1 旧版 oredict）：necrotic_bone→`c:bones/wither`（旧版 boneWithered）、slime_sapling→`minecraft:saplings`（treeSapling）、slime_leaves→`minecraft:leaves`（treeLeaves）、6×slime_vine→`tconstruct_nirvana:vines`（旧版 vine，顺带修复 vine 材料吃不到史莱姆藤蔓）、12 seared 主变体→`tconstruct_nirvana:seared_blocks` 物品+方块（blockSeared）、pattern/cast→`tconstruct_nirvana:patterns/casts`、tool_station/tool_forge→`tconstruct_nirvana:workbenches`（workbench）、slime_dirt/grass/congealed→`tconstruct_nirvana:slime_blocks/*` 物品+方块（blockSlimeDirt/Grass/Congealed）
+- **删误标 tag**：物品侧 `needs_cobalt_tool`（会话4 把全部 21 工具打上，木镐也被标钴级，误导附属；旧版无此物 1:1 应删）——TConTags 常量 + provider + 手动删 src/generated 残留 JSON
+- **工具入原版工具类别 tag**：minecraft:pickaxes（pickaxe/hammer）、axes（hatchet/mattock/lumberaxe）、shovels（shovel/mattock/excavator）——1:1 旧版 ToolClass；**配套** HarvestCheck 事件补 `else setCanHarvest(false)` 显式拦截（否则石镐因原版 isCorrectToolForDrops 放行能挖钻石矿，绕过 mod 采掘等级体系）
+- **Curios（任务2）**：确认旧版无饰品系统（haste ring 是匠魂1 装备；travel_belt_armor 等 8 个只是 Config 黑名单里的外部 mod id；accessory 仅是 scythe 渲染层贴图术语）→ 不接入 Curios，记录结论
+- **配置项完善（任务3）**：TConConfig 新增 `smeltery` 分组 3 项（默认值 1:1 旧版 Config）：drainGaseousFluids=true、heatItemsTickrateSmeltery=4、liquidTransferRate=6；接线：TileFaucet 气体过滤改读配置（**修正旧实现与旧版默认相反**：原实现 density>=0 才可浇注=禁气体，注释还误写"1:1 false"；旧版默认 true 允许气体）、pour 流量改读配置；TileSmeltery 加热 tickrate 改读配置（删死常量 HEAT_TICKRATE）；**容量不做配置**——旧版无容量配置项（容量=结构槽数×8 锭，代码已 1:1），devlog 备注；旧版 oreToIngotRatio 属配方数据驱动语义，未迁移（数据驱动配方已定产出）；烈焰血燃料缺失（旧版 150tick/50mb）仍遗留（无 blazing blood 流体）
+- **遗留接线（任务4）**：① needs_cobalt_tool 工具侧：HarvestCheck else 显式拦截 + 原版工具 tag（见上）；sharpening_kit 会话3 已注册（cost=288、canUseMaterial=HEAD、lang/贴图/创造页齐全），仅更新 devlog 旧文案 ② 互斥 aspect：ModifierAspect 新增 `ExclusiveAspect`（检查工具活跃修饰符，1:1 旧版 canApplyTogether 拒绝规则），挂载：ModSilktouch 拒 squeaky/luck、ModAutosmelt 拒 autosmelt/silktouch、ModBlasting 拒 luck/silktouch/squeaky/autosmelt、TraitAutosmelt 拒 squeaky/silktouch ③ ModCreative：确认无应用入口不可达，待工具站修饰符入口接入时加创造/命令限定（待办已记）
+- **资源与本地化（任务5）**：模型/blockstate/贴图审计全绿（96 blockstate/142 item 模型/贴图引用 0 处 tconstruct: 残留）；lang 补齐 **165 条**（322→487）：material.*.name+prefix 44 材料×双语（工具组合名"钴 镐"不再显示 raw key；英文 1:1 旧版 lang，中文新译；旧版仅 wood/slime/blueslime 有 prefix 其余用材料名）、entity.* 3 条（arrow/bolt/shuriken 弹射物名）、modifier.*.desc 74 条×双语（1:1 旧版 desc 去 § 格式码；creative 旧版无 desc 不生成）
+- **修复会话10 遗留 worldgen 崩溃（runClient 进世界暴露）**：`BlockSlimeVine.grow` NPE——END 段注册传 `() -> null`（返回 null 的 Supplier），而 grow 只检查字段 `nextStage == null`；藤蔓连生到 end 段后再 grow → `nextStage.get()` 返回 null → `Feature placement` 崩溃（SlimeIslandFeature.tryPlacingVine 循环触发）。修复：END 段构造器直接传 `null`（与构造器 javadoc "end 段传 null" 一致）
+- **验证**：`./gradlew check` ✓；`./gradlew runData` ✓（1155 文件，lang 487 条、c:bones/wither、saplings/leaves、pickaxes/axes/shovels 等 JSON 逐项核对）；`./gradlew build` ✓；`./gradlew runClient` 进世界完整验证：Preparing start region 无崩溃 → 玩家登录 → 正常停止（0 ERROR/Exception）——**首次进世界验证通过**（会话10 仅到主菜单，worldgen 崩溃此前未暴露）
+- **review 后续（2026-08-08）**：内置 review 检出 3 处互斥/配置问题并修复——① ModBlasting 互斥名单补 `mod_autosmelt`、ModAutosmelt 补 `blasting`（掉落转化修饰符双向互斥）② ModLuck 补 `ExclusiveAspect("silktouch", "blasting")`（ExclusiveAspect 单向检查需成对挂载，否则先 silktouch/blasting 后 luck 被放行）③ heatItemsTickrateSmeltery 配置上限 100→20（tick 循环周期 20，>20 的值全部等效 20，范围误导）；另删 TConItemTagsProvider 重复 PACKED_ICE 条目（review 误报 TileFaucet.LIQUID_TRANSFER 为死常量——TileChannel 仍引用，保留）；修复后 `./gradlew check`/`./gradlew build` 均 SUCCESSFUL
+- 遗留：村庄建筑暂缓；slime 实体未注册；矿池实体生成死代码（WorldGenRegion）；工具站 GUI 遗留 + 修饰符应用入口（含 ModCreative 限定）；冶炼炉 GUI 每槽进度；烈焰血燃料；弹射物 3D

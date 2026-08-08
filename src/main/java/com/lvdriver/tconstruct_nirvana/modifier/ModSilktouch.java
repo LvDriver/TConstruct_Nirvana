@@ -16,6 +16,8 @@ public class ModSilktouch extends Modifier {
         aspects.add(new ModifierAspect.SingleAspect(identifier));
         aspects.add(new ModifierAspect.DataAspect(identifier, 0xdddddd));
         aspects.add(new ModifierAspect.FreeModifierAspect(1));
+        // 1:1 旧版 ModSilktouch.canApplyTogether：拒 squeaky、luck
+        aspects.add(new ModifierAspect.ExclusiveAspect("squeaky", "luck"));
     }
 
     @Override

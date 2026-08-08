@@ -1,6 +1,14 @@
 package com.lvdriver.tconstruct_nirvana.block;
 
 import com.lvdriver.tconstruct_nirvana.TConstructNirvana;
+import com.lvdriver.tconstruct_nirvana.block.slime.BlockSlimeCongealed;
+import com.lvdriver.tconstruct_nirvana.block.slime.BlockSlimeDirt;
+import com.lvdriver.tconstruct_nirvana.block.slime.BlockSlimeGrass;
+import com.lvdriver.tconstruct_nirvana.block.slime.BlockSlimeLeaves;
+import com.lvdriver.tconstruct_nirvana.block.slime.BlockSlimeSapling;
+import com.lvdriver.tconstruct_nirvana.block.slime.BlockSlimeVine;
+import com.lvdriver.tconstruct_nirvana.block.slime.BlockTallSlimeGrass;
+import com.lvdriver.tconstruct_nirvana.block.slime.SlimeTypes;
 import net.minecraft.world.level.block.Block;
 import net.minecraft.world.level.block.SoundType;
 import net.minecraft.world.level.block.state.BlockBehaviour;
@@ -286,6 +294,80 @@ public final class ModBlocks {
 
     private static DeferredBlock<BlockSeared> registerSeared(String name) {
         return BLOCKS.registerBlock(name, BlockSeared::new, BlockSeared.searedProperties());
+    }
+
+    /* ---------- 史莱姆方块（会话10：史莱姆岛生态） ---------- */
+
+    /** 史莱姆泥土（green/blue/purple/magma 4 变体，旧版 BlockSlimeDirt）。 */
+    public static final DeferredBlock<BlockSlimeDirt> SLIME_DIRT = BLOCKS.register("slime_dirt",
+            () -> new BlockSlimeDirt(BlockBehaviour.Properties.of()
+                    .mapColor(MapColor.COLOR_GREEN)
+                    .strength(0.55F)
+                    .sound(SlimeTypes.SLIME_SOUND)));
+
+    /** 史莱姆草皮（type×foliage，旧版 BlockSlimeGrass，grass 掉落对应 slime_dirt）。 */
+    public static final DeferredBlock<BlockSlimeGrass> SLIME_GRASS = BLOCKS.register("slime_grass",
+            () -> new BlockSlimeGrass(BlockBehaviour.Properties.of()
+                    .mapColor(MapColor.COLOR_GREEN)
+                    .strength(0.65F)
+                    .sound(SoundType.GRASS)
+                    .friction(0.65F))); // 旧版 slipperiness += 0.05
+
+    /** 史莱姆树叶（blue/purple/orange 3 变体，旧版 BlockSlimeLeaves 简化：无凋零衰减）。 */
+    public static final DeferredBlock<BlockSlimeLeaves> SLIME_LEAVES = BLOCKS.register("slime_leaves",
+            () -> new BlockSlimeLeaves(BlockBehaviour.Properties.of()
+                    .mapColor(MapColor.PLANT)
+                    .strength(0.3F)
+                    .sound(SoundType.GRASS)
+                    .noOcclusion()
+                    .isViewBlocking((state, level, pos) -> false)));
+
+    /** 史莱姆高草（旧版 BlockTallSlimeGrass 简化：无掉落，仅 foliage 变体）。 */
+    public static final DeferredBlock<BlockTallSlimeGrass> SLIME_GRASS_TALL = BLOCKS.register("slime_grass_tall",
+            () -> new BlockTallSlimeGrass(BlockBehaviour.Properties.of()
+                    .mapColor(MapColor.PLANT)
+                    .replaceable()
+                    .noCollission()
+                    .instabreak()
+                    .sound(SoundType.GRASS)
+                    .offsetType(BlockBehaviour.OffsetType.XYZ)));
+
+    /** 史莱姆树苗（骨粉催熟按 foliage 生成对应史莱姆树）。 */
+    public static final DeferredBlock<BlockSlimeSapling> SLIME_SAPLING = BLOCKS.register("slime_sapling",
+            () -> new BlockSlimeSapling(BlockBehaviour.Properties.of()
+                    .mapColor(MapColor.PLANT)
+                    .noCollission()
+                    .instabreak()
+                    .sound(SoundType.GRASS)));
+
+    /** 史莱姆藤蔓（蓝/紫 × top/mid/end 各 3 段，1:1 旧版 BlockSlimeVine）。 */
+    public static final DeferredBlock<BlockSlimeVine> SLIME_VINE_BLUE = BLOCKS.register("slime_vine_blue",
+            () -> new BlockSlimeVine(vineProperties(), () -> ModBlocks.SLIME_VINE_BLUE_MID.get()));
+    public static final DeferredBlock<BlockSlimeVine> SLIME_VINE_BLUE_MID = BLOCKS.register("slime_vine_blue_mid",
+            () -> new BlockSlimeVine(vineProperties(), () -> ModBlocks.SLIME_VINE_BLUE_END.get()));
+    public static final DeferredBlock<BlockSlimeVine> SLIME_VINE_BLUE_END = BLOCKS.register("slime_vine_blue_end",
+            () -> new BlockSlimeVine(vineProperties(), null));
+    public static final DeferredBlock<BlockSlimeVine> SLIME_VINE_PURPLE = BLOCKS.register("slime_vine_purple",
+            () -> new BlockSlimeVine(vineProperties(), () -> ModBlocks.SLIME_VINE_PURPLE_MID.get()));
+    public static final DeferredBlock<BlockSlimeVine> SLIME_VINE_PURPLE_MID = BLOCKS.register("slime_vine_purple_mid",
+            () -> new BlockSlimeVine(vineProperties(), () -> ModBlocks.SLIME_VINE_PURPLE_END.get()));
+    public static final DeferredBlock<BlockSlimeVine> SLIME_VINE_PURPLE_END = BLOCKS.register("slime_vine_purple_end",
+            () -> new BlockSlimeVine(vineProperties(), null));
+
+    /** 凝结石块（green/blue/purple/blood/magma 5 变体，树树干/矿池边缘）。 */
+    public static final DeferredBlock<BlockSlimeCongealed> SLIME_CONGEALED = BLOCKS.register("slime_congealed",
+            () -> new BlockSlimeCongealed(BlockBehaviour.Properties.of()
+                    .mapColor(MapColor.COLOR_GREEN)
+                    .strength(0.6F)
+                    .friction(0.8F)
+                    .sound(SlimeTypes.SLIME_SOUND)));
+
+    private static BlockBehaviour.Properties vineProperties() {
+        return BlockBehaviour.Properties.of()
+                .mapColor(MapColor.PLANT)
+                .noCollission()
+                .instabreak()
+                .sound(SoundType.VINE);
     }
 
     private ModBlocks() {

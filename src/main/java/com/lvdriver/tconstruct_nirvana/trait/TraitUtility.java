@@ -75,6 +75,8 @@ class TraitMagnetic extends TraitLeveled {
 class TraitAutosmelt extends Trait {
     TraitAutosmelt() {
         super("autosmelt", 0xff5500);
+        // 1:1 旧版 TraitAutosmelt.canApplyTogether：拒 squeaky、silktouch
+        aspects.add(new com.lvdriver.tconstruct_nirvana.modifier.ModifierAspect.ExclusiveAspect("squeaky", "silktouch"));
     }
 
     @Override

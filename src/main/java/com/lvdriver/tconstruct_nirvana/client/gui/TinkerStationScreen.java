@@ -11,18 +11,18 @@ import net.minecraft.world.entity.player.Inventory;
 /**
  * 工具站/锻造厂 GUI（1:1 移植自 Tinkers' Antique {@code GuiToolStation} 简化版）。
  *
- * <p>仅绘制背景与槽位（旧版 generic.png 布局）；构建/修饰符/修复按钮
- * 留待后续会话。</p>
+ * <p>使用旧版 toolstation.png 背景（176×174）；槽位固定布局（工具槽 + 5 材料槽 +
+ * 结果槽）。信息面板/工具选择按钮/重命名文本框留待后续会话。</p>
  */
 public class TinkerStationScreen extends AbstractContainerScreen<TinkerStationMenu> {
 
     private static final ResourceLocation BACKGROUND =
-            ResourceLocation.fromNamespaceAndPath(TConstructNirvana.MODID, "textures/gui/tool_station.png");
+            ResourceLocation.fromNamespaceAndPath(TConstructNirvana.MODID, "textures/gui/toolstation.png");
 
     public TinkerStationScreen(TinkerStationMenu menu, Inventory playerInventory, Component title) {
         super(menu, playerInventory, title);
         this.imageWidth = 176;
-        this.imageHeight = 166;
+        this.imageHeight = 174;
     }
 
     @Override

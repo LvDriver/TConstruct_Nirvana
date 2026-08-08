@@ -43,6 +43,9 @@ public final class TConDataGen {
         // 世界生成：BiomeModifier JSON（下界生成钴/阿迪特矿，1:1 旧版 NetherOreGenerator）
         generator.addProvider(event.includeServer(), new TConBiomeModifiersProvider(packOutput, modid));
 
+        // 战利品：凋灵骷髅掉坏死骨（实体子表 + neoforge:add_table GLM，1:1 旧版 ToolEvents）
+        generator.addProvider(event.includeServer(), new TConLootModifiersProvider(packOutput, modid));
+
         // 方块/物品 Tag（矿物词典等价 + 采掘等级 + 信标基座）
         TConBlockTagsProvider blockTags = new TConBlockTagsProvider(packOutput, event.getLookupProvider(), modid, event.getExistingFileHelper());
         generator.addProvider(event.includeServer(), blockTags);

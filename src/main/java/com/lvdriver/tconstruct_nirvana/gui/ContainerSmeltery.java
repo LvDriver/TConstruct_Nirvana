@@ -30,12 +30,14 @@ public class ContainerSmeltery extends AbstractContainerMenu {
     /** 可见槽数（3 列 × 9 行，1:1 旧版 calcColumns=3）。 */
     public static final int VISIBLE_SLOTS = 27;
 
-    /** DataSlot 索引：燃料有无。 */
+    /** DataSlot 索引：燃料量（剩余燃料 tick，旧版 fuelQuality）。 */
     public static final int DATA_FUEL = 0;
+    /** DataSlot 索引：炉温（旧版 heat = temperature + 300）。 */
+    public static final int DATA_TEMPERATURE = 1;
     /** DataSlot 索引：液体层数。 */
-    public static final int DATA_LAYERS = 1;
+    public static final int DATA_LAYERS = 2;
     /** DataSlot 起始索引：每层 (流体 id, 量) 两两一组。 */
-    public static final int DATA_FLUID_START = 2;
+    public static final int DATA_FLUID_START = 3;
     /** 同步的液体层数上限。 */
     public static final int MAX_FLUID_LAYERS = 16;
     /** DataSlot 总数。 */
@@ -79,15 +81,27 @@ public class ContainerSmeltery extends AbstractContainerMenu {
             @Override
             public ItemStack removeItem(int index, int count) {
                 int real = scrollOffset + index;
-                return tile != null && real < tile.getSizeInventory()
-                        ? tile.getInventory().removeItem(real, count) : ItemStack.EMPTY;
+                if (tile != null && real < tile.getSizeInventory()) {
+                    ItemStack removed = tile.getInventory().removeItem(real, count);
+                    if (!removed.isEmpty()) {
+                        tile.setChanged();
+                    }
+                    return removed;
+                }
+                return ItemStack.EMPTY;
             }
 
             @Override
             public ItemStack removeItemNoUpdate(int index) {
                 int real = scrollOffset + index;
-                return tile != null && real < tile.getSizeInventory()
-                        ? tile.getInventory().removeItemNoUpdate(real) : ItemStack.EMPTY;
+                if (tile != null && real < tile.getSizeInventory()) {
+                    ItemStack removed = tile.getInventory().removeItemNoUpdate(real);
+                    if (!removed.isEmpty()) {
+                        tile.setChanged();
+                    }
+                    return removed;
+                }
+                return ItemStack.EMPTY;
             }
 
             @Override
@@ -138,7 +152,8 @@ public class ContainerSmeltery extends AbstractContainerMenu {
     private void initDataSlots() {
         // 服务端：get() 读 BE 实时值（broadcastChanges 经 checkAndClearUpdateFlag 自动下发）；
         // 客户端：tile==null，set() 由 setData 回填保存，get() 返回回填值供 Screen 渲染
-        syncData.add(addDataSlot(new SmelteryDataSlot(() -> tile != null && tile.hasFuel() ? 1 : 0)));
+        syncData.add(addDataSlot(new SmelteryDataSlot(() -> tile != null ? tile.fuelQuality : 0)));
+        syncData.add(addDataSlot(new SmelteryDataSlot(() -> tile != null ? tile.getTemperature() + 300 : 0)));
         syncData.add(addDataSlot(new SmelteryDataSlot(() -> {
             SmelteryTank tank = tank();
             return tank == null ? 0 : Math.min(MAX_FLUID_LAYERS, tank.getFluids().size());
@@ -232,8 +247,33 @@ public class ContainerSmeltery extends AbstractContainerMenu {
 
     @Override
     public ItemStack quickMoveStack(Player player, int index) {
-        // 简化：不实现 Shift 快速移动（同工具站）
-        return ItemStack.EMPTY;
+        ItemStack itemstack = ItemStack.EMPTY;
+        Slot slot = this.slots.get(index);
+        if (slot != null && slot.hasItem()) {
+            ItemStack stack = slot.getItem();
+            itemstack = stack.copy();
+            if (index < VISIBLE_SLOTS) {
+                // 冶炼炉槽 → 背包
+                if (!this.moveItemStackTo(stack, VISIBLE_SLOTS, this.slots.size(), true)) {
+                    return ItemStack.EMPTY;
+                }
+            } else {
+                // 背包 → 冶炼炉槽（可熔物品；先找空槽再合并）
+                if (!this.moveItemStackTo(stack, 0, VISIBLE_SLOTS, false)) {
+                    return ItemStack.EMPTY;
+                }
+            }
+            if (stack.isEmpty()) {
+                slot.setByPlayer(ItemStack.EMPTY);
+            } else {
+                slot.setChanged();
+            }
+            if (stack.getCount() == itemstack.getCount()) {
+                return ItemStack.EMPTY;
+            }
+            slot.onTake(player, stack);
+        }
+        return itemstack;
     }
 
     @Override

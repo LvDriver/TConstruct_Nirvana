@@ -428,7 +428,9 @@ public final class ModMaterials {
         ardite.addCommonItems("ardite");                                    // ingot/nugget/block Ardite
         manyullyn.addCommonItems("manyullyn");                              // ingot/nugget/block Manyullyn
 
-        // 特殊骨材料（boneBloodied 物品未注册，留待物品注册会话）
+        // 特殊骨材料（旧版 oredict "boneBloodied"：坏死骨物品，本会话注册并接线）
+        bloodbone.addItemIngot(TConTags.BONE_BLOODIED)
+                .setRepresentativeItem(TConTags.BONE_BLOODIED);
 
         // 金属与合金（addCommonItems 全量，c: tag 空时待附属/物品注册填充）
         iron.addCommonItems("iron").setRepresentativeItem(Items.IRON_INGOT);

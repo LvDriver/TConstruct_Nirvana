@@ -15,6 +15,8 @@ public class ModLuck extends Modifier {
         aspects.add(new ModifierAspect.LevelAspect(identifier, 3));
         aspects.add(new ModifierAspect.DataAspect(identifier, 0x2d51e2));
         aspects.add(new ModifierAspect.FreeModifierAspect(1));
+        // 1:1 旧版 ModSilktouch/ModBlasting 拒 luck 的方向补充（ExclusiveAspect 单向检查需成对挂载，review 会话11）
+        aspects.add(new ModifierAspect.ExclusiveAspect("silktouch", "blasting"));
     }
 
     /** 幸运等级（1:1 旧版 getLuckLevel）。 */

@@ -34,6 +34,9 @@ public final class ModItems {
     /** 阿迪特粒。 */
     public static final DeferredItem<Item> ARDITE_NUGGET = ITEMS.registerSimpleItem("ardite_nugget");
 
+    /** 坏死骨（凋灵骷髅掉落，血骨材料来源；旧版 TinkerCommons.matNecroticBone）。 */
+    public static final DeferredItem<Item> NECROTIC_BONE = ITEMS.registerSimpleItem("necrotic_bone");
+
     // 方块物品（与方块同名自动注册）
     public static final DeferredItem<BlockItem> COBALT_ORE_ITEM = ITEMS.registerSimpleBlockItem(ModBlocks.COBALT_ORE);
     public static final DeferredItem<BlockItem> ARDITE_ORE_ITEM = ITEMS.registerSimpleBlockItem(ModBlocks.ARDITE_ORE);
@@ -68,6 +71,20 @@ public final class ModItems {
     public static final List<DeferredItem<BlockItem>> SEARED_SLABS_ITEMS = ModBlocks.SEARED_SLABS.stream()
             .map(s -> ITEMS.registerSimpleBlockItem(s.block()))
             .toList();
+
+    // 史莱姆方块物品（会话10：变体由 BLOCK_STATE 组件表达，创造页遍历添加）
+    public static final DeferredItem<BlockItem> SLIME_DIRT_ITEM = ITEMS.registerSimpleBlockItem(ModBlocks.SLIME_DIRT);
+    public static final DeferredItem<BlockItem> SLIME_GRASS_ITEM = ITEMS.registerSimpleBlockItem(ModBlocks.SLIME_GRASS);
+    public static final DeferredItem<BlockItem> SLIME_LEAVES_ITEM = ITEMS.registerSimpleBlockItem(ModBlocks.SLIME_LEAVES);
+    public static final DeferredItem<BlockItem> SLIME_GRASS_TALL_ITEM = ITEMS.registerSimpleBlockItem(ModBlocks.SLIME_GRASS_TALL);
+    public static final DeferredItem<BlockItem> SLIME_SAPLING_ITEM = ITEMS.registerSimpleBlockItem(ModBlocks.SLIME_SAPLING);
+    public static final DeferredItem<BlockItem> SLIME_VINE_BLUE_ITEM = ITEMS.registerSimpleBlockItem(ModBlocks.SLIME_VINE_BLUE);
+    public static final DeferredItem<BlockItem> SLIME_VINE_BLUE_MID_ITEM = ITEMS.registerSimpleBlockItem(ModBlocks.SLIME_VINE_BLUE_MID);
+    public static final DeferredItem<BlockItem> SLIME_VINE_BLUE_END_ITEM = ITEMS.registerSimpleBlockItem(ModBlocks.SLIME_VINE_BLUE_END);
+    public static final DeferredItem<BlockItem> SLIME_VINE_PURPLE_ITEM = ITEMS.registerSimpleBlockItem(ModBlocks.SLIME_VINE_PURPLE);
+    public static final DeferredItem<BlockItem> SLIME_VINE_PURPLE_MID_ITEM = ITEMS.registerSimpleBlockItem(ModBlocks.SLIME_VINE_PURPLE_MID);
+    public static final DeferredItem<BlockItem> SLIME_VINE_PURPLE_END_ITEM = ITEMS.registerSimpleBlockItem(ModBlocks.SLIME_VINE_PURPLE_END);
+    public static final DeferredItem<BlockItem> SLIME_CONGEALED_ITEM = ITEMS.registerSimpleBlockItem(ModBlocks.SLIME_CONGEALED);
 
     private ModItems() {
     }

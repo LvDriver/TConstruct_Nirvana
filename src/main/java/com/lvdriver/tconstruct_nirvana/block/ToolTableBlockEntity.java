@@ -15,15 +15,15 @@ import net.minecraft.world.SimpleContainer;
 /**
  * 工具站方块实体（1:1 移植自 Tinkers' Antique {@code TileToolStation} 简化版）。
  *
- * <p>持有 5 个部件槽（{@link #PARTS}），实现 {@link MenuProvider} 打开组装菜单；
- * 无 ticker。破坏掉落与容器网络同步留待后续会话（GUI 会话内最小实现）。</p>
+ * <p>持有 6 个输入槽（{@link #INPUT_SLOTS}：工具槽 + 5 个材料槽），实现
+ * {@link MenuProvider} 打开组装菜单；无 ticker。破坏掉落与容器网络同步留待后续会话。</p>
  */
 public class ToolTableBlockEntity extends BlockEntity implements MenuProvider {
 
-    /** 部件槽数（1:1 旧版工具站 5 槽；锻造厂旧版 5×5 简化同 5 槽）。 */
-    public static final int PART_SLOTS = 5;
+    /** 输入槽数（1:1 旧版工具站：工具槽 + 5 材料槽；锻造厂旧版 5×5 简化同 5 材料槽）。 */
+    public static final int INPUT_SLOTS = 6;
 
-    private final SimpleContainer parts = new SimpleContainer(PART_SLOTS);
+    private final SimpleContainer parts = new SimpleContainer(INPUT_SLOTS);
 
     public ToolTableBlockEntity(BlockPos pos, BlockState state) {
         super(ModBlockEntities.TOOL_TABLE.get(), pos, state);
